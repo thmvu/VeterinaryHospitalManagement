@@ -1,0 +1,17 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Có lỗi xảy ra";
+}
+
+<h1 class="text-danger">Có lỗi xảy ra.</h1>
+<h2 class="text-danger">Hệ thống không thể xử lý yêu cầu của bạn lúc này.</h2>
+
+@if (Model.ShowRequestId)
+{
+    <p>
+        <strong>Mã yêu cầu:</strong> <code>@Model.RequestId</code>
+    </p>
+}
+
+<h3>Môi trường phát triển</h3>
+<p>Chi tiết lỗi chỉ nên hiển thị khi chạy cục bộ trong môi trường Development.</p>
