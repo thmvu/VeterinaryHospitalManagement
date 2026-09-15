@@ -1,6 +1,6 @@
 # Veterinary Hospital Management
 
-Ứng dụng ASP.NET Core MVC quản lý bệnh viện thú y ngoại trú. Repository hiện ở mốc 1 — Foundation: solution, project web, project test, cấu hình EF Core SQL Server và trang khởi đầu tiếng Việt.
+Ứng dụng ASP.NET Core MVC quản lý bệnh viện thú y ngoại trú. Repository đã có Foundation và phần lõi Identity/RBAC: đăng nhập nội bộ, policy theo permission, schema Identity và seed có kiểm soát.
 
 ## Yêu cầu
 
@@ -31,9 +31,42 @@ dotnet test VeterinaryHospitalManagement.slnx --no-build
 
 ## Phạm vi hiện tại
 
-Foundation chỉ chuẩn bị luồng Controller → Service → `ApplicationDbContext`, contract thời gian Việt Nam và trang Access Denied cơ bản. Chưa có entity nghiệp vụ, CRUD, đăng nhập, phân quyền hoặc database migration. Identity, RBAC và migration đầu tiên thuộc mốc 2 theo tài liệu trong `docs/`.
+Foundation chuẩn bị luồng Controller → Service → `ApplicationDbContext`, contract thời gian Việt Nam và trang Access Denied. Mốc Identity/RBAC bổ sung tài khoản nội bộ, đăng nhập/đổi mật khẩu, role, permission động, audit schema và quản trị tài khoản lõi. Không có đăng ký tài khoản công khai.
 
-Không chạy `database update` ở mốc này. Trước khi tạo hoặc áp dụng migration phải kiểm tra đúng SQL Server và tên database đích, đồng thời không xóa hay ghi đè database có sẵn.
+Migration Identity đã được sinh để review nhưng không tự động áp vào SQL Server. Trước khi chạy `database update` phải kiểm tra đúng server, đúng `VeterinaryHospitalManagementDb` và chắc chắn không ghi đè database có sẵn.
+
+## Khởi tạo Identity và Admin lần đầu
+
+Seed không chạy mặc định. Chỉ bật sau khi migration Identity đã được áp vào đúng database. Bốn role hệ thống (`Receptionist`, `Veterinarian`, `Manager`, `Admin`) và danh mục permission được seed idempotent. Lần baseline đầu tiên có thể hoàn tất một catalog dở; sau đó, chỉ permission code mới nhận quyền mặc định. Chạy lại không phục hồi các quyền cũ mà quản trị viên đã gỡ.
+
+Trong môi trường Development, đặt ba giá trị Admin bằng user-secrets và bật seed cho đúng một lần:
+
+```powershell
+dotnet user-secrets set "BootstrapAdmin:Email" "admin@example.com" --project src/VeterinaryHospitalManagement.Web
+dotnet user-secrets set "BootstrapAdmin:Password" "THAY_BANG_MAT_KHAU_MANH" --project src/VeterinaryHospitalManagement.Web
+dotnet user-secrets set "BootstrapAdmin:FullName" "Quản trị hệ thống" --project src/VeterinaryHospitalManagement.Web
+dotnet user-secrets set "BootstrapAdmin:Enabled" "true" --project src/VeterinaryHospitalManagement.Web
+dotnet user-secrets set "IdentitySeed:RunOnStartup" "true" --project src/VeterinaryHospitalManagement.Web
+dotnet run --project src/VeterinaryHospitalManagement.Web
+```
+
+Ứng dụng dừng ngay khi bootstrap được bật mà thiếu/sai `BootstrapAdmin:Email`, `BootstrapAdmin:Password` hoặc `BootstrapAdmin:FullName`; lỗi chỉ nêu tên key, không in giá trị. Seed dùng `UserManager`/`RoleManager`, không tự tạo `PasswordHash`. Nếu email đã thuộc một user không phải Admin, hoặc Admin đang bị khóa, seed dừng thay vì tự nâng quyền hay tự mở khóa.
+
+Sau lần chạy thành công, dừng ứng dụng rồi tắt seed và xóa bí mật bootstrap:
+
+```powershell
+dotnet user-secrets set "BootstrapAdmin:Enabled" "false" --project src/VeterinaryHospitalManagement.Web
+dotnet user-secrets set "IdentitySeed:RunOnStartup" "false" --project src/VeterinaryHospitalManagement.Web
+dotnet user-secrets remove "BootstrapAdmin:Email" --project src/VeterinaryHospitalManagement.Web
+dotnet user-secrets remove "BootstrapAdmin:Password" --project src/VeterinaryHospitalManagement.Web
+dotnet user-secrets remove "BootstrapAdmin:FullName" --project src/VeterinaryHospitalManagement.Web
+```
+
+Trang đăng nhập ở `/Account/Login`. User bị khóa (`IsActive = false`) không đăng nhập được; `/Account/Register` không tồn tại. Production phải lấy cấu hình bootstrap từ provider bí mật phù hợp và tắt bootstrap sau khi tạo Admin đầu tiên.
+
+## Quản trị tài khoản
+
+Sau khi đăng nhập bằng Admin, mở `/BackOffice/Users`. Admin có thể tạo tài khoản nội bộ, sửa họ tên/email, đổi đúng một role, khóa/mở khóa và đặt lại mật khẩu. Không có xóa cứng tài khoản vì audit cần giữ lịch sử. Mọi thay đổi role, khóa hoặc reset mật khẩu thu hồi cookie cũ; hệ thống không cho khóa hoặc hạ quyền Admin đang hoạt động cuối cùng. Các thao tác này ghi AuditLog cùng transaction.
 
 ## Bằng chứng kiểm thử Foundation
 
@@ -43,13 +76,21 @@ Không chạy `database update` ở mốc này. Trước khi tạo hoặc áp d�
 - Guard của test SQL chỉ chấp nhận đúng server `localhost`, database `VeterinaryHospitalManagement_Test`, Windows Authentication và các tùy chọn kết nối giống ứng dụng (`Encrypt=True`, `TrustServerCertificate=True`, `MultipleActiveResultSets=False`). Guard thứ hai yêu cầu opt-in riêng trước mọi thao tác reset/xóa dữ liệu trong fixture tương lai.
 - Test kết nối SQL là test opt-in và được xUnit đánh dấu **Skipped** thật trong bộ test mặc định. Test này không tạo hoặc xóa database; nó chỉ gọi `ApplicationDbContext.Database.CanConnectAsync()` tới database test đã tồn tại với đúng connection contract.
 
-Để chạy test SQL opt-in sau khi đã chuẩn bị `VeterinaryHospitalManagement_Test` an toàn:
+Để chạy kiểm tra kết nối SQL không phá hủy sau khi đã chuẩn bị `VeterinaryHospitalManagement_Test`:
 
 ```powershell
 $env:VETERINARY_SQL_INTEGRATION_TESTS = "1"
 dotnet test VeterinaryHospitalManagement.slnx --filter FullyQualifiedName~SqlServerOptInConnectivityTests
 ```
 
-Không đặt biến `VETERINARY_SQL_ALLOW_DESTRUCTIVE_TESTS=YES_I_UNDERSTAND` trừ khi một fixture tương lai thực sự cần reset database test. Foundation chưa có fixture hoặc thao tác phá hủy nào.
+Để chạy toàn bộ Identity SQL suite, gồm migration/schema/seed/workflow, cần xác nhận riêng việc cho phép fixture xóa và tạo lại **đúng database test** `localhost/VeterinaryHospitalManagement_Test`:
+
+```powershell
+$env:VETERINARY_SQL_INTEGRATION_TESTS = "1"
+$env:VETERINARY_SQL_ALLOW_DESTRUCTIVE_TESTS = "YES_I_UNDERSTAND"
+dotnet test VeterinaryHospitalManagement.slnx --no-restore
+```
+
+Không đặt `VETERINARY_SQL_ALLOW_DESTRUCTIVE_TESTS=YES_I_UNDERSTAND` khi chuỗi kết nối không trỏ đúng `VeterinaryHospitalManagement_Test`. Test suite giữ khóa SQL cross-process cho database test, nhưng không được dùng nó với database ứng dụng hoặc database demo.
 
 Kết quả test mặc định không chứng minh SQL Server hoặc database ứng dụng kết nối được. Trước migration phải chạy test opt-in với đúng connection contract; không dùng probe `Encrypt=False` thay cho bằng chứng này.

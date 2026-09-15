@@ -1,0 +1,30 @@
+@model IReadOnlyList<ManagedUserSummary>
+@{
+    ViewData["Title"] = "Quản lý tài khoản";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Quản lý tài khoản</h1>
+    <a class="btn btn-primary" asp-action="Create">Tạo tài khoản</a>
+</div>
+
+@if (TempData["StatusMessage"] is string statusMessage)
+{
+    <div class="alert alert-success">@statusMessage</div>
+}
+
+<table class="table table-striped align-middle">
+    <thead><tr><th>Họ tên</th><th>Email</th><th>Role</th><th>Trạng thái</th><th></th></tr></thead>
+    <tbody>
+    @foreach (var user in Model)
+    {
+        <tr>
+            <td>@user.FullName</td>
+            <td>@user.Email</td>
+            <td>@user.RoleName</td>
+            <td>@(user.IsActive ? "Đang hoạt động" : "Đã khóa")</td>
+            <td><a class="btn btn-outline-secondary btn-sm" asp-action="Edit" asp-route-id="@user.Id">Quản lý</a></td>
+        </tr>
+    }
+    </tbody>
+</table>

@@ -1,0 +1,47 @@
+@model EditUserViewModel
+@{
+    ViewData["Title"] = "Quản lý tài khoản";
+}
+
+<h1>Quản lý tài khoản</h1>
+@if (TempData["StatusMessage"] is string statusMessage)
+{
+    <div class="alert alert-success">@statusMessage</div>
+}
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<form asp-action="Edit" method="post" class="col-md-6 mb-4">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input asp-for="Id" type="hidden" />
+    <input asp-for="ConcurrencyStamp" type="hidden" />
+    <input asp-for="RoleName" type="hidden" />
+    <input asp-for="IsActive" type="hidden" />
+    <div class="mb-3"><label asp-for="FullName" class="form-label"></label><input asp-for="FullName" class="form-control" /><span asp-validation-for="FullName" class="text-danger"></span></div>
+    <div class="mb-3"><label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control" /><span asp-validation-for="Email" class="text-danger"></span></div>
+    <button type="submit" class="btn btn-primary">Lưu thông tin</button>
+</form>
+
+<hr />
+<h2 class="h4">Quyền và trạng thái</h2>
+<p>Role hiện tại: <strong>@Model.RoleName</strong>. Trạng thái: <strong>@(Model.IsActive ? "Đang hoạt động" : "Đã khóa")</strong>.</p>
+<form asp-action="ChangeRole" method="post" class="row g-2 mb-3">
+    <input asp-for="Id" type="hidden" /><input asp-for="ConcurrencyStamp" type="hidden" />
+    <div class="col-auto"><select name="RoleName" class="form-select"><option value="@SystemRoleNames.Receptionist">Receptionist</option><option value="@SystemRoleNames.Veterinarian">Veterinarian</option><option value="@SystemRoleNames.Manager">Manager</option><option value="@SystemRoleNames.Admin">Admin</option></select></div>
+    <div class="col-auto"><button type="submit" class="btn btn-outline-primary">Đổi role</button></div>
+</form>
+<form asp-action="SetActive" method="post" class="mb-4">
+    <input asp-for="Id" type="hidden" /><input asp-for="ConcurrencyStamp" type="hidden" /><input asp-for="IsActive" type="hidden" value="@(!Model.IsActive)" />
+    <button type="submit" class="btn @(Model.IsActive ? "btn-outline-danger" : "btn-outline-success")">@(Model.IsActive ? "Khóa tài khoản" : "Mở khóa tài khoản")</button>
+</form>
+
+<hr />
+<h2 class="h4">Đặt lại mật khẩu</h2>
+<form asp-action="ResetPassword" method="post" class="col-md-6">
+    <input asp-for="Id" type="hidden" /><input asp-for="ConcurrencyStamp" type="hidden" />
+    <div class="mb-3"><label for="NewPassword" class="form-label">Mật khẩu mới</label><input id="NewPassword" name="NewPassword" type="password" class="form-control" required /></div>
+    <button type="submit" class="btn btn-warning">Đặt lại mật khẩu</button>
+    <a asp-action="Index" class="btn btn-link">Quay lại danh sách</a>
+</form>

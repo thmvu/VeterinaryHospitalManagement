@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using VeterinaryHospitalManagement.Tests.Infrastructure.Identity;
 using VeterinaryHospitalManagement.Web.Data;
 
 namespace VeterinaryHospitalManagement.Tests.Integration;
 
+[Collection(IdentitySqlServerTestCollection.Name)]
 public class SqlServerOptInConnectivityTests
 {
     [SqlServerFact]
