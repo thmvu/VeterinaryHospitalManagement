@@ -1,5 +1,12 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using VeterinaryHospitalManagement.Web.Configuration;
 using VeterinaryHospitalManagement.Web.Data;
+using VeterinaryHospitalManagement.Web.Data.Seed;
+using VeterinaryHospitalManagement.Web.Models.Entities;
+using VeterinaryHospitalManagement.Web.Services.Identity;
 using VeterinaryHospitalManagement.Web.Services.Time;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,10 +15,50 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services
+    .AddIdentity<ApplicationUser, IdentityRole>(options =>
+    {
+        options.User.RequireUniqueEmail = true;
+    })
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Home/AccessDenied";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.SlidingExpiration = true;
+    options.EventsType = typeof(ActiveUserCookieEvents);
+});
+builder.Services.Configure<SecurityStampValidatorOptions>(options =>
+    options.ValidationInterval = TimeSpan.Zero);
+builder.Services.PostConfigure<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme, options =>
+    options.EventsType = typeof(ActiveUserCookieEvents));
+builder.Services.AddScoped<ActiveUserCookieEvents>();
+builder.Services.AddScoped<IUserManagementService, UserManagementService>();
+builder.Services.AddVeterinaryAuthorization();
+builder.Services
+    .AddOptions<BootstrapAdminOptions>()
+    .Bind(builder.Configuration.GetSection(BootstrapAdminOptions.SectionName))
+    .ValidateOnStart();
+builder.Services.AddSingleton<IValidateOptions<BootstrapAdminOptions>>(services =>
+    new BootstrapAdminOptionsValidator(
+        services.GetRequiredService<IOptions<IdentityOptions>>().Value));
+builder.Services.AddScoped<IdentitySeed>();
+builder.Services.AddScoped<PermissionSeed>();
+builder.Services.AddScoped<SeedRunner>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IVietnamTimeProvider, VietnamTimeProvider>();
 
 var app = builder.Build();
+
+if (builder.Configuration.GetValue<bool>("IdentitySeed:RunOnStartup"))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    await scope.ServiceProvider.GetRequiredService<SeedRunner>().RunAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -24,9 +71,14 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
     name: "default",
