@@ -147,9 +147,15 @@ Không bắt đầu đồng thời Owner + Pet + Species + Breed. **G1 / DEC-01 
 - Canonical lưu database là `+84` + 9 chữ số, không separator.
 - `Owner.PhoneNumber` không unique; nhiều Owner được phép dùng chung số. Exact search chuẩn hóa input bằng cùng quy tắc và trả danh sách tất cả Owner khớp để người dùng chọn, không tự lấy một bản ghi duy nhất.
 
+Các quy tắc schema đã chốt thêm:
+
+- `OwnerCode`/`PetCode` do hệ thống tự sinh đúng dạng `OWN-000001`/`PET-000001` bằng hai SQL sequence độc lập, bắt đầu 1, tăng 1, tối đa 999999, không cycle. Cho phép khoảng trống khi transaction rollback và không tái sử dụng số.
+- `Species.Code` do quản trị viên nhập ở workflow danh mục sau; trim, uppercase invariant, tối đa 30 ký tự và unique, không áp regex. `Species.Name` không unique.
+- Owner inactive không được dùng để tạo Pet mới; khóa Owner không cascade `Pet.IsActive`. Species/Breed giữ nguyên field trong DatabaseDesign, không thêm `CreatedAt` hoặc `RowVersion`.
+
 Lát hiện tại chỉ nên là:
 
-> **M2.1A — DEC-01 và pure phone normalization:** cập nhật tài liệu DEC-01; tạo phone normalizer thuần cùng interface/result và contract tests cho toàn bộ tập input hợp lệ, không hợp lệ và canonical đã duyệt. Lát này không truy cập database và không triển khai Owner entity/configuration, `ApplicationDbContext`, persistence, tìm kiếm Owner hoặc migration `AddOwnersAndPets`; các phần đó được hoãn sang lát schema/persistence tiếp theo. Chưa làm Pet/Species/Breed hoặc UI Owner.
+> **M2.1B — Owner/Pet schema:** tạo entity và EF configuration cho Owner, Species, Breed, Pet; thêm các `DbSet`; tạo duy nhất migration `AddOwnersAndPets` gồm bảng, constraint/index/FK và hai sequence; viết model/schema/migration tests tương ứng. Đây là lát schema-only: chưa làm service CRUD/search, controller/view/UI hoặc audit nghiệp vụ.
 
 ### 8. Báo cáo bắt buộc cuối mỗi task
 

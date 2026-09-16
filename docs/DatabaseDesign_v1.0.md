@@ -56,12 +56,16 @@ Audit không chứa mật khẩu hoặc sao chép toàn bộ nội dung bệnh �
 
 | Bảng | Trường |
 | --- | --- |
-| Owners | Id, OwnerCode nvarchar(30), FullName nvarchar(150), PhoneNumber nvarchar(20), Email nvarchar(254)?, Address nvarchar(500)?, IsActive bit, CreatedAt, RowVersion |
+| Owners | Id, OwnerCode nvarchar(10), FullName nvarchar(150), PhoneNumber nvarchar(20), Email nvarchar(254)?, Address nvarchar(500)?, IsActive bit, CreatedAt, RowVersion |
 | Species | Id, Code nvarchar(30), Name nvarchar(100), IsActive bit |
 | Breeds | Id, SpeciesId FK, Name nvarchar(100), IsActive bit |
-| Pets | Id, PetCode nvarchar(30), OwnerId FK, Name nvarchar(100), SpeciesId FK, BreedId FK?, Sex nvarchar(20), BirthDate date?, Color nvarchar(100)?, Notes nvarchar(1000)?, IsActive bit, CreatedAt, RowVersion |
+| Pets | Id, PetCode nvarchar(10), OwnerId FK, Name nvarchar(100), SpeciesId FK, BreedId FK?, Sex nvarchar(20), BirthDate date?, Color nvarchar(100)?, Notes nvarchar(1000)?, IsActive bit, CreatedAt, RowVersion |
 
 Sex = Unknown/Male/Female. **DEC-01 đã chốt:** `PhoneNumber` chỉ nhận số di động Việt Nam. Sau khi trim khoảng trắng ngoài, input phải ở một trong ba dạng: `0` + 9 chữ số, `84` + 9 chữ số hoặc `+84` + 9 chữ số; chữ số đầu của phần 9 chữ số phải thuộc `3/5/7/8/9`. Chỉ nhận chữ số ASCII. Trong số có thể dùng space, dấu gạch ngang (`-`) hoặc dấu chấm (`.`) làm separator giữa các nhóm chữ số; không nhận separator ở đầu/cuối, separator liên tiếp, dấu ngoặc, extension hoặc ký tự khác. Canonical lưu database là `+84` + 9 chữ số, không separator, ví dụ `0912 345 678`, `84-912-345-678` và `+84.912.345.678` cùng lưu thành `+84912345678`. Nhiều Owner được phép dùng chung một canonical phone; tìm kiếm exact phải chuẩn hóa input bằng cùng quy tắc và trả danh sách tất cả Owner khớp để người dùng chọn, không tự lấy một bản ghi duy nhất. Không dùng số điện thoại để xác thực quyền xem hồ sơ.
+
+`OwnerCode` và `PetCode` do hệ thống tự sinh theo đúng dạng `OWN-000001` và `PET-000001`. Dùng hai SQL sequence độc lập, bắt đầu từ 1, tăng 1, tối đa 999999 và không cycle; sequence bảo đảm cấp số an toàn khi tạo đồng thời. Số đã cấp không rollback nên được phép có khoảng trống khi transaction thất bại; không tái sử dụng số. Mỗi code có unique index và không được sửa sau khi tạo.
+
+`Species.Code` chưa tự sinh trong lát này; quản trị viên sẽ nhập ở workflow danh mục sau. Khi workflow đó được triển khai, code được trim, chuyển uppercase invariant, giới hạn 30 ký tự và unique; không áp regex ngoài các quy tắc này. `Species.Name` không unique. Owner inactive không được chọn để tạo Pet mới; việc khóa Owner không cascade thay đổi `Pet.IsActive`, và các Pet đã có vẫn giữ quan hệ/lịch sử. Species và Breed giữ đúng các trường trong bảng trên, không thêm `CreatedAt` hoặc `RowVersion` trong migration này.
 
 Breed phải thuộc đúng Species. Có thể dùng FK ghép `(BreedId, SpeciesId)` tới alternate key `(Id, SpeciesId)` của Breeds để bảo vệ ở DB; khi BreedId null vẫn giữ FK SpeciesId.
 
@@ -150,7 +154,7 @@ Sơ đồ lược bỏ FK tác nhân/audit để dễ đọc. Một đơn Draft 
 
 ## 5. Index và constraints
 
-- UNIQUE: Permission.Code; các Code/Number của Owner, Pet, Species, bác sĩ, Medicine, ServiceCatalog, Appointment, Visit, Invoice.
+- UNIQUE: Permission.Code; Owner.OwnerCode; Pet.PetCode; Species.Code; các Code/Number của bác sĩ, Medicine, ServiceCatalog, Appointment, Visit, Invoice. Species.Name không unique.
 - INDEX Owners(PhoneNumber) không unique để phục vụ exact search theo canonical phone; nhiều Owner có thể dùng chung số.
 - UNIQUE VeterinarianProfile.UserId; Breed(SpeciesId, Name).
 - UNIQUE Visit.AppointmentId WHERE AppointmentId IS NOT NULL.
@@ -182,7 +186,7 @@ Các ràng buộc nhiều bảng như bác sĩ active/đúng phụ trách, Invoi
 | Migration dự kiến | Schema |
 | --- | --- |
 | InitialIdentityAndPermissions | Identity, Permissions, RolePermissions, AuditLogs |
-| AddOwnersAndPets | Owners, Species, Breeds, Pets |
+| AddOwnersAndPets | Owners, Species, Breeds, Pets; sequence cấp OwnerCode và PetCode |
 | AddVeterinariansAndCatalogs | VeterinarianProfiles, VeterinarianShifts, Medicines, ServiceCatalogs |
 | AddAppointments | Appointments và index lịch |
 | AddVisits | Visits, filtered unique indexes |
