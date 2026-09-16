@@ -61,7 +61,7 @@ Audit không chứa mật khẩu hoặc sao chép toàn bộ nội dung bệnh �
 | Breeds | Id, SpeciesId FK, Name nvarchar(100), IsActive bit |
 | Pets | Id, PetCode nvarchar(30), OwnerId FK, Name nvarchar(100), SpeciesId FK, BreedId FK?, Sex nvarchar(20), BirthDate date?, Color nvarchar(100)?, Notes nvarchar(1000)?, IsActive bit, CreatedAt, RowVersion |
 
-Sex = Unknown/Male/Female. SĐT chuẩn hóa trước lưu; bản đầu đề xuất số di động Việt Nam 10 chữ số bắt đầu 0, chấp nhận input +84 rồi chuẩn hóa. Không dùng số điện thoại để xác thực quyền xem hồ sơ. Unique PhoneNumber là giả định một số liên hệ đại diện một hồ sơ chủ nuôi; cần đổi trước module Owner nếu muốn nhiều người dùng chung số.
+Sex = Unknown/Male/Female. **DEC-01 đã chốt:** `PhoneNumber` chỉ nhận số di động Việt Nam. Sau khi trim khoảng trắng ngoài, input phải ở một trong ba dạng: `0` + 9 chữ số, `84` + 9 chữ số hoặc `+84` + 9 chữ số; chữ số đầu của phần 9 chữ số phải thuộc `3/5/7/8/9`. Chỉ nhận chữ số ASCII. Trong số có thể dùng space, dấu gạch ngang (`-`) hoặc dấu chấm (`.`) làm separator giữa các nhóm chữ số; không nhận separator ở đầu/cuối, separator liên tiếp, dấu ngoặc, extension hoặc ký tự khác. Canonical lưu database là `+84` + 9 chữ số, không separator, ví dụ `0912 345 678`, `84-912-345-678` và `+84.912.345.678` cùng lưu thành `+84912345678`. Nhiều Owner được phép dùng chung một canonical phone; tìm kiếm exact phải chuẩn hóa input bằng cùng quy tắc và trả danh sách tất cả Owner khớp để người dùng chọn, không tự lấy một bản ghi duy nhất. Không dùng số điện thoại để xác thực quyền xem hồ sơ.
 
 Breed phải thuộc đúng Species. Có thể dùng FK ghép `(BreedId, SpeciesId)` tới alternate key `(Id, SpeciesId)` của Breeds để bảo vệ ở DB; khi BreedId null vẫn giữ FK SpeciesId.
 
@@ -150,7 +150,8 @@ Sơ đồ lược bỏ FK tác nhân/audit để dễ đọc. Một đơn Draft 
 
 ## 5. Index và constraints
 
-- UNIQUE: Permission.Code; các Code/Number của Owner, Pet, Species, bác sĩ, Medicine, ServiceCatalog, Appointment, Visit, Invoice; Owner.PhoneNumber.
+- UNIQUE: Permission.Code; các Code/Number của Owner, Pet, Species, bác sĩ, Medicine, ServiceCatalog, Appointment, Visit, Invoice.
+- INDEX Owners(PhoneNumber) không unique để phục vụ exact search theo canonical phone; nhiều Owner có thể dùng chung số.
 - UNIQUE VeterinarianProfile.UserId; Breed(SpeciesId, Name).
 - UNIQUE Visit.AppointmentId WHERE AppointmentId IS NOT NULL.
 - UNIQUE Visit.PetId WHERE Status IN ('Waiting','InProgress').

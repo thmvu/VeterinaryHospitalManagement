@@ -140,15 +140,16 @@ Báo cáo lỗi phải nêu: mã lỗi, tác nhân gây ra/phần chịu trách 
 
 ### 7. Lát tiếp theo được khuyến nghị
 
-Không bắt đầu đồng thời Owner + Pet + Species + Breed. Trước hết xử lý **G1 / DEC-01** trong delivery plan:
+Không bắt đầu đồng thời Owner + Pet + Species + Breed. **G1 / DEC-01 đã chốt** như sau:
 
-- Tập số điện thoại Owner hợp lệ và không hợp lệ.
-- Dạng canonical lưu trong database.
-- Có cho nhiều Owner dùng chung một số hay không.
+- Chỉ nhận số di động Việt Nam. Sau khi trim khoảng trắng ngoài, chấp nhận `0` + 9 chữ số hoặc `84`/`+84` + 9 chữ số; chữ số đầu của phần 9 chữ số phải thuộc `3/5/7/8/9`.
+- Chỉ nhận chữ số ASCII. Separator chỉ được là space, dấu gạch ngang (`-`) hoặc dấu chấm (`.`) và chỉ nằm giữa các nhóm chữ số; không hỗ trợ dấu ngoặc, extension, separator ở đầu/cuối hoặc separator liên tiếp.
+- Canonical lưu database là `+84` + 9 chữ số, không separator.
+- `Owner.PhoneNumber` không unique; nhiều Owner được phép dùng chung số. Exact search chuẩn hóa input bằng cùng quy tắc và trả danh sách tất cả Owner khớp để người dùng chọn, không tự lấy một bản ghi duy nhất.
 
-Quyết định này hiện **chưa chốt** và không được tự giả định `+84`, 10 chữ số hoặc unique. Hãy trình bày lựa chọn ngắn gọn cho người dùng duyệt. Sau khi duyệt, task code đầu tiên chỉ nên là:
+Lát hiện tại chỉ nên là:
 
-> **M2.1A — Owner domain và phone normalization:** tạo contract test cho quyết định G1, entity/configuration Owner, service chuẩn hóa/tìm kiếm lõi và các test tương ứng. Chưa làm Pet/Species/Breed và chưa làm toàn bộ UI Owner trong cùng task.
+> **M2.1A — DEC-01 và pure phone normalization:** cập nhật tài liệu DEC-01; tạo phone normalizer thuần cùng interface/result và contract tests cho toàn bộ tập input hợp lệ, không hợp lệ và canonical đã duyệt. Lát này không truy cập database và không triển khai Owner entity/configuration, `ApplicationDbContext`, persistence, tìm kiếm Owner hoặc migration `AddOwnersAndPets`; các phần đó được hoãn sang lát schema/persistence tiếp theo. Chưa làm Pet/Species/Breed hoặc UI Owner.
 
 ### 8. Báo cáo bắt buộc cuối mỗi task
 
