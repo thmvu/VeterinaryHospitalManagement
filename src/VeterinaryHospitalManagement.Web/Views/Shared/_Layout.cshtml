@@ -1,4 +1,17 @@
-﻿<!DOCTYPE html>
+@using Microsoft.AspNetCore.Authorization
+@using VeterinaryHospitalManagement.Web.Authorization
+@inject IAuthorizationService AuthorizationService
+@{
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var canManageUsers = isAuthenticated &&
+        (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.UserManage))).Succeeded;
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var currentArea = ViewContext.RouteData.Values["area"]?.ToString();
+    var isHome = string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase);
+}
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
@@ -10,36 +23,78 @@
     <link rel="stylesheet" href="~/VeterinaryHospitalManagement.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                    <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Veterinary Hospital Management</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+    <a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+    <header class="site-header">
+        <nav class="navbar navbar-expand-lg navbar-dark" aria-label="Điều hướng chính">
+            <div class="container-xxl">
+                <a class="navbar-brand vhm-brand" asp-area="" asp-controller="Home" asp-action="Index" aria-label="Veterinary Hospital Management - Trang chủ">
+                    <span class="vhm-brand__mark" aria-hidden="true">V</span>
+                    <span class="vhm-brand__copy">
+                        <span class="vhm-brand__name">Veterinary Hospital</span>
+                        <span class="vhm-brand__tagline">Quản lý ngoại trú</span>
+                    </span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#primaryNavigation"
+                        aria-controls="primaryNavigation" aria-expanded="false" aria-label="Mở hoặc đóng điều hướng">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                <div id="primaryNavigation" class="collapse navbar-collapse">
+                    <ul class="navbar-nav ms-lg-4 me-auto mb-3 mb-lg-0">
                         <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Trang chủ</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index"
+                               aria-current="@(isHome ? "page" : null)">Trang chủ</a>
                         </li>
-                        <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Quyền riêng tư</a>
-                        </li>
+                        @if (canManageUsers)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="BackOffice" asp-controller="Users" asp-action="Index"
+                                   aria-current="@(string.Equals(currentArea, "BackOffice", StringComparison.OrdinalIgnoreCase) && string.Equals(currentController, "Users", StringComparison.OrdinalIgnoreCase) ? "page" : null)">
+                                    Quản lý tài khoản
+                                </a>
+                            </li>
+                        }
                     </ul>
+                    @if (isAuthenticated)
+                    {
+                        <div class="dropdown account-menu">
+                            <button class="btn btn-account dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Tài khoản</button>
+                            <ul class="dropdown-menu dropdown-menu-lg-end shadow-sm">
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Account" asp-action="ChangePassword">Đổi mật khẩu</a></li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li>
+                                    <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                                        <button class="dropdown-item" type="submit">Đăng xuất</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <a class="btn btn-nav-login" asp-area="" asp-controller="Account" asp-action="Login">Đăng nhập</a>
+                    }
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - Veterinary Hospital Management - <a asp-area="" asp-controller="Home" asp-action="Privacy">Quyền riêng tư</a>
+    <main id="main-content" tabindex="-1">
+        @if (isHome)
+        {
+            @RenderBody()
+        }
+        else
+        {
+            <div class="container-xxl page-shell">
+                @RenderBody()
+            </div>
+        }
+    </main>
+
+    <footer class="footer site-footer">
+        <div class="container-xxl d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+            <span>&copy; 2026 Veterinary Hospital Management</span>
+            <a asp-area="" asp-controller="Home" asp-action="Privacy">Quyền riêng tư</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

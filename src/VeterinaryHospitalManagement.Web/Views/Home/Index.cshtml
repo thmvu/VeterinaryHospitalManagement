@@ -1,14 +1,92 @@
-﻿@{
+@{
     ViewData["Title"] = "Trang chủ";
 }
 
-<div class="py-5 text-center">
-    <p class="text-uppercase text-primary fw-semibold">Hệ thống quản lý ngoại trú</p>
-    <h1 class="display-4 fw-bold">Veterinary Hospital Management</h1>
-    <p class="lead text-secondary mx-auto" style="max-width: 720px">
-        Nền tảng quản lý lịch hẹn, tiếp nhận, khám bệnh, đơn thuốc, dịch vụ và hóa đơn cho bệnh viện thú y.
-    </p>
-    <div class="alert alert-info d-inline-block mt-3" role="status">
-        Phiên bản hiện tại đang ở mốc Foundation. Các chức năng nghiệp vụ sẽ được bổ sung theo từng module.
+<section class="landing-hero" aria-labelledby="landing-title">
+    <div class="container-xxl position-relative">
+        <div class="row align-items-center gy-5 py-5 py-lg-6">
+            <div class="col-lg-7">
+                <p class="section-eyebrow mb-3">Hệ thống quản lý ngoại trú</p>
+                <h1 id="landing-title" class="landing-title mb-4">Quản lý bệnh viện thú y ngoại trú</h1>
+                <p class="landing-lead mb-4">
+                    Một không gian làm việc thống nhất cho lễ tân, bác sĩ, quản lý và quản trị viên —
+                    giúp theo dõi đúng chủ nuôi, đúng thú cưng và đúng trạng thái.
+                </p>
+                <div class="d-flex flex-column flex-sm-row gap-3 align-items-sm-center">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a class="btn btn-brand btn-lg" asp-area="" asp-controller="Account" asp-action="ChangePassword">Đổi mật khẩu</a>
+                    }
+                    else
+                    {
+                        <a class="btn btn-brand btn-lg" asp-area="" asp-controller="Account" asp-action="Login">Đăng nhập hệ thống</a>
+                    }
+                    <a class="btn btn-link landing-link px-0" href="#quy-trinh">Xem quy trình</a>
+                </div>
+                <p class="landing-trust mb-0 mt-4">
+                    Dành cho nhân viên nội bộ <span aria-hidden="true">·</span>
+                    Phân quyền theo vai trò <span aria-hidden="true">·</span>
+                    Không có đăng ký công khai
+                </p>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block" aria-hidden="true">
+                <div class="hero-visual">
+                    <div class="hero-visual__ring"></div>
+                    <div class="hero-visual__panel">
+                        <span class="hero-visual__label">Quy trình ngoại trú</span>
+                        <span class="hero-visual__line hero-visual__line--wide"></span>
+                        <span class="hero-visual__line"></span>
+                        <div class="hero-visual__steps"><span>01</span><span>02</span><span>03</span><span>04</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+</section>
+
+<section id="quy-trinh" class="landing-section" aria-labelledby="workflow-title">
+    <div class="container-xxl">
+        <div class="section-heading mb-5">
+            <p class="section-eyebrow mb-2">Quy trình thống nhất</p>
+            <h2 id="workflow-title" class="section-title">Một luồng làm việc, một nguồn dữ liệu</h2>
+            <p class="section-description mb-0">Các phân hệ nghiệp vụ được bổ sung theo từng giai đoạn để giữ dữ liệu và quyền truy cập nhất quán.</p>
+        </div>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-4">
+            <div class="col"><article class="workflow-card h-100"><div class="workflow-number" aria-hidden="true">01</div><span class="status-label">Sắp triển khai</span><h3>Hồ sơ</h3><p>Tìm chủ nuôi bằng số điện thoại, quản lý thú cưng và lịch sử khám.</p></article></div>
+            <div class="col"><article class="workflow-card h-100"><div class="workflow-number" aria-hidden="true">02</div><span class="status-label">Sắp triển khai</span><h3>Lịch hẹn &amp; tiếp nhận</h3><p>Đặt lịch, check-in hoặc tiếp nhận khách đến trực tiếp tại quầy.</p></article></div>
+            <div class="col"><article class="workflow-card h-100"><div class="workflow-number" aria-hidden="true">03</div><span class="status-label">Sắp triển khai</span><h3>Khám &amp; điều trị</h3><p>Theo dõi hàng đợi, bệnh án, đơn thuốc và dịch vụ đã thực hiện.</p></article></div>
+            <div class="col"><article class="workflow-card h-100"><div class="workflow-number" aria-hidden="true">04</div><span class="status-label">Sắp triển khai</span><h3>Thanh toán &amp; báo cáo</h3><p>Xác nhận hóa đơn, in lại và tổng hợp hoạt động vận hành.</p></article></div>
+        </div>
+    </div>
+</section>
+
+<section class="landing-section landing-section--soft" aria-labelledby="foundation-title">
+    <div class="container-xxl">
+        <div class="section-heading mb-5"><p class="section-eyebrow mb-2">Nền tảng hiện tại</p><h2 id="foundation-title" class="section-title">Sẵn sàng cho quản trị nội bộ</h2></div>
+        <div class="row row-cols-1 row-cols-lg-3 g-4">
+            <div class="col"><article class="capability-card h-100"><span class="ready-label">Đã có</span><h3>Tài khoản nội bộ</h3><p>Đăng nhập, đổi mật khẩu và khóa hoặc mở tài khoản nhân viên.</p></article></div>
+            <div class="col"><article class="capability-card h-100"><span class="ready-label">Đã có</span><h3>Phân quyền theo vai trò</h3><p>Lễ tân, bác sĩ, quản lý và quản trị viên có phạm vi thao tác riêng.</p></article></div>
+            <div class="col"><article class="capability-card h-100"><span class="ready-label">Đã có</span><h3>Quản trị an toàn</h3><p>Thay đổi vai trò, đặt lại mật khẩu và thu hồi phiên đăng nhập cũ.</p></article></div>
+        </div>
+    </div>
+</section>
+
+<section class="landing-section" aria-labelledby="next-title">
+    <div class="container-xxl">
+        <div class="next-panel d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-4">
+            <div>
+                <p class="section-eyebrow mb-2">Lộ trình sản phẩm</p>
+                <h2 id="next-title" class="section-title mb-3">Các phân hệ nghiệp vụ đang được hoàn thiện</h2>
+                <p class="section-description mb-0">Hồ sơ chủ nuôi và thú cưng, lịch hẹn, tiếp nhận, khám, thanh toán và báo cáo sẽ xuất hiện trong điều hướng khi sẵn sàng.</p>
+            </div>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a class="btn btn-outline-brand flex-shrink-0" asp-area="" asp-controller="Account" asp-action="ChangePassword">Đổi mật khẩu</a>
+            }
+            else
+            {
+                <a class="btn btn-outline-brand flex-shrink-0" asp-area="" asp-controller="Account" asp-action="Login">Đăng nhập</a>
+            }
+        </div>
+    </div>
+</section>
