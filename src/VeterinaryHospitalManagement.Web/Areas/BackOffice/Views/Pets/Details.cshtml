@@ -1,0 +1,120 @@
+@model PetDetails
+@using Microsoft.AspNetCore.Authorization
+@inject IAuthorizationService AuthorizationService
+@{
+    ViewData["Title"] = $"{Model.Name} ({Model.PetCode})";
+    var canManagePets = (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.PetManage))).Succeeded;
+    var rowVersionBase64 = Convert.ToBase64String(Model.RowVersion);
+    var sexText = Model.Sex switch
+    {
+        PetSex.Male => "Đực",
+        PetSex.Female => "Cái",
+        _ => "Không xác định"
+    };
+}
+
+@if (TempData["StatusMessage"] is string statusMessage)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @statusMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @errorMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-area="BackOffice" asp-controller="Owners" asp-action="Index">Chủ nuôi</a></li>
+            <li class="breadcrumb-item"><a asp-area="BackOffice" asp-controller="Owners" asp-action="Details" asp-route-id="@Model.OwnerId">@Model.OwnerFullName</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Name (@Model.PetCode)</li>
+        </ol>
+    </nav>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h2 class="mb-1">
+                @Model.Name
+                <span class="text-muted fw-normal">(@Model.PetCode)</span>
+                @if (Model.IsActive)
+                {
+                    <span class="badge bg-success ms-2">Hoạt động</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary ms-2">Đã khóa</span>
+                }
+            </h2>
+            <p class="text-muted mb-0">Chủ nuôi: <a asp-area="BackOffice" asp-controller="Owners" asp-action="Details" asp-route-id="@Model.OwnerId" class="fw-bold text-decoration-none">@Model.OwnerFullName (@Model.OwnerCode)</a> — SĐT: @Model.OwnerPhoneNumber</p>
+        </div>
+        @if (canManagePets)
+        {
+            <div class="d-flex gap-2">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">Chỉnh sửa</a>
+                <form asp-action="SetActive" asp-route-id="@Model.Id" method="post" class="d-inline">
+                    <input type="hidden" name="expectedRowVersion" value="@rowVersionBase64" />
+                    <input type="hidden" name="isActive" value="@(!Model.IsActive).ToString().ToLowerInvariant()" />
+                    @if (Model.IsActive)
+                    {
+                        <button type="submit" class="btn btn-outline-warning" onclick="return confirm('Bạn có chắc chắn muốn khóa thú cưng này?');">Khóa thú cưng</button>
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-outline-success">Mở khóa thú cưng</button>
+                    }
+                </form>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-bold">Thông tin thú cưng</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted">Mã thú cưng:</dt>
+                    <dd class="col-sm-8 fw-bold"><code>@Model.PetCode</code></dd>
+
+                    <dt class="col-sm-4 text-muted">Tên gọi:</dt>
+                    <dd class="col-sm-8 fw-bold">@Model.Name</dd>
+
+                    <dt class="col-sm-4 text-muted">Loài:</dt>
+                    <dd class="col-sm-8">@Model.SpeciesName</dd>
+
+                    <dt class="col-sm-4 text-muted">Giống:</dt>
+                    <dd class="col-sm-8">@(Model.BreedName ?? "Không xác định")</dd>
+
+                    <dt class="col-sm-4 text-muted">Giới tính:</dt>
+                    <dd class="col-sm-8">@sexText</dd>
+
+                    <dt class="col-sm-4 text-muted">Ngày sinh:</dt>
+                    <dd class="col-sm-8">@(Model.BirthDate?.ToString("dd/MM/yyyy") ?? "Chưa rõ")</dd>
+
+                    <dt class="col-sm-4 text-muted">Màu lông / Đặc điểm:</dt>
+                    <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.Color) ? "Chưa có" : Model.Color)</dd>
+
+                    <dt class="col-sm-4 text-muted">Ghi chú:</dt>
+                    <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.Notes) ? "Không có" : Model.Notes)</dd>
+
+                    <dt class="col-sm-4 text-muted">Ngày tạo hồ sơ:</dt>
+                    <dd class="col-sm-8">@Model.CreatedAt.ToOffset(TimeSpan.FromHours(7)).ToString("dd/MM/yyyy HH:mm")</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-bold">Lịch sử khám bệnh</div>
+            <div class="card-body text-center text-muted py-5">
+                <p class="mb-0">Chưa có lượt khám nào. Phân hệ Khám bệnh & Điều trị sẽ hiển thị tại đây khi triển khai.</p>
+            </div>
+        </div>
+    </div>
+</div>

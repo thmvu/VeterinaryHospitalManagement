@@ -1,0 +1,73 @@
+@model OwnerIndexViewModel
+@using Microsoft.AspNetCore.Authorization
+@inject IAuthorizationService AuthorizationService
+@{
+    ViewData["Title"] = "Chủ nuôi";
+    var canManageOwners = User.Identity?.IsAuthenticated == true &&
+        (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.OwnerManage))).Succeeded;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Chủ nuôi</h1>
+    @if (canManageOwners)
+    {
+        <a class="btn btn-primary" asp-action="Create">Tạo chủ nuôi</a>
+    }
+</div>
+
+@if (TempData["StatusMessage"] is string statusMessage)
+{
+    <div class="alert alert-success">@statusMessage</div>
+}
+
+<div class="card card-body bg-light mb-4">
+    <p class="mb-2 text-muted">
+        Tra cứu chủ nuôi theo số điện thoại hoặc mã chủ nuôi. Nhiều chủ nuôi có thể dùng chung một số điện thoại;
+        hãy chọn đúng chủ nuôi theo mã trước khi tạo thú cưng hoặc lịch hẹn.
+    </p>
+    <form asp-action="Index" method="get" class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label" for="phoneNumber">Số điện thoại</label>
+            <input id="phoneNumber" name="phoneNumber" class="form-control" value="@Model.PhoneNumber" placeholder="VD: 0912 345 678" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="ownerCode">Mã chủ nuôi</label>
+            <input id="ownerCode" name="ownerCode" class="form-control" value="@Model.OwnerCode" placeholder="OWN-000001" />
+        </div>
+        <div class="col-md-auto">
+            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+        </div>
+    </form>
+</div>
+
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+@if (Model.Searched && ViewData.ModelState.IsValid)
+{
+    @if (Model.Results.Count == 0)
+    {
+        <div class="alert alert-info">Không tìm thấy chủ nuôi phù hợp.</div>
+    }
+    else
+    {
+        <p class="text-muted">Tìm thấy @Model.Results.Count chủ nuôi.</p>
+        <table class="table table-striped align-middle">
+            <thead>
+            <tr><th>Mã chủ nuôi</th><th>Họ tên</th><th>Số điện thoại</th><th>Thú cưng</th><th>Trạng thái</th><th></th></tr>
+            </thead>
+            <tbody>
+            @foreach (var owner in Model.Results)
+            {
+                <tr>
+                    <td><code>@owner.OwnerCode</code></td>
+                    <td>@owner.FullName</td>
+                    <td>@owner.PhoneNumber</td>
+                    <td>@owner.TotalPets</td>
+                    <td>@(owner.IsActive ? "Đang hoạt động" : "Đã khóa")</td>
+                    <td><a class="btn btn-outline-secondary btn-sm" asp-action="Details" asp-route-id="@owner.Id">Chi tiết</a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+}

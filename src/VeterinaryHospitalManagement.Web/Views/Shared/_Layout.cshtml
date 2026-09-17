@@ -5,6 +5,8 @@
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
     var canManageUsers = isAuthenticated &&
         (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.UserManage))).Succeeded;
+    var canViewOwners = isAuthenticated &&
+        (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.OwnerView))).Succeeded;
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
     var currentArea = ViewContext.RouteData.Values["area"]?.ToString();
@@ -44,6 +46,15 @@
                             <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index"
                                aria-current="@(isHome ? "page" : null)">Trang chủ</a>
                         </li>
+                        @if (canViewOwners)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="BackOffice" asp-controller="Owners" asp-action="Index"
+                                   aria-current="@(string.Equals(currentArea, "BackOffice", StringComparison.OrdinalIgnoreCase) && string.Equals(currentController, "Owners", StringComparison.OrdinalIgnoreCase) ? "page" : null)">
+                                    Chủ nuôi
+                                </a>
+                            </li>
+                        }
                         @if (canManageUsers)
                         {
                             <li class="nav-item">

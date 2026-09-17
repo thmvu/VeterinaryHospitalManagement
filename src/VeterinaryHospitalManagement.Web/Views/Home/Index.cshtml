@@ -1,42 +1,113 @@
+@using Microsoft.AspNetCore.Authorization
+@using VeterinaryHospitalManagement.Web.Authorization
+@inject IAuthorizationService AuthorizationService
 @{
     ViewData["Title"] = "Trang chủ";
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var canViewOwners = isAuthenticated &&
+        (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.OwnerView))).Succeeded;
+    var canManageUsers = isAuthenticated &&
+        (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.UserManage))).Succeeded;
 }
 
+<!-- Hero Section -->
 <section class="landing-hero" aria-labelledby="landing-title">
     <div class="container-xxl position-relative">
         <div class="row align-items-center gy-5 py-5 py-lg-6">
             <div class="col-lg-7">
-                <p class="section-eyebrow mb-3">Hệ thống quản lý ngoại trú</p>
-                <h1 id="landing-title" class="landing-title mb-4">Quản lý bệnh viện thú y ngoại trú</h1>
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-3 rounded-pill bg-white border shadow-sm">
+                    <span class="badge-pulse" aria-hidden="true"></span>
+                    <span class="text-uppercase fw-bold small text-secondary" style="font-size: 0.78rem; letter-spacing: 0.08em;">Hệ thống y tế ngoại trú thông minh</span>
+                </div>
+                <h1 id="landing-title" class="landing-title mb-3">Quản lý bệnh viện thú y ngoại trú</h1>
+                <p class="text-uppercase fw-bold text-muted small mb-3 tracking-wide" style="letter-spacing: 0.12em;">Veterinary Hospital Management</p>
                 <p class="landing-lead mb-4">
-                    Một không gian làm việc thống nhất cho lễ tân, bác sĩ, quản lý và quản trị viên —
-                    giúp theo dõi đúng chủ nuôi, đúng thú cưng và đúng trạng thái.
+                    Không gian làm việc đồng bộ và chuyên nghiệp dành cho bác sĩ thú y, điều dưỡng, lễ tân và cấp quản lý.
+                    Số hóa toàn diện từ khâu tiếp nhận, bệnh án điện tử, chỉ định điều trị, kê đơn thuốc đến thanh toán viện phí minh bạch.
                 </p>
                 <div class="d-flex flex-column flex-sm-row gap-3 align-items-sm-center">
-                    @if (User.Identity?.IsAuthenticated == true)
+                    @if (isAuthenticated)
                     {
-                        <a class="btn btn-brand btn-lg" asp-area="" asp-controller="Account" asp-action="ChangePassword">Đổi mật khẩu</a>
+                        @if (canViewOwners)
+                        {
+                            <a class="btn btn-brand btn-lg" asp-area="BackOffice" asp-controller="Owners" asp-action="Index">Tra cứu chủ nuôi</a>
+                        }
+                        @if (canManageUsers)
+                        {
+                            <a class="btn btn-outline-brand btn-lg" asp-area="BackOffice" asp-controller="Users" asp-action="Index">Quản lý tài khoản</a>
+                        }
+                        <a class="btn btn-outline-secondary btn-lg" asp-area="" asp-controller="Account" asp-action="ChangePassword">Đổi mật khẩu</a>
                     }
                     else
                     {
                         <a class="btn btn-brand btn-lg" asp-area="" asp-controller="Account" asp-action="Login">Đăng nhập hệ thống</a>
+                        <a class="btn btn-outline-brand btn-lg" href="#quy-trinh">Xem quy trình khám</a>
                     }
-                    <a class="btn btn-link landing-link px-0" href="#quy-trinh">Xem quy trình</a>
                 </div>
-                <p class="landing-trust mb-0 mt-4">
-                    Dành cho nhân viên nội bộ <span aria-hidden="true">·</span>
-                    Phân quyền theo vai trò <span aria-hidden="true">·</span>
-                    Không có đăng ký công khai
-                </p>
+                <div class="d-flex flex-wrap gap-3 mt-4 pt-2 text-muted small">
+                    <div class="d-flex align-items-center gap-1">
+                        <svg width="16" height="16" fill="currentColor" class="text-success" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z"/></svg>
+                        <span>Xác thực nội bộ đa vai trò</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <svg width="16" height="16" fill="currentColor" class="text-success" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z"/></svg>
+                        <span>Lịch sử kiểm toán Audit Log</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <svg width="16" height="16" fill="currentColor" class="text-success" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z"/></svg>
+                        <span>Chuẩn thời gian UTC+7</span>
+                    </div>
+                </div>
             </div>
-            <div class="col-lg-5 d-none d-lg-block" aria-hidden="true">
-                <div class="hero-visual">
-                    <div class="hero-visual__ring"></div>
-                    <div class="hero-visual__panel">
-                        <span class="hero-visual__label">Quy trình ngoại trú</span>
-                        <span class="hero-visual__line hero-visual__line--wide"></span>
-                        <span class="hero-visual__line"></span>
-                        <div class="hero-visual__steps"><span>01</span><span>02</span><span>03</span><span>04</span></div>
+            <div class="col-lg-5">
+                <!-- Human-designed Live Consultation Card Mockup -->
+                <div class="clinic-preview-card">
+                    <div class="d-flex justify-content-between align-items-center pb-3 mb-3 border-bottom">
+                        <div>
+                            <span class="badge bg-light text-dark border px-2 py-1 small fw-bold">Phòng khám 01</span>
+                            <span class="text-muted ms-2 small">Mã ca: #VIS-00084</span>
+                        </div>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle d-inline-flex align-items-center gap-1 px-2 py-1">
+                            <span class="badge-pulse"></span> Đang khám
+                        </span>
+                    </div>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-teal-subtle text-teal fw-bold" style="width: 48px; height: 48px; background: #e0f2fe; color: #0284c7; font-size: 1.25rem;">
+                            🐱
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Miu Miu <span class="badge bg-secondary-subtle text-secondary small fw-normal ms-1">Mèo Anh lông ngắn</span></h6>
+                            <small class="text-muted">Chủ nuôi: <strong>Nguyễn Văn An</strong> (0912 345 678)</small>
+                        </div>
+                    </div>
+                    <div class="bg-light p-3 rounded-3 mb-3 border">
+                        <div class="row g-2 text-center">
+                            <div class="col-4 border-end">
+                                <div class="text-muted small">Cân nặng</div>
+                                <div class="fw-bold text-dark">4.2 kg</div>
+                            </div>
+                            <div class="col-4 border-end">
+                                <div class="text-muted small">Thân nhiệt</div>
+                                <div class="fw-bold text-dark">38.6 °C</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-muted small">Bác sĩ</div>
+                                <div class="fw-bold text-dark text-truncate">BS. Hoàng</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-muted fw-bold">Chẩn đoán lâm sàng</small>
+                            <span class="badge bg-warning-subtle text-dark small">Theo dõi</span>
+                        </div>
+                        <p class="small text-secondary mb-0 fst-italic">
+                            "Viêm tai ngoài nhẹ do vi khuẩn, da vùng cổ kích ứng nhẹ. Chỉ định vệ sinh tai và nhỏ thuốc 7 ngày."
+                        </p>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <span class="small text-muted">Dịch vụ: <strong>Vệ sinh tai + Soi da</strong></span>
+                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">Hẹn tái khám 7 ngày</span>
                     </div>
                 </div>
             </div>
@@ -44,49 +115,151 @@
     </div>
 </section>
 
-<section id="quy-trinh" class="landing-section" aria-labelledby="workflow-title">
+<!-- Metrics / Highlights -->
+<section class="py-4 border-top border-bottom bg-white">
+    <div class="container-xxl">
+        <div class="row g-4 text-center">
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="stat-number">4</div>
+                    <div class="stat-label">Role phân quyền chuyên biệt</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Bệnh án & Đơn thuốc số hóa</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="stat-number">0s</div>
+                    <div class="stat-label">Độ trễ thu hồi phiên khi khóa</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="stat-number">UTC+7</div>
+                    <div class="stat-label">Chuẩn hóa giờ khám y tế VN</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Phân hệ nghiệp vụ cốt lõi -->
+<section id="dich-vu" class="landing-section" aria-labelledby="modules-title">
     <div class="container-xxl">
         <div class="section-heading mb-5">
-            <p class="section-eyebrow mb-2">Quy trình thống nhất</p>
-            <h2 id="workflow-title" class="section-title">Một luồng làm việc, một nguồn dữ liệu</h2>
-            <p class="section-description mb-0">Các phân hệ nghiệp vụ được bổ sung theo từng giai đoạn để giữ dữ liệu và quyền truy cập nhất quán.</p>
+            <p class="section-eyebrow mb-2">Phân hệ nghiệp vụ</p>
+            <h2 id="modules-title" class="section-title">Hệ thống chức năng toàn diện cho bệnh viện thú y</h2>
+            <p class="section-description mb-0">Thiết kế đồng bộ hóa dữ liệu khám bệnh, giảm thiểu sai sót y khoa và tối ưu hóa thời gian chờ đợi của chủ nuôi.</p>
         </div>
         <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-4">
-            <div class="col"><article class="workflow-card h-100"><div class="workflow-number" aria-hidden="true">01</div><span class="status-label">Sắp triển khai</span><h3>Hồ sơ</h3><p>Tìm chủ nuôi bằng số điện thoại, quản lý thú cưng và lịch sử khám.</p></article></div>
-            <div class="col"><article class="workflow-card h-100"><div class="workflow-number" aria-hidden="true">02</div><span class="status-label">Sắp triển khai</span><h3>Lịch hẹn &amp; tiếp nhận</h3><p>Đặt lịch, check-in hoặc tiếp nhận khách đến trực tiếp tại quầy.</p></article></div>
-            <div class="col"><article class="workflow-card h-100"><div class="workflow-number" aria-hidden="true">03</div><span class="status-label">Sắp triển khai</span><h3>Khám &amp; điều trị</h3><p>Theo dõi hàng đợi, bệnh án, đơn thuốc và dịch vụ đã thực hiện.</p></article></div>
-            <div class="col"><article class="workflow-card h-100"><div class="workflow-number" aria-hidden="true">04</div><span class="status-label">Sắp triển khai</span><h3>Thanh toán &amp; báo cáo</h3><p>Xác nhận hóa đơn, in lại và tổng hợp hoạt động vận hành.</p></article></div>
-        </div>
-    </div>
-</section>
-
-<section class="landing-section landing-section--soft" aria-labelledby="foundation-title">
-    <div class="container-xxl">
-        <div class="section-heading mb-5"><p class="section-eyebrow mb-2">Nền tảng hiện tại</p><h2 id="foundation-title" class="section-title">Sẵn sàng cho quản trị nội bộ</h2></div>
-        <div class="row row-cols-1 row-cols-lg-3 g-4">
-            <div class="col"><article class="capability-card h-100"><span class="ready-label">Đã có</span><h3>Tài khoản nội bộ</h3><p>Đăng nhập, đổi mật khẩu và khóa hoặc mở tài khoản nhân viên.</p></article></div>
-            <div class="col"><article class="capability-card h-100"><span class="ready-label">Đã có</span><h3>Phân quyền theo vai trò</h3><p>Lễ tân, bác sĩ, quản lý và quản trị viên có phạm vi thao tác riêng.</p></article></div>
-            <div class="col"><article class="capability-card h-100"><span class="ready-label">Đã có</span><h3>Quản trị an toàn</h3><p>Thay đổi vai trò, đặt lại mật khẩu và thu hồi phiên đăng nhập cũ.</p></article></div>
-        </div>
-    </div>
-</section>
-
-<section class="landing-section" aria-labelledby="next-title">
-    <div class="container-xxl">
-        <div class="next-panel d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-4">
-            <div>
-                <p class="section-eyebrow mb-2">Lộ trình sản phẩm</p>
-                <h2 id="next-title" class="section-title mb-3">Các phân hệ nghiệp vụ đang được hoàn thiện</h2>
-                <p class="section-description mb-0">Hồ sơ chủ nuôi và thú cưng, lịch hẹn, tiếp nhận, khám, thanh toán và báo cáo sẽ xuất hiện trong điều hướng khi sẵn sàng.</p>
+            <div class="col">
+                <article class="feature-card">
+                    <div class="feature-icon-wrap" aria-hidden="true">
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/></svg>
+                    </div>
+                    <h3 class="h5 fw-bold mb-2">Chủ nuôi & Thú cưng</h3>
+                    <p class="text-muted small mb-0">Quản lý hồ sơ định danh, chuẩn hóa số điện thoại di động Việt Nam (+84), liên kết phả hệ loài/giống và lịch sử khám liên tục.</p>
+                </article>
             </div>
-            @if (User.Identity?.IsAuthenticated == true)
-            {
-                <a class="btn btn-outline-brand flex-shrink-0" asp-area="" asp-controller="Account" asp-action="ChangePassword">Đổi mật khẩu</a>
-            }
-            else
-            {
-                <a class="btn btn-outline-brand flex-shrink-0" asp-area="" asp-controller="Account" asp-action="Login">Đăng nhập</a>
-            }
+            <div class="col">
+                <article class="feature-card">
+                    <div class="feature-icon-wrap" aria-hidden="true">
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/></svg>
+                    </div>
+                    <h3 class="h5 fw-bold mb-2">Lịch hẹn & Tiếp nhận</h3>
+                    <p class="text-muted small mb-0">Đặt lịch hẹn theo ca bác sĩ, tránh chồng chéo khung giờ; tiếp nhận check-in nhanh hoặc điều phối khách vãng lai (Walk-in).</p>
+                </article>
+            </div>
+            <div class="col">
+                <article class="feature-card">
+                    <div class="feature-icon-wrap" aria-hidden="true">
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v3a.5.5 0 0 1-1 0v-3A1.5 1.5 0 0 1 1.5 0h3a.5.5 0 0 1 0 1zM11 .5a.5.5 0 0 1 .5-.5h3A1.5 1.5 0 0 1 16 1.5v3a.5.5 0 0 1-1 0v-3a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 1-.5-.5M.5 11a.5.5 0 0 1 .5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 1 0 1h-3A1.5 1.5 0 0 1 0 14.5v-3a.5.5 0 0 1 .5-.5m15 0a.5.5 0 0 1 .5.5v3a1.5 1.5 0 0 1-1.5 1.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 1 .5-.5M3 8.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5zm5 0a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5z"/></svg>
+                    </div>
+                    <h3 class="h5 fw-bold mb-2">Bệnh án & Đơn thuốc</h3>
+                    <p class="text-muted small mb-0">Ghi chép lâm sàng điện tử, kê đơn thuốc hướng dẫn tại nhà và chỉ định dịch vụ y tế. Khóa bệnh án bảo toàn pháp lý khi hoàn tất.</p>
+                </article>
+            </div>
+            <div class="col">
+                <article class="feature-card">
+                    <div class="feature-icon-wrap" aria-hidden="true">
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v1h14V4a1 1 0 0 0-1-1zm13 4H1v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1z"/></svg>
+                    </div>
+                    <h3 class="h5 fw-bold mb-2">Viện phí & Hóa đơn</h3>
+                    <p class="text-muted small mb-0">Tự động kết xuất chi phí dịch vụ thực tế (Performed) kèm snapshot đơn giá, chống gian lận, hỗ trợ thanh toán linh hoạt và in phiếu thu.</p>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quy trình y tế 4 bước -->
+<section id="quy-trinh" class="landing-section landing-section--soft" aria-labelledby="workflow-title">
+    <div class="container-xxl">
+        <div class="section-heading mb-5">
+            <p class="section-eyebrow mb-2">Hành trình khám bệnh</p>
+            <h2 id="workflow-title" class="section-title">Quy trình khám ngoại trú tiêu chuẩn y khoa</h2>
+            <p class="section-description mb-0">Quy trình 4 bước chặt chẽ, bảo đảm mỗi thú cưng nhận được sự chăm sóc đúng người, đúng chuyên môn và đúng thời điểm.</p>
+        </div>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-4">
+            <div class="col">
+                <article class="workflow-card h-100">
+                    <div class="step-bubble" aria-hidden="true">01</div>
+                    <h3 class="h5 fw-bold mb-2">Tiếp nhận & Hồ sơ</h3>
+                    <p class="text-muted small">Lễ tân tra cứu số điện thoại chủ nuôi, xác nhận thú cưng, ghi nhận lý do khám và phân bổ phòng khám phù hợp.</p>
+                </article>
+            </div>
+            <div class="col">
+                <article class="workflow-card h-100">
+                    <div class="step-bubble" aria-hidden="true">02</div>
+                    <h3 class="h5 fw-bold mb-2">Khám & Bệnh án</h3>
+                    <p class="text-muted small">Bác sĩ phụ trách thăm khám trực tiếp, đo sinh hiệu, ghi nhận triệu chứng và lập bệnh án điện tử chi tiết.</p>
+                </article>
+            </div>
+            <div class="col">
+                <article class="workflow-card h-100">
+                    <div class="step-bubble" aria-hidden="true">03</div>
+                    <h3 class="h5 fw-bold mb-2">Chỉ định & Kê đơn</h3>
+                    <p class="text-muted small">Thực hiện các xét nghiệm/thủ thuật cần thiết và kê đơn thuốc điều trị với hướng dẫn chăm sóc tại gia đình.</p>
+                </article>
+            </div>
+            <div class="col">
+                <article class="workflow-card h-100">
+                    <div class="step-bubble" aria-hidden="true">04</div>
+                    <h3 class="h5 fw-bold mb-2">Viện phí & Tái khám</h3>
+                    <p class="text-muted small">Lễ tân đối soát các dịch vụ đã làm, thu tiền và in hóa đơn chi tiết, đồng thời hẹn lịch tái khám nếu cần.</p>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Banner -->
+<section class="landing-section" aria-labelledby="cta-title">
+    <div class="container-xxl">
+        <div class="next-panel d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-4 p-4 p-lg-5">
+            <div>
+                <p class="section-eyebrow mb-2">Cổng thông tin nội bộ</p>
+                <h2 id="cta-title" class="section-title mb-3">Sẵn sàng phục vụ bệnh nhân và chủ nuôi</h2>
+                <p class="section-description mb-0">Hệ thống áp dụng chuẩn phân quyền nghiêm ngặt dành riêng cho nhân viên y tế và quản trị bệnh viện.</p>
+            </div>
+            <div class="d-flex flex-column flex-sm-row gap-2 flex-shrink-0">
+                @if (isAuthenticated)
+                {
+                    @if (canViewOwners)
+                    {
+                        <a class="btn btn-brand btn-lg" asp-area="BackOffice" asp-controller="Owners" asp-action="Index">Mở hồ sơ chủ nuôi</a>
+                    }
+                    <a class="btn btn-outline-brand btn-lg" asp-area="" asp-controller="Account" asp-action="ChangePassword">Đổi mật khẩu</a>
+                }
+                else
+                {
+                    <a class="btn btn-brand btn-lg" asp-area="" asp-controller="Account" asp-action="Login">Đăng nhập ngay</a>
+                }
+            </div>
         </div>
     </div>
 </section>

@@ -1,0 +1,57 @@
+@model EditOwnerViewModel
+@{
+    ViewData["Title"] = "Sửa chủ nuôi";
+}
+
+<h1>Sửa chủ nuôi <code>@Model.OwnerCode</code></h1>
+@if (TempData["StatusMessage"] is string statusMessage)
+{
+    <div class="alert alert-success">@statusMessage</div>
+}
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<form asp-action="Edit" method="post" class="col-md-6 mb-4">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input asp-for="Id" type="hidden" />
+    <input asp-for="RowVersion" type="hidden" />
+    <div class="mb-3">
+        <label asp-for="FullName" class="form-label"></label>
+        <input asp-for="FullName" class="form-control" />
+        <span asp-validation-for="FullName" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="PhoneNumber" class="form-label"></label>
+        <input asp-for="PhoneNumber" class="form-control" />
+        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Address" class="form-label"></label>
+        <textarea asp-for="Address" class="form-control" rows="2"></textarea>
+        <span asp-validation-for="Address" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Lưu thông tin</button>
+    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-link">Xem chi tiết</a>
+</form>
+
+<hr />
+<h2 class="h4">Trạng thái</h2>
+<p>
+    Trạng thái hiện tại: <strong>@(Model.IsActive ? "Đang hoạt động" : "Đã khóa")</strong>.
+    Khóa chủ nuôi không tự khóa thú cưng đã có; chủ nuôi bị khóa không được dùng để tạo thú cưng mới.
+</p>
+<form asp-action="SetActive" method="post" class="mb-4">
+    <input asp-for="Id" type="hidden" />
+    <input asp-for="RowVersion" type="hidden" />
+    <input type="hidden" name="IsActive" value="@((!Model.IsActive).ToString().ToLowerInvariant())" />
+    <button type="submit" class="btn @(Model.IsActive ? "btn-outline-danger" : "btn-outline-success")">
+        @(Model.IsActive ? "Khóa chủ nuôi" : "Mở khóa chủ nuôi")
+    </button>
+</form>

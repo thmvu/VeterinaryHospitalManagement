@@ -7,6 +7,8 @@ using VeterinaryHospitalManagement.Web.Data;
 using VeterinaryHospitalManagement.Web.Data.Seed;
 using VeterinaryHospitalManagement.Web.Models.Entities;
 using VeterinaryHospitalManagement.Web.Services.Identity;
+using VeterinaryHospitalManagement.Web.Services.Owners;
+using VeterinaryHospitalManagement.Web.Services.Pets;
 using VeterinaryHospitalManagement.Web.Services.Time;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,6 +40,9 @@ builder.Services.PostConfigure<CookieAuthenticationOptions>(IdentityConstants.Ap
     options.EventsType = typeof(ActiveUserCookieEvents));
 builder.Services.AddScoped<ActiveUserCookieEvents>();
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
+builder.Services.AddSingleton<IOwnerPhoneNormalizer, OwnerPhoneNormalizer>();
+builder.Services.AddScoped<IOwnerService, OwnerService>();
+builder.Services.AddScoped<IPetService, PetService>();
 builder.Services.AddVeterinaryAuthorization();
 builder.Services
     .AddOptions<BootstrapAdminOptions>()

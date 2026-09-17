@@ -1,0 +1,121 @@
+@model EditPetViewModel
+@{
+    ViewData["Title"] = $"Chỉnh sửa - {Model.PetCode}";
+    var speciesList = (ViewBag.SpeciesList as IReadOnlyList<SpeciesOption>) ?? [];
+    var breedList = (ViewBag.BreedList as IReadOnlyList<BreedOption>) ?? [];
+}
+
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-area="BackOffice" asp-controller="Owners" asp-action="Index">Chủ nuôi</a></li>
+            <li class="breadcrumb-item"><a asp-area="BackOffice" asp-controller="Owners" asp-action="Details" asp-route-id="@Model.OwnerId">@Model.OwnerFullName</a></li>
+            <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.PetId">@Model.Name (@Model.PetCode)</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Chỉnh sửa</li>
+        </ol>
+    </nav>
+    <h2>Chỉnh sửa thông tin thú cưng <code>@Model.PetCode</code></h2>
+    <p class="text-muted">Chủ nuôi: <strong>@Model.OwnerFullName</strong> (Mã: <code>@Model.OwnerCode</code>)</p>
+</div>
+
+<form asp-action="Edit" method="post" class="col-lg-7">
+    <input type="hidden" asp-for="PetId" />
+    <input type="hidden" asp-for="PetCode" />
+    <input type="hidden" asp-for="OwnerId" />
+    <input type="hidden" asp-for="OwnerCode" />
+    <input type="hidden" asp-for="OwnerFullName" />
+    <input type="hidden" asp-for="ExpectedRowVersion" />
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label fw-bold"></label> <span class="text-danger">*</span>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <label asp-for="SpeciesId" class="form-label fw-bold"></label> <span class="text-danger">*</span>
+            <select asp-for="SpeciesId" id="speciesSelect" class="form-select">
+                <option value="">-- Chọn loài --</option>
+                @foreach (var species in speciesList)
+                {
+                    <option value="@species.Id" selected="@(species.Id == Model.SpeciesId)">@species.Name (@species.Code)</option>
+                }
+            </select>
+            <span asp-validation-for="SpeciesId" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="BreedId" class="form-label fw-bold"></label>
+            <select asp-for="BreedId" id="breedSelect" class="form-select">
+                <option value="">-- Chọn giống (hoặc để trống) --</option>
+                @foreach (var breed in breedList)
+                {
+                    <option value="@breed.Id" selected="@(breed.Id == Model.BreedId)">@breed.Name</option>
+                }
+            </select>
+            <span asp-validation-for="BreedId" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <label asp-for="Sex" class="form-label fw-bold"></label> <span class="text-danger">*</span>
+            <select asp-for="Sex" class="form-select">
+                <option value="@PetSex.Unknown">Không xác định</option>
+                <option value="@PetSex.Male">Đực</option>
+                <option value="@PetSex.Female">Cái</option>
+            </select>
+            <span asp-validation-for="Sex" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="BirthDate" class="form-label fw-bold"></label>
+            <input asp-for="BirthDate" class="form-control" type="date" max="@DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd")" />
+            <span asp-validation-for="BirthDate" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Color" class="form-label fw-bold"></label>
+        <input asp-for="Color" class="form-control" />
+        <span asp-validation-for="Color" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Notes" class="form-label fw-bold"></label>
+        <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Notes" class="text-danger"></span>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+        <a asp-action="Details" asp-route-id="@Model.PetId" class="btn btn-secondary">Hủy</a>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var speciesSelect = document.getElementById("speciesSelect");
+        var breedSelect = document.getElementById("breedSelect");
+
+        speciesSelect.addEventListener("change", function() {
+            var speciesId = speciesSelect.value;
+            breedSelect.innerHTML = '<option value="">-- Chọn giống (hoặc để trống) --</option>';
+            if (!speciesId) return;
+
+            fetch('/BackOffice/Pets/BreedsBySpecies?speciesId=' + encodeURIComponent(speciesId))
+                .then(function(response) { return response.json(); })
+                .then(function(breeds) {
+                    breeds.forEach(function(breed) {
+                        var option = document.createElement("option");
+                        option.value = breed.id;
+                        option.textContent = breed.name;
+                        breedSelect.appendChild(option);
+                    });
+                })
+                .catch(function(error) { console.error('Lỗi tải danh mục giống:', error); });
+        });
+    });
+</script>
+}
