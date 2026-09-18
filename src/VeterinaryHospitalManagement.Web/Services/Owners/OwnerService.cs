@@ -15,7 +15,9 @@ public sealed class OwnerService(
 {
     public async Task<IReadOnlyList<OwnerSearchItem>> SearchAsync(OwnerSearchCriteria criteria, CancellationToken cancellationToken = default)
     {
-        var phoneNumber = criteria.PhoneNumber?.Trim();
+        var phoneNumber = string.IsNullOrWhiteSpace(criteria.PhoneNumber)
+            ? null
+            : criteria.PhoneNumber.Trim();
         var ownerCode = string.IsNullOrWhiteSpace(criteria.OwnerCode)
             ? null
             : criteria.OwnerCode.Trim().ToUpperInvariant();

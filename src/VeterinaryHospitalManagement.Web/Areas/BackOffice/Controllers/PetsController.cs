@@ -95,8 +95,7 @@ public sealed class PetsController(IPetService petService, IOwnerService ownerSe
             return NotFound();
         }
 
-        ViewBag.SpeciesList = await petService.GetActiveSpeciesAsync(cancellationToken);
-        ViewBag.BreedList = await petService.GetBreedsBySpeciesAsync(pet.SpeciesId, cancellationToken);
+        await PopulateEditOptionsAsync(pet.SpeciesId, pet.BreedId, cancellationToken);
 
         return View(new EditPetViewModel
         {
@@ -124,14 +123,13 @@ public sealed class PetsController(IPetService petService, IOwnerService ownerSe
     {
         if (!ModelState.IsValid)
         {
-            ViewBag.SpeciesList = await petService.GetActiveSpeciesAsync(cancellationToken);
-            ViewBag.BreedList = await petService.GetBreedsBySpeciesAsync(model.SpeciesId, cancellationToken);
+            await PopulateEditOptionsAsync(model.SpeciesId, model.BreedId, cancellationToken);
             return View(model);
         }
 
         try
         {
-            var rowVersion = Convert.FromBase64String(model.ExpectedRowVersion);
+            var rowVersion = DecodeRowVersion(model.ExpectedRowVersion);
             await petService.UpdateAsync(new UpdatePetRequest(
                 CurrentUserId(),
                 model.PetId,
@@ -150,15 +148,13 @@ public sealed class PetsController(IPetService petService, IOwnerService ownerSe
         catch (PetConcurrencyException exception)
         {
             ModelState.AddModelError(string.Empty, exception.Message);
-            ViewBag.SpeciesList = await petService.GetActiveSpeciesAsync(cancellationToken);
-            ViewBag.BreedList = await petService.GetBreedsBySpeciesAsync(model.SpeciesId, cancellationToken);
+            await PopulateEditOptionsAsync(model.SpeciesId, model.BreedId, cancellationToken);
             return View(model);
         }
         catch (PetManagementException exception)
         {
             ModelState.AddModelError(string.Empty, exception.Message);
-            ViewBag.SpeciesList = await petService.GetActiveSpeciesAsync(cancellationToken);
-            ViewBag.BreedList = await petService.GetBreedsBySpeciesAsync(model.SpeciesId, cancellationToken);
+            await PopulateEditOptionsAsync(model.SpeciesId, model.BreedId, cancellationToken);
             return View(model);
         }
     }
@@ -170,7 +166,7 @@ public sealed class PetsController(IPetService petService, IOwnerService ownerSe
     {
         try
         {
-            var rowVersion = Convert.FromBase64String(expectedRowVersion);
+            var rowVersion = DecodeRowVersion(expectedRowVersion);
             await petService.SetActiveAsync(new PetActivationRequest(
                 CurrentUserId(), id, rowVersion, isActive), cancellationToken);
 
@@ -200,4 +196,22 @@ public sealed class PetsController(IPetService petService, IOwnerService ownerSe
     private string CurrentUserId() =>
         User.FindFirstValue(ClaimTypes.NameIdentifier)
         ?? throw new InvalidOperationException("Không tìm thấy định danh người dùng đăng nhập.");
+
+    private async Task PopulateEditOptionsAsync(int speciesId, int? breedId, CancellationToken cancellationToken)
+    {
+        ViewBag.SpeciesList = await petService.GetSpeciesForEditAsync(speciesId, cancellationToken);
+        ViewBag.BreedList = await petService.GetBreedsForEditAsync(speciesId, breedId, cancellationToken);
+    }
+
+    private static byte[] DecodeRowVersion(string base64Value)
+    {
+        try
+        {
+            return Convert.FromBase64String(base64Value);
+        }
+        catch (FormatException)
+        {
+            throw new PetManagementException("Dữ liệu phiên bản không hợp lệ. Hãy tải lại trang và thử lại.");
+        }
+    }
 }

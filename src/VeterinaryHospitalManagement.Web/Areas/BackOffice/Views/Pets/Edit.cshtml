@@ -40,7 +40,7 @@
                 <option value="">-- Chọn loài --</option>
                 @foreach (var species in speciesList)
                 {
-                    <option value="@species.Id" selected="@(species.Id == Model.SpeciesId)">@species.Name (@species.Code)</option>
+                    <option value="@species.Id" selected="@(species.Id == Model.SpeciesId)">@species.Name (@species.Code)@(!species.IsActive ? " — đã ngừng hoạt động" : "")</option>
                 }
             </select>
             <span asp-validation-for="SpeciesId" class="text-danger"></span>
@@ -51,7 +51,7 @@
                 <option value="">-- Chọn giống (hoặc để trống) --</option>
                 @foreach (var breed in breedList)
                 {
-                    <option value="@breed.Id" selected="@(breed.Id == Model.BreedId)">@breed.Name</option>
+                    <option value="@breed.Id" selected="@(breed.Id == Model.BreedId)">@breed.Name@(!breed.IsActive ? " — đã ngừng hoạt động" : "")</option>
                 }
             </select>
             <span asp-validation-for="BreedId" class="text-danger"></span>

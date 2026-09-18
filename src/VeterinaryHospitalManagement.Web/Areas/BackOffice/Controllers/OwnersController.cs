@@ -68,6 +68,7 @@ public sealed class OwnersController(IOwnerService ownerService) : Controller
     }
 
     [HttpGet]
+    [PermissionAuthorize(PermissionCodes.PetView)]
     public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
     {
         var owner = await ownerService.FindAsync(id, cancellationToken);

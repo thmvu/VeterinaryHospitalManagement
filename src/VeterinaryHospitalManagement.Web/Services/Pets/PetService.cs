@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using VeterinaryHospitalManagement.Web.Data;
 using VeterinaryHospitalManagement.Web.Models.Entities;
+using VeterinaryHospitalManagement.Web.Models.Enums;
 using VeterinaryHospitalManagement.Web.Services.Time;
 
 namespace VeterinaryHospitalManagement.Web.Services.Pets;
@@ -52,6 +53,7 @@ public sealed class PetService(
     public Task<string> CreateAsync(CreatePetRequest request, CancellationToken cancellationToken = default) =>
         InSerializableTransactionAsync(async () =>
         {
+            ValidateSex(request.Sex);
             var name = PetRules.NormalizeName(request.Name);
             var color = PetRules.NormalizeOptional(request.Color, 100, "Màu lông");
             var notes = PetRules.NormalizeOptional(request.Notes, 1000, "Ghi chú");
@@ -120,6 +122,7 @@ public sealed class PetService(
         {
             var pet = await LoadPetAsync(request.PetId, request.ExpectedRowVersion, cancellationToken);
 
+            ValidateSex(request.Sex);
             var name = PetRules.NormalizeName(request.Name);
             var color = PetRules.NormalizeOptional(request.Color, 100, "Màu lông");
             var notes = PetRules.NormalizeOptional(request.Notes, 1000, "Ghi chú");
@@ -185,7 +188,7 @@ public sealed class PetService(
             .AsNoTracking()
             .Where(s => s.IsActive)
             .OrderBy(s => s.Name)
-            .Select(s => new SpeciesOption(s.Id, s.Code, s.Name))
+            .Select(s => new SpeciesOption(s.Id, s.Code, s.Name, s.IsActive))
             .ToListAsync(cancellationToken);
     }
 
@@ -195,8 +198,36 @@ public sealed class PetService(
             .AsNoTracking()
             .Where(b => b.SpeciesId == speciesId && b.IsActive)
             .OrderBy(b => b.Name)
-            .Select(b => new BreedOption(b.Id, b.SpeciesId, b.Name))
+            .Select(b => new BreedOption(b.Id, b.SpeciesId, b.Name, b.IsActive))
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<SpeciesOption>> GetSpeciesForEditAsync(int selectedSpeciesId, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Species
+            .AsNoTracking()
+            .Where(s => s.IsActive || s.Id == selectedSpeciesId)
+            .OrderBy(s => s.Name)
+            .Select(s => new SpeciesOption(s.Id, s.Code, s.Name, s.IsActive))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<BreedOption>> GetBreedsForEditAsync(int speciesId, int? selectedBreedId, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Breeds
+            .AsNoTracking()
+            .Where(b => b.SpeciesId == speciesId && (b.IsActive || b.Id == selectedBreedId))
+            .OrderBy(b => b.Name)
+            .Select(b => new BreedOption(b.Id, b.SpeciesId, b.Name, b.IsActive))
+            .ToListAsync(cancellationToken);
+    }
+
+    private static void ValidateSex(PetSex sex)
+    {
+        if (!Enum.IsDefined(sex))
+        {
+            throw new PetManagementException("Giới tính thú cưng không hợp lệ.");
+        }
     }
 
     private async Task<Pet> LoadPetAsync(int petId, byte[] expectedRowVersion, CancellationToken cancellationToken)

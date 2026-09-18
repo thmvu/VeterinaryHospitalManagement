@@ -15,11 +15,15 @@ public interface IPetService
     Task<IReadOnlyList<SpeciesOption>> GetActiveSpeciesAsync(CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<BreedOption>> GetBreedsBySpeciesAsync(int speciesId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<SpeciesOption>> GetSpeciesForEditAsync(int selectedSpeciesId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<BreedOption>> GetBreedsForEditAsync(int speciesId, int? selectedBreedId, CancellationToken cancellationToken = default);
 }
 
-public sealed record SpeciesOption(int Id, string Code, string Name);
+public sealed record SpeciesOption(int Id, string Code, string Name, bool IsActive);
 
-public sealed record BreedOption(int Id, int SpeciesId, string Name);
+public sealed record BreedOption(int Id, int SpeciesId, string Name, bool IsActive);
 
 public sealed record PetDetails(
     int Id,

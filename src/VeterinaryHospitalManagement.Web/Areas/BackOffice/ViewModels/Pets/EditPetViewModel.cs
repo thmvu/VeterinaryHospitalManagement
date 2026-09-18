@@ -32,7 +32,7 @@ public sealed class EditPetViewModel
     [Display(Name = "Giống")]
     public int? BreedId { get; set; }
 
-    [Required(ErrorMessage = "Vui lòng chọn giới tính.")]
+    [EnumDataType(typeof(PetSex), ErrorMessage = "Giới tính thú cưng không hợp lệ.")]
     [Display(Name = "Giới tính")]
     public PetSex Sex { get; set; }
 
