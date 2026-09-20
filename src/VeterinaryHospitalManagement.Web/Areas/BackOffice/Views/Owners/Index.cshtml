@@ -7,67 +7,177 @@
         (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.OwnerManage))).Succeeded;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>Chủ nuôi</h1>
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Chủ nuôi &amp; Thú cưng</h1>
+        <p class="page-subtitle">Tra cứu, quản lý hồ sơ chủ nuôi và liên kết thú cưng</p>
+    </div>
     @if (canManageOwners)
     {
-        <a class="btn btn-primary" asp-action="Create">Tạo chủ nuôi</a>
+        <a class="btn btn-brand" asp-action="Create" id="btn-create-owner">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"/>
+            </svg>
+            Tạo chủ nuôi
+        </a>
     }
 </div>
 
 @if (TempData["StatusMessage"] is string statusMessage)
 {
-    <div class="alert alert-success">@statusMessage</div>
+    <div class="alert alert-success mb-4" role="alert">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" style="flex-shrink:0">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd"/>
+        </svg>
+        @statusMessage
+    </div>
 }
 
-<div class="card card-body bg-light mb-4">
-    <p class="mb-2 text-muted">
-        Tra cứu chủ nuôi theo số điện thoại hoặc mã chủ nuôi. Nhiều chủ nuôi có thể dùng chung một số điện thoại;
-        hãy chọn đúng chủ nuôi theo mã trước khi tạo thú cưng hoặc lịch hẹn.
+<!-- Search Panel -->
+<div class="search-panel mb-4">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style="color: var(--text-secondary);" aria-hidden="true">
+            <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd"/>
+        </svg>
+        <span style="font-weight: 600; font-size: .9375rem;">Tìm kiếm</span>
+    </div>
+    <p style="font-size: .8125rem; color: var(--text-secondary); margin-bottom: 1rem;">
+        Tra cứu theo số điện thoại hoặc mã chủ nuôi. Nhiều chủ nuôi có thể dùng chung một số điện thoại —
+        hãy chọn đúng chủ nuôi theo mã trước khi thao tác.
     </p>
-    <form asp-action="Index" method="get" class="row g-2 align-items-end">
-        <div class="col-md-4">
-            <label class="form-label" for="phoneNumber">Số điện thoại</label>
-            <input id="phoneNumber" name="phoneNumber" class="form-control" value="@Model.PhoneNumber" placeholder="VD: 0912 345 678" />
-        </div>
-        <div class="col-md-3">
-            <label class="form-label" for="ownerCode">Mã chủ nuôi</label>
-            <input id="ownerCode" name="ownerCode" class="form-control" value="@Model.OwnerCode" placeholder="OWN-000001" />
-        </div>
-        <div class="col-md-auto">
-            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+    <form asp-action="Index" method="get">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label" for="phoneNumber">Số điện thoại</label>
+                <input id="phoneNumber" name="phoneNumber" class="form-control"
+                       value="@Model.PhoneNumber" placeholder="VD: 0912 345 678"
+                       autocomplete="tel" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="ownerCode">Mã chủ nuôi</label>
+                <input id="ownerCode" name="ownerCode" class="form-control"
+                       value="@Model.OwnerCode" placeholder="OWN-000001" />
+            </div>
+            <div class="col-md-auto">
+                <button type="submit" class="btn btn-brand" id="btn-search-owner">
+                    <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd"/>
+                    </svg>
+                    Tìm kiếm
+                </button>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.PhoneNumber) || !string.IsNullOrEmpty(Model.OwnerCode))
+            {
+                <div class="col-md-auto">
+                    <a class="btn btn-secondary" asp-action="Index">Xóa bộ lọc</a>
+                </div>
+            }
         </div>
     </form>
 </div>
 
-<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3" role="alert"></div>
 
 @if (Model.Searched && ViewData.ModelState.IsValid)
 {
     @if (Model.Results.Count == 0)
     {
-        <div class="alert alert-info">Không tìm thấy chủ nuôi phù hợp.</div>
+        <div class="d-flex flex-column align-items-center py-5" style="text-align: center;">
+            <svg width="48" height="48" viewBox="0 0 20 20" fill="currentColor"
+                 style="color: var(--text-tertiary); margin-bottom: 1rem;" aria-hidden="true">
+                <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd"/>
+            </svg>
+            <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: .5rem;">Không tìm thấy kết quả</h3>
+            <p style="color: var(--text-secondary); font-size: .875rem; max-width: 320px;">
+                Không có chủ nuôi nào phù hợp với tiêu chí tìm kiếm. Thử lại với thông tin khác hoặc tạo mới.
+            </p>
+            @if (canManageOwners)
+            {
+                <a class="btn btn-brand mt-2" asp-action="Create">Tạo chủ nuôi mới</a>
+            }
+        </div>
     }
     else
     {
-        <p class="text-muted">Tìm thấy @Model.Results.Count chủ nuôi.</p>
-        <table class="table table-striped align-middle">
-            <thead>
-            <tr><th>Mã chủ nuôi</th><th>Họ tên</th><th>Số điện thoại</th><th>Thú cưng</th><th>Trạng thái</th><th></th></tr>
-            </thead>
-            <tbody>
-            @foreach (var owner in Model.Results)
-            {
-                <tr>
-                    <td><code>@owner.OwnerCode</code></td>
-                    <td>@owner.FullName</td>
-                    <td>@owner.PhoneNumber</td>
-                    <td>@owner.TotalPets</td>
-                    <td>@(owner.IsActive ? "Đang hoạt động" : "Đã khóa")</td>
-                    <td><a class="btn btn-outline-secondary btn-sm" asp-action="Details" asp-route-id="@owner.Id">Chi tiết</a></td>
-                </tr>
-            }
-            </tbody>
-        </table>
+        <div class="table-wrap">
+            <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem;">
+                <span style="font-weight: 600; font-size: .9375rem;">Kết quả tìm kiếm</span>
+                <span style="font-size: .8rem; color: var(--text-secondary);">Tìm thấy @Model.Results.Count chủ nuôi</span>
+            </div>
+            <div class="table-responsive">
+                <table class="vhm-table" aria-label="Kết quả tìm kiếm chủ nuôi">
+                    <thead>
+                        <tr>
+                            <th>Mã chủ nuôi</th>
+                            <th>Họ tên</th>
+                            <th>Số điện thoại</th>
+                            <th>Thú cưng</th>
+                            <th>Trạng thái</th>
+                            <th style="width: 90px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var owner in Model.Results)
+                    {
+                        <tr>
+                            <td>
+                                <code style="font-size: .8rem; background: var(--bg-subtle);
+                                             padding: .15rem .45rem; border-radius: 4px;
+                                             border: 1px solid var(--border); color: var(--text-secondary);">
+                                    @owner.OwnerCode
+                                </code>
+                            </td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: .625rem;">
+                                    <span style="width: 30px; height: 30px; border-radius: 50%;
+                                                 background: var(--brand-light); color: var(--brand);
+                                                 font-weight: 700; font-size: .75rem;
+                                                 display: grid; place-items: center; flex-shrink: 0;">
+                                        @(owner.FullName?.Length > 0 ? owner.FullName[0].ToString().ToUpper() : "?")
+                                    </span>
+                                    <span style="font-weight: 600; font-size: .875rem;">@owner.FullName</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span style="font-size: .875rem; font-family: 'Inter', monospace;">@owner.PhoneNumber</span>
+                            </td>
+                            <td>
+                                <span class="badge badge-info">
+                                    <svg width="11" height="11" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path d="M5 3a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5ZM5 11a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2H5ZM11 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V5ZM14 11a1 1 0 0 1 1 1v1h1a1 1 0 1 1 0 2h-1v1a1 1 0 1 1-2 0v-1h-1a1 1 0 1 1 0-2h1v-1a1 1 0 0 1 1-1Z"/>
+                                    </svg>
+                                    @owner.TotalPets
+                                </span>
+                            </td>
+                            <td>
+                                @if (owner.IsActive)
+                                {
+                                    <span class="badge badge-success">
+                                        <span class="dot-pulse" style="width: 5px; height: 5px;" aria-hidden="true"></span>
+                                        Hoạt động
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-neutral">Đã khóa</span>
+                                }
+                            </td>
+                            <td>
+                                <a class="btn btn-ghost btn-sm" asp-action="Details" asp-route-id="@owner.Id"
+                                   title="Xem chi tiết @owner.FullName">
+                                    <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/>
+                                        <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41ZM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Chi tiết
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
     }
 }

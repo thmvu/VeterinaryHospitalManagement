@@ -8,10 +8,22 @@
     var canViewOwners = isAuthenticated &&
         (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.OwnerView))).Succeeded;
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
-    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
-    var currentArea = ViewContext.RouteData.Values["area"]?.ToString();
+    var currentAction    = ViewContext.RouteData.Values["action"]?.ToString();
+    var currentArea      = ViewContext.RouteData.Values["area"]?.ToString();
     var isHome = string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase) &&
-        string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase);
+                 string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase);
+    var isBackOffice = string.Equals(currentArea, "BackOffice", StringComparison.OrdinalIgnoreCase);
+
+    // Breadcrumb / title
+    var pageTitle = ViewData["Title"]?.ToString() ?? "";
+
+    bool isHomeActive = string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase) &&
+                         string.Equals(currentArea, "", StringComparison.OrdinalIgnoreCase);
+    bool isOwnersActive = string.Equals(currentController, "Owners", StringComparison.OrdinalIgnoreCase) && isBackOffice;
+    bool isUsersActive  = string.Equals(currentController, "Users", StringComparison.OrdinalIgnoreCase) && isBackOffice;
+
+    string ownersClass = "sidebar-nav-item" + (isOwnersActive ? " active" : "");
+    string usersClass  = "sidebar-nav-item" + (isUsersActive  ? " active" : "");
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -19,13 +31,161 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Veterinary Hospital Management</title>
-    <script type="importmap"></script>
+    <meta name="description" content="Veterinary Hospital Management – Hệ thống quản lý bệnh viện thú y ngoại trú" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/VeterinaryHospitalManagement.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+<a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+
+@if (isBackOffice)
+{
+    <!-- ══════════════════════════════════════
+         BACKOFFICE APP SHELL (Sidebar + Topbar)
+    ═══════════════════════════════════════ -->
+    <div class="app-shell">
+
+        <!-- Sidebar -->
+        <aside class="app-sidebar" id="appSidebar" aria-label="Điều hướng chính">
+
+            <!-- Brand -->
+            <a class="sidebar-brand" asp-area="" asp-controller="Home" asp-action="Index"
+               aria-label="Veterinary Hospital Management – Trang chủ">
+                <span class="sidebar-brand__mark" aria-hidden="true">V</span>
+                <div class="sidebar-brand__text">
+                    <span class="sidebar-brand__title">Veterinary Hospital</span>
+                    <span class="sidebar-brand__subtitle">Quản lý ngoại trú</span>
+                </div>
+            </a>
+
+            <!-- Navigation Links -->
+            <nav class="sidebar-nav" aria-label="Menu chức năng">
+
+                <span class="sidebar-section-label">Tổng quan</span>
+                <a class="sidebar-nav-item @(isHomeActive ? "active" : "")"
+                   asp-area="" asp-controller="Home" asp-action="Index"
+                   aria-current="@(isHomeActive ? "page" : null)">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M9.293 2.293a1 1 0 0 1 1.414 0l7 7A1 1 0 0 1 17 11h-1v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6H3a1 1 0 0 1-.707-1.707l7-7Z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>Trang chủ</span>
+                </a>
+
+                @if (canViewOwners)
+                {
+                    <span class="sidebar-section-label mt-2">Nghiệp vụ</span>
+                    <a class="@ownersClass"
+                       asp-area="BackOffice" asp-controller="Owners" asp-action="Index"
+                       aria-current="@(isOwnersActive ? "page" : null)">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path d="M7 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM14.5 9a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM1.615 16.428a1.224 1.224 0 0 1-.569-1.175 6.002 6.002 0 0 1 11.908 0c.058.467-.172.92-.57 1.174A9.953 9.953 0 0 1 7 17a9.953 9.953 0 0 1-5.385-1.572ZM14.5 16h-.106c.07-.297.088-.611.048-.933a7.47 7.47 0 0 0-1.588-3.755 4.502 4.502 0 0 1 5.874 2.636.818.818 0 0 1-.36.98A7.465 7.465 0 0 1 14.5 16Z"/>
+                        </svg>
+                        <span>Chủ nuôi &amp; Thú cưng</span>
+                    </a>
+                }
+
+                @if (canManageUsers)
+                {
+                    <span class="sidebar-section-label mt-2">Quản trị</span>
+                    <a class="@usersClass"
+                       asp-area="BackOffice" asp-controller="Users" asp-action="Index"
+                       aria-current="@(isUsersActive ? "page" : null)">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path d="M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM6 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM1.49 15.326a.78.78 0 0 1-.358-.442 3 3 0 0 1 4.308-3.516 6.484 6.484 0 0 0-1.905 3.959c-.023.222-.014.442.025.654a4.97 4.97 0 0 1-2.07-.655ZM16.44 15.98a4.97 4.97 0 0 0 2.07-.654.78.78 0 0 0 .357-.442 3 3 0 0 0-4.308-3.517 6.484 6.484 0 0 1 1.907 3.96 2.32 2.32 0 0 1-.026.654ZM18 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM5.304 16.19a.844.844 0 0 1-.277-.71 5 5 0 0 1 9.947 0 .843.843 0 0 1-.277.71A6.975 6.975 0 0 1 10 18a6.974 6.974 0 0 1-4.696-1.81Z"/>
+                        </svg>
+                        <span>Quản lý tài khoản</span>
+                    </a>
+                }
+
+            </nav>
+
+            <!-- Footer: user pill + dropdown -->
+            <div class="sidebar-footer">
+                <div class="dropdown">
+                    <button class="user-pill w-100 border-0 text-start dropdown-toggle"
+                            type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                            id="userMenuBtn" aria-haspopup="true">
+                        <span class="user-avatar" aria-hidden="true">
+                            @(User.Identity?.Name?.Length > 0 ? User.Identity.Name[0].ToString().ToUpper() : "U")
+                        </span>
+                        <span class="user-pill__meta">
+                            <span class="user-pill__name">@User.Identity?.Name</span>
+                            <span class="user-pill__role">Nhân viên</span>
+                        </span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark mb-1" style="min-width: 200px; border-radius: 10px; padding: .5rem;" aria-labelledby="userMenuBtn">
+                        <li>
+                            <a class="dropdown-item rounded-2" asp-area="" asp-controller="Account" asp-action="ChangePassword">
+                                <svg class="me-2" width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clip-rule="evenodd"/></svg>
+                                Đổi mật khẩu
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider" style="border-color: rgba(255,255,255,.12);" /></li>
+                        <li>
+                            <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                                <button class="dropdown-item rounded-2 text-danger" type="submit">
+                                    <svg class="me-2" width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M3 4.25A2.25 2.25 0 0 1 5.25 2h5.5A2.25 2.25 0 0 1 13 4.25v2a.75.75 0 0 1-1.5 0v-2a.75.75 0 0 0-.75-.75h-5.5a.75.75 0 0 0-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 0 0 .75-.75v-2a.75.75 0 0 1 1.5 0v2A2.25 2.25 0 0 1 10.75 18h-5.5A2.25 2.25 0 0 1 3 15.75V4.25Z" clip-rule="evenodd"/><path fill-rule="evenodd" d="M19 10a.75.75 0 0 0-.75-.75H8.704l1.048-1.06a.75.75 0 1 0-1.064-1.058l-2.5 2.5a.75.75 0 0 0 0 1.057l2.5 2.5a.75.75 0 1 0 1.064-1.057L8.704 10.75H18.25A.75.75 0 0 0 19 10Z" clip-rule="evenodd"/></svg>
+                                    Đăng xuất
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Sidebar overlay (mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+        <!-- Main -->
+        <div class="app-main">
+            <!-- Top bar -->
+            <header class="app-topbar" role="banner">
+                <button class="topbar-menu-btn" id="sidebarToggle" type="button"
+                        aria-label="Mở/đóng sidebar" aria-controls="appSidebar" aria-expanded="false">
+                    <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75ZM2 10a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Zm0 5.25a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+
+                <nav class="topbar-breadcrumb" aria-label="Breadcrumb">
+                    <a asp-area="" asp-controller="Home" asp-action="Index">Trang chủ</a>
+                    @if (!string.IsNullOrEmpty(pageTitle) && !string.Equals(pageTitle, "Trang chủ", StringComparison.OrdinalIgnoreCase))
+                    {
+                        <span class="sep" aria-hidden="true">/</span>
+                        <span class="current">@pageTitle</span>
+                    }
+                </nav>
+
+                <div class="topbar-actions">
+                    <span style="font-size: .8rem; color: var(--text-tertiary);">
+                        UTC+7
+                    </span>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <main id="main-content" tabindex="-1" class="d-flex flex-column flex-grow-1">
+                <div class="page-content">
+                    @RenderBody()
+                </div>
+                <footer class="site-footer" role="contentinfo">
+                    <span>&copy; 2026 Veterinary Hospital Management</span>
+                    <a asp-area="" asp-controller="Home" asp-action="Privacy">Quyền riêng tư</a>
+                </footer>
+            </main>
+        </div>
+    </div>
+}
+else
+{
+    <!-- ══════════════════════════════════════
+         STANDARD / PUBLIC NAV & PAGE SHELL
+    ═══════════════════════════════════════ -->
     <header class="site-header">
         <nav class="navbar navbar-expand-lg navbar-dark" aria-label="Điều hướng chính">
             <div class="container-xxl">
@@ -108,9 +268,45 @@
             <a asp-area="" asp-controller="Home" asp-action="Privacy">Quyền riêng tư</a>
         </div>
     </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+}
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+
+<!-- Sidebar toggle script -->
+<script>
+(function () {
+    var btn     = document.getElementById('sidebarToggle');
+    var sidebar = document.getElementById('appSidebar');
+    var overlay = document.getElementById('sidebarOverlay');
+    if (!btn || !sidebar) return;
+
+    function openSidebar() {
+        sidebar.classList.add('open');
+        overlay && overlay.classList.add('show');
+        btn.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        overlay && overlay.classList.remove('show');
+        btn.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+    }
+    function toggleSidebar() {
+        sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+    }
+
+    btn.addEventListener('click', toggleSidebar);
+    overlay && overlay.addEventListener('click', closeSidebar);
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeSidebar();
+    });
+})();
+</script>
+
+@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
