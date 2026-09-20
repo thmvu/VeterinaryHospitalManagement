@@ -3,7 +3,7 @@
     ViewData["Title"] = "Sửa chủ nuôi";
 }
 
-<h1>Sửa chủ nuôi <code>@Model.OwnerCode</code></h1>
+<header class="record-header"><div><span class="record-kicker">Hồ sơ @Model.OwnerCode</span><h1>Chỉnh sửa chủ nuôi</h1><p>Cập nhật thông tin liên hệ và trạng thái sử dụng hồ sơ.</p></div><a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">Xem hồ sơ</a></header>
 @if (TempData["StatusMessage"] is string statusMessage)
 {
     <div class="alert alert-success">@statusMessage</div>
@@ -13,7 +13,7 @@
     <div class="alert alert-danger">@errorMessage</div>
 }
 
-<form asp-action="Edit" method="post" class="col-md-6 mb-4">
+<div class="clinical-sheet clinical-sheet--form"><form asp-action="Edit" method="post">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <input asp-for="Id" type="hidden" />
     <input asp-for="RowVersion" type="hidden" />
@@ -37,12 +37,10 @@
         <textarea asp-for="Address" class="form-control" rows="2"></textarea>
         <span asp-validation-for="Address" class="text-danger"></span>
     </div>
-    <button type="submit" class="btn btn-primary">Lưu thông tin</button>
-    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-link">Xem chi tiết</a>
-</form>
+    <div class="form-actions"><button type="submit" class="btn btn-brand">Lưu thông tin</button><a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">Hủy</a></div>
+</form></div>
 
-<hr />
-<h2 class="h4">Trạng thái</h2>
+<section class="clinical-sheet clinical-sheet--status"><h2>Trạng thái hồ sơ</h2>
 <p>
     Trạng thái hiện tại: <strong>@(Model.IsActive ? "Đang hoạt động" : "Đã khóa")</strong>.
     Khóa chủ nuôi không tự khóa thú cưng đã có; chủ nuôi bị khóa không được dùng để tạo thú cưng mới.
@@ -55,3 +53,4 @@
         @(Model.IsActive ? "Khóa chủ nuôi" : "Mở khóa chủ nuôi")
     </button>
 </form>
+</section>

@@ -3,13 +3,12 @@
     ViewData["Title"] = "Tạo chủ nuôi";
 }
 
-<h1>Tạo chủ nuôi</h1>
-<p class="text-muted">
-    Mã chủ nuôi do hệ thống tự sinh. Số điện thoại hợp lệ: 0 + 9 chữ số hoặc +84/84 + 9 chữ số,
-    đầu số 3/5/7/8/9; được phép dùng khoảng trắng, dấu gạch ngang hoặc dấu chấm giữa các nhóm số.
-</p>
-
-<form asp-action="Create" method="post" class="col-md-6">
+<header class="record-header">
+    <div><span class="record-kicker">Hồ sơ chủ nuôi</span><h1>Tạo hồ sơ mới</h1><p>Mã hồ sơ được hệ thống cấp sau khi lưu.</p></div>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại tra cứu</a>
+</header>
+<div class="clinical-sheet clinical-sheet--form">
+<form asp-action="Create" method="post">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="mb-3">
         <label asp-for="FullName" class="form-label"></label>
@@ -31,6 +30,7 @@
         <textarea asp-for="Address" class="form-control" rows="2"></textarea>
         <span asp-validation-for="Address" class="text-danger"></span>
     </div>
-    <button type="submit" class="btn btn-primary">Tạo chủ nuôi</button>
-    <a asp-action="Index" class="btn btn-link">Quay lại</a>
+    <p class="field-guidance">Số điện thoại Việt Nam có thể nhập với đầu số 0, 84 hoặc +84; chấp nhận khoảng trắng, dấu chấm và dấu gạch ngang.</p>
+    <div class="form-actions"><button type="submit" class="btn btn-brand">Tạo chủ nuôi</button><a asp-action="Index" class="btn btn-secondary">Hủy</a></div>
 </form>
+</div>

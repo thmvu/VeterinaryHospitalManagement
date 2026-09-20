@@ -10,20 +10,22 @@
         (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.OwnerManage))).Succeeded;
     var canManagePets = User.Identity?.IsAuthenticated == true &&
         (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.PetManage))).Succeeded;
+    var canViewPets = User.Identity?.IsAuthenticated == true &&
+        (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.PetView))).Succeeded;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>Chủ nuôi <code>@Model.OwnerCode</code></h1>
-    <div>
+<header class="record-header">
+    <div><span class="record-kicker">Hồ sơ @Model.OwnerCode</span><h1>@Model.FullName</h1><p>@Model.PhoneNumber · Tạo @Model.CreatedAt.ToOffset(VietnamTimeProvider.LocalNow.Offset).ToString("dd/MM/yyyy HH:mm")</p></div>
+    <div class="form-actions">
         @if (canManageOwners)
         {
             <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Id">Sửa</a>
         }
         <a class="btn btn-outline-secondary" asp-action="Index">Quay lại</a>
     </div>
-</div>
+</header>
 
-<dl class="row">
+<section class="clinical-sheet"><div class="sheet-heading"><div><span class="sheet-index">01</span><h2>Thông tin chủ nuôi</h2></div><span class="status-stamp @(Model.IsActive ? "status-stamp--active" : "status-stamp--inactive")">@(Model.IsActive ? "Đang hoạt động" : "Đã khóa")</span></div><dl class="record-grid">
     <dt class="col-sm-3">Họ tên</dt>
     <dd class="col-sm-9">@Model.FullName</dd>
     <dt class="col-sm-3">Số điện thoại</dt>
@@ -32,14 +34,10 @@
     <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Email) ? "—" : Model.Email)</dd>
     <dt class="col-sm-3">Địa chỉ</dt>
     <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Address) ? "—" : Model.Address)</dd>
-    <dt class="col-sm-3">Trạng thái</dt>
-    <dd class="col-sm-9">@(Model.IsActive ? "Đang hoạt động" : "Đã khóa")</dd>
-    <dt class="col-sm-3">Ngày tạo</dt>
-    <dd class="col-sm-9">@Model.CreatedAt.ToOffset(VietnamTimeProvider.LocalNow.Offset).ToString("dd/MM/yyyy HH:mm") (giờ Việt Nam)</dd>
 </dl>
+</section>
 
-<div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-    <h2 class="h4 mb-0">Thú cưng (@Model.Pets.Count)</h2>
+<section class="clinical-sheet"><div class="sheet-heading"><div><span class="sheet-index">02</span><h2>Thú cưng <span class="sheet-count">@Model.Pets.Count</span></h2></div>
     @if (canManagePets && Model.IsActive)
     {
         <a class="btn btn-sm btn-success" asp-area="BackOffice" asp-controller="Pets" asp-action="Create" asp-route-ownerId="@Model.Id">+ Thêm thú cưng</a>
@@ -51,7 +49,7 @@
 }
 else
 {
-    <table class="table table-striped align-middle">
+    <div class="table-responsive"><table class="vhm-table clinical-table">
         <thead>
         <tr><th>Mã thú cưng</th><th>Tên</th><th>Loài</th><th>Giống</th><th>Giới tính</th><th>Ngày sinh</th><th>Trạng thái</th><th></th></tr>
         </thead>
@@ -67,11 +65,11 @@ else
                 <td>@(pet.BirthDate?.ToString("dd/MM/yyyy") ?? "—")</td>
                 <td>@(pet.IsActive ? "Đang hoạt động" : "Đã khóa")</td>
                 <td class="text-end">
-                    <a class="btn btn-sm btn-outline-primary" asp-area="BackOffice" asp-controller="Pets" asp-action="Details" asp-route-id="@pet.Id">Xem</a>
+                    @if (canViewPets) { <a class="btn btn-sm btn-ghost" asp-area="BackOffice" asp-controller="Pets" asp-action="Details" asp-route-id="@pet.Id">Xem hồ sơ</a> }
                 </td>
             </tr>
         }
         </tbody>
-    </table>
+    </table></div>
 }
-<p class="text-muted">Hồ sơ khám và lịch hẹn của thú cưng sẽ hiển thị ở các module sau.</p>
+<p class="sheet-note">Hồ sơ khám và lịch hẹn sẽ được liên kết tại đây khi các phân hệ tương ứng được triển khai.</p></section>

@@ -5,6 +5,8 @@
     ViewData["Title"] = "Chủ nuôi";
     var canManageOwners = User.Identity?.IsAuthenticated == true &&
         (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.OwnerManage))).Succeeded;
+    var canViewPets = User.Identity?.IsAuthenticated == true &&
+        (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.PetView))).Succeeded;
 }
 
 <!-- Page Header -->
@@ -140,7 +142,7 @@
                                 </div>
                             </td>
                             <td>
-                                <span style="font-size: .875rem; font-family: 'Inter', monospace;">@owner.PhoneNumber</span>
+                                <span class="phone-number">@owner.PhoneNumber</span>
                             </td>
                             <td>
                                 <span class="badge badge-info">
@@ -164,6 +166,8 @@
                                 }
                             </td>
                             <td>
+                                @if (canViewPets)
+                                {
                                 <a class="btn btn-ghost btn-sm" asp-action="Details" asp-route-id="@owner.Id"
                                    title="Xem chi tiết @owner.FullName">
                                     <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -172,6 +176,7 @@
                                     </svg>
                                     Chi tiết
                                 </a>
+                                }
                             </td>
                         </tr>
                     }

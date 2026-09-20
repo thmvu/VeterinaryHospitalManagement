@@ -1,22 +1,27 @@
 @model CreatePetViewModel
+@using Microsoft.AspNetCore.Authorization
+@inject IAuthorizationService AuthorizationService
 @{
     ViewData["Title"] = "Thêm thú cưng";
     var speciesList = (ViewBag.SpeciesList as IReadOnlyList<SpeciesOption>) ?? [];
+    var canViewOwners = (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.OwnerView))).Succeeded;
 }
 
-<div class="mb-4">
+<header class="record-header">
+    <div>
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a asp-area="BackOffice" asp-controller="Owners" asp-action="Index">Chủ nuôi</a></li>
-            <li class="breadcrumb-item"><a asp-area="BackOffice" asp-controller="Owners" asp-action="Details" asp-route-id="@Model.OwnerId">@Model.OwnerFullName (@Model.OwnerCode)</a></li>
+            @if (canViewOwners) { <li class="breadcrumb-item"><a asp-area="BackOffice" asp-controller="Owners" asp-action="Index">Chủ nuôi</a></li> }
+            <li class="breadcrumb-item">@Model.OwnerFullName (@Model.OwnerCode)</li>
             <li class="breadcrumb-item active" aria-current="page">Thêm thú cưng</li>
         </ol>
     </nav>
-    <h2>Thêm thú cưng mới</h2>
-    <p class="text-muted">Chủ nuôi: <strong>@Model.OwnerFullName</strong> (Mã: <code>@Model.OwnerCode</code>). Mã thú cưng (PET-xxxxxx) sẽ được hệ thống cấp tự động.</p>
-</div>
+    <span class="record-kicker">Chủ nuôi @Model.OwnerCode</span><h1>Thêm thú cưng</h1>
+    <p>@Model.OwnerFullName · Mã thú cưng được hệ thống cấp sau khi lưu.</p>
+    </div>
+</header>
 
-<form asp-action="Create" method="post" class="col-lg-7">
+<div class="clinical-sheet clinical-sheet--form"><form asp-action="Create" method="post">
     <input type="hidden" asp-for="OwnerId" />
     <input type="hidden" asp-for="OwnerCode" />
     <input type="hidden" asp-for="OwnerFullName" />
@@ -78,11 +83,12 @@
         <span asp-validation-for="Notes" class="text-danger"></span>
     </div>
 
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Lưu thú cưng</button>
-        <a asp-area="BackOffice" asp-controller="Owners" asp-action="Details" asp-route-id="@Model.OwnerId" class="btn btn-secondary">Hủy</a>
+    <div class="form-actions">
+        <button type="submit" class="btn btn-brand">Lưu thú cưng</button>
+        @if (canViewOwners) { <a asp-area="BackOffice" asp-controller="Owners" asp-action="Details" asp-route-id="@Model.OwnerId" class="btn btn-secondary">Hủy</a> }
+        else { <a asp-area="" asp-controller="Home" asp-action="Index" class="btn btn-secondary">Hủy</a> }
     </div>
-</form>
+</form></div>
 
 @section Scripts {
 <script>

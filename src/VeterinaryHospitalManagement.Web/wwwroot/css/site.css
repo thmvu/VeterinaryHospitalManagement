@@ -1,11 +1,8 @@
 /* ==========================================================================
    VHM Design System — Claude-inspired Premium UI
    Agent 1: Design System — site.css
-   Font: Inter (Google Fonts), clean off-white, dark sidebar tokens
+   Font: local system UI, clean off-white, dark sidebar tokens
    ========================================================================== */
-
-/* ── Google Fonts (Inter) ───────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 /* ── Design Tokens ──────────────────────────────────────────────────── */
 :root {
@@ -74,6 +71,123 @@
   --dur:  160ms;
 }
 
+/* Clinical record workspace ------------------------------------------------ */
+.app-shell,
+.page-content,
+.form-control,
+.form-select,
+.btn {
+  font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif;
+}
+
+.topbar-timezone {
+  color: var(--text-tertiary);
+  font-size: .8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.user-menu {
+  min-width: 200px;
+  border-radius: 8px;
+  padding: .5rem;
+}
+
+.user-menu__divider { border-color: rgba(255, 255, 255, .12); }
+
+.record-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding: .25rem 0 1.1rem;
+  border-bottom: 2px solid var(--brand);
+}
+
+.record-header h1 {
+  margin: .15rem 0 .25rem;
+  color: var(--text-primary);
+  font-size: clamp(1.65rem, 3vw, 2.25rem);
+  font-weight: 680;
+  letter-spacing: -.035em;
+}
+
+.record-header p { margin: 0; color: var(--text-secondary); }
+.record-header .breadcrumb { margin-bottom: .75rem; }
+.record-kicker {
+  color: var(--brand);
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.clinical-sheet {
+  margin-bottom: 1.25rem;
+  padding: 1.4rem;
+  background: #fffefb;
+  border: 1px solid var(--border);
+  border-left: 4px solid #a7d6cf;
+  border-radius: 4px;
+  box-shadow: 0 2px 9px rgba(22, 55, 63, .055);
+}
+
+.clinical-sheet--form { max-width: 760px; }
+.clinical-sheet--status { max-width: 760px; border-left-color: #e7bd72; }
+.clinical-sheet--status h2 { font-size: 1.05rem; }
+
+.sheet-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: -1.4rem -1.4rem 1.2rem;
+  padding: .85rem 1.15rem;
+  border-bottom: 1px solid var(--border);
+  background: #f5f8f5;
+}
+
+.sheet-heading > div { display: flex; align-items: center; gap: .65rem; }
+.sheet-heading h2 { margin: 0; font-size: 1rem; font-weight: 700; }
+.sheet-index { color: var(--brand); font: 700 .72rem/1 ui-monospace, Consolas, monospace; }
+.sheet-count { color: var(--text-secondary); font-weight: 500; }
+.sheet-note { margin: 1rem 0 0; color: var(--text-secondary); font-size: .825rem; }
+
+.record-grid {
+  display: grid;
+  grid-template-columns: minmax(130px, .32fr) 1fr;
+  margin: 0;
+}
+.record-grid dt,
+.record-grid dd { margin: 0; padding: .75rem .25rem; border-bottom: 1px solid var(--border); }
+.record-grid dt { color: var(--text-secondary); font-size: .82rem; font-weight: 600; }
+.record-grid dd { color: var(--text-primary); }
+
+.status-stamp {
+  padding: .3rem .55rem;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font-size: .75rem;
+  font-weight: 700;
+}
+.status-stamp--active { color: #167466; background: #e5f4f0; }
+.status-stamp--inactive { color: #785b55; background: #f3ece9; }
+.form-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem; }
+.field-guidance { margin: -.25rem 0 1rem; color: var(--text-secondary); font-size: .8rem; }
+.phone-number { font-family: ui-monospace, Consolas, monospace; font-size: .875rem; font-variant-numeric: tabular-nums; }
+.clinical-table { margin: 0; }
+.empty-ledger { display: grid; min-height: 180px; place-items: center; padding: 2rem; color: var(--text-secondary); text-align: center; }
+body.sidebar-open { overflow: hidden; }
+
+@media (max-width: 767.98px) {
+  .record-header { align-items: flex-start; flex-direction: column; }
+  .record-grid { grid-template-columns: 1fr; }
+  .record-grid dt { padding-bottom: .15rem; border-bottom: 0; }
+  .record-grid dd { padding-top: .15rem; }
+  .clinical-sheet { padding: 1rem; }
+  .sheet-heading { margin: -1rem -1rem 1rem; padding: .8rem 1rem; }
+}
+
 /* ── Reset & Base ───────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -86,7 +200,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
   font-size: .9375rem;
   line-height: 1.6;
   color: var(--text-primary);

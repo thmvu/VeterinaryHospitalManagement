@@ -19,7 +19,8 @@
 
     bool isHomeActive = string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase) &&
                          string.Equals(currentArea, "", StringComparison.OrdinalIgnoreCase);
-    bool isOwnersActive = string.Equals(currentController, "Owners", StringComparison.OrdinalIgnoreCase) && isBackOffice;
+    bool isOwnersActive = (string.Equals(currentController, "Owners", StringComparison.OrdinalIgnoreCase) ||
+                           string.Equals(currentController, "Pets", StringComparison.OrdinalIgnoreCase)) && isBackOffice;
     bool isUsersActive  = string.Equals(currentController, "Users", StringComparison.OrdinalIgnoreCase) && isBackOffice;
 
     string ownersClass = "sidebar-nav-item" + (isOwnersActive ? " active" : "");
@@ -32,9 +33,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Veterinary Hospital Management</title>
     <meta name="description" content="Veterinary Hospital Management – Hệ thống quản lý bệnh viện thú y ngoại trú" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/VeterinaryHospitalManagement.Web.styles.css" asp-append-version="true" />
@@ -50,7 +48,7 @@
     <div class="app-shell">
 
         <!-- Sidebar -->
-        <aside class="app-sidebar" id="appSidebar" aria-label="Điều hướng chính">
+        <aside class="app-sidebar" id="appSidebar" aria-label="Điều hướng chính" aria-hidden="false">
 
             <!-- Brand -->
             <a class="sidebar-brand" asp-area="" asp-controller="Home" asp-action="Index"
@@ -117,14 +115,14 @@
                             <span class="user-pill__role">Nhân viên</span>
                         </span>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-dark mb-1" style="min-width: 200px; border-radius: 10px; padding: .5rem;" aria-labelledby="userMenuBtn">
+                    <ul class="dropdown-menu dropdown-menu-dark mb-1 user-menu" aria-labelledby="userMenuBtn">
                         <li>
                             <a class="dropdown-item rounded-2" asp-area="" asp-controller="Account" asp-action="ChangePassword">
                                 <svg class="me-2" width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clip-rule="evenodd"/></svg>
                                 Đổi mật khẩu
                             </a>
                         </li>
-                        <li><hr class="dropdown-divider" style="border-color: rgba(255,255,255,.12);" /></li>
+                        <li><hr class="dropdown-divider user-menu__divider" /></li>
                         <li>
                             <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
                                 <button class="dropdown-item rounded-2 text-danger" type="submit">
@@ -162,7 +160,7 @@
                 </nav>
 
                 <div class="topbar-actions">
-                    <span style="font-size: .8rem; color: var(--text-tertiary);">
+                    <span class="topbar-timezone">
                         UTC+7
                     </span>
                 </div>
@@ -273,39 +271,6 @@ else
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
-
-<!-- Sidebar toggle script -->
-<script>
-(function () {
-    var btn     = document.getElementById('sidebarToggle');
-    var sidebar = document.getElementById('appSidebar');
-    var overlay = document.getElementById('sidebarOverlay');
-    if (!btn || !sidebar) return;
-
-    function openSidebar() {
-        sidebar.classList.add('open');
-        overlay && overlay.classList.add('show');
-        btn.setAttribute('aria-expanded', 'true');
-        document.body.style.overflow = 'hidden';
-    }
-    function closeSidebar() {
-        sidebar.classList.remove('open');
-        overlay && overlay.classList.remove('show');
-        btn.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = '';
-    }
-    function toggleSidebar() {
-        sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
-    }
-
-    btn.addEventListener('click', toggleSidebar);
-    overlay && overlay.addEventListener('click', closeSidebar);
-
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') closeSidebar();
-    });
-})();
-</script>
 
 @await RenderSectionAsync("Scripts", required: false)
 </body>

@@ -3,61 +3,28 @@
     ViewData["Title"] = "Đăng nhập";
 }
 
-<div class="row justify-content-center align-items-center py-4 py-md-5">
-    <div class="col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
-        <div class="card card-premium shadow-sm p-4 p-sm-5 animate-in" style="background: var(--bg-surface); border-radius: var(--r-xl); border: 1px solid var(--border) !important;">
-
-            <div class="text-center mb-4">
-                <div class="login-brand__icon mx-auto mb-3" aria-hidden="true" style="width: 44px; height: 44px; border-radius: 12px; font-size: 1.3rem;">V</div>
-                <h1 class="h3 mb-2" style="font-weight: 800; letter-spacing: -.03em; color: var(--text-primary);">Đăng nhập</h1>
-                <p class="small mb-0" style="color: var(--text-secondary); line-height: 1.5;">
-                    Hệ thống quản lý bệnh viện thú y ngoại trú
-                </p>
+<div class="row justify-content-center">
+    <div class="col-md-5 col-lg-4">
+        <h1 class="h3 mb-4">Đăng nhập</h1>
+        <form asp-action="Login" method="post">
+            <input asp-for="ReturnUrl" type="hidden" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" autocomplete="username" />
+                <span asp-validation-for="Email" class="text-danger"></span>
             </div>
-
-            <form asp-action="Login" method="post" novalidate id="login-form">
-                <input asp-for="ReturnUrl" type="hidden" />
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3 py-2 px-3 small" role="alert"></div>
-
-                <div class="mb-3">
-                    <label asp-for="Email" class="form-label" style="font-weight: 600;"></label>
-                    <input asp-for="Email"
-                           class="form-control"
-                           autocomplete="username"
-                           placeholder="admin@example.com"
-                           id="login-email" />
-                    <span asp-validation-for="Email" class="form-text text-danger small"></span>
-                </div>
-
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <label asp-for="Password" class="form-label mb-0" style="font-weight: 600;"></label>
-                    </div>
-                    <input asp-for="Password"
-                           class="form-control"
-                           autocomplete="current-password"
-                           placeholder="••••••••"
-                           id="login-password" />
-                    <span asp-validation-for="Password" class="form-text text-danger small"></span>
-                </div>
-
-                <div class="form-check mb-4">
-                    <input asp-for="RememberMe" class="form-check-input" id="login-remember" />
-                    <label asp-for="RememberMe" class="form-check-label small" for="login-remember" style="color: var(--text-secondary);"></label>
-                </div>
-
-                <button type="submit" class="btn btn-brand w-100 py-2" id="login-submit" style="font-weight: 600;">
-                    Đăng nhập
-                </button>
-            </form>
-
-            <div class="mt-4 pt-3 text-center" style="border-top: 1px solid var(--border);">
-                <p class="small mb-0" style="font-size: .8rem; color: var(--text-tertiary);">
-                    Hệ thống nội bộ – chỉ dành cho nhân viên được cấp phép.
-                </p>
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"></label>
+                <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                <span asp-validation-for="Password" class="text-danger"></span>
             </div>
-
-        </div>
+            <div class="form-check mb-3">
+                <input asp-for="RememberMe" class="form-check-input" />
+                <label asp-for="RememberMe" class="form-check-label"></label>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
+        </form>
     </div>
 </div>
 

@@ -4,6 +4,7 @@
 @{
     ViewData["Title"] = $"{Model.Name} ({Model.PetCode})";
     var canManagePets = (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.PetManage))).Succeeded;
+    var canViewOwners = (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.OwnerView))).Succeeded;
     var rowVersionBase64 = Convert.ToBase64String(Model.RowVersion);
     var sexText = Model.Sex switch
     {
@@ -28,17 +29,25 @@
     </div>
 }
 
-<div class="mb-4">
+<header class="record-header">
+    <div class="record-header__content">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a asp-area="BackOffice" asp-controller="Owners" asp-action="Index">Chủ nuôi</a></li>
-            <li class="breadcrumb-item"><a asp-area="BackOffice" asp-controller="Owners" asp-action="Details" asp-route-id="@Model.OwnerId">@Model.OwnerFullName</a></li>
+            @if (canViewOwners)
+            {
+                <li class="breadcrumb-item"><a asp-area="BackOffice" asp-controller="Owners" asp-action="Index">Chủ nuôi</a></li>
+                <li class="breadcrumb-item"><a asp-area="BackOffice" asp-controller="Owners" asp-action="Details" asp-route-id="@Model.OwnerId">@Model.OwnerFullName</a></li>
+            }
+            else
+            {
+                <li class="breadcrumb-item">@Model.OwnerFullName</li>
+            }
             <li class="breadcrumb-item active" aria-current="page">@Model.Name (@Model.PetCode)</li>
         </ol>
     </nav>
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
-            <h2 class="mb-1">
+            <span class="record-kicker">Hồ sơ @Model.PetCode</span><h1>
                 @Model.Name
                 <span class="text-muted fw-normal">(@Model.PetCode)</span>
                 @if (Model.IsActive)
@@ -49,8 +58,8 @@
                 {
                     <span class="badge bg-secondary ms-2">Đã khóa</span>
                 }
-            </h2>
-            <p class="text-muted mb-0">Chủ nuôi: <a asp-area="BackOffice" asp-controller="Owners" asp-action="Details" asp-route-id="@Model.OwnerId" class="fw-bold text-decoration-none">@Model.OwnerFullName (@Model.OwnerCode)</a> — SĐT: @Model.OwnerPhoneNumber</p>
+            </h1>
+            <p>Chủ nuôi: @if (canViewOwners) { <a asp-area="BackOffice" asp-controller="Owners" asp-action="Details" asp-route-id="@Model.OwnerId">@Model.OwnerFullName (@Model.OwnerCode)</a> } else { <span>@Model.OwnerFullName (@Model.OwnerCode)</span> } · @Model.OwnerPhoneNumber</p>
         </div>
         @if (canManagePets)
         {
@@ -71,13 +80,14 @@
             </div>
         }
     </div>
-</div>
+    </div>
+</header>
 
 <div class="row g-4">
     <div class="col-lg-6">
-        <div class="card shadow-sm h-100">
-            <div class="card-header bg-white fw-bold">Thông tin thú cưng</div>
-            <div class="card-body">
+        <section class="clinical-sheet h-100">
+            <div class="sheet-heading"><div><span class="sheet-index">01</span><h2>Thông tin thú cưng</h2></div></div>
+            <div>
                 <dl class="row mb-0">
                     <dt class="col-sm-4 text-muted">Mã thú cưng:</dt>
                     <dd class="col-sm-8 fw-bold"><code>@Model.PetCode</code></dd>
@@ -107,14 +117,14 @@
                     <dd class="col-sm-8">@Model.CreatedAt.ToOffset(TimeSpan.FromHours(7)).ToString("dd/MM/yyyy HH:mm")</dd>
                 </dl>
             </div>
-        </div>
+        </section>
     </div>
     <div class="col-lg-6">
-        <div class="card shadow-sm h-100">
-            <div class="card-header bg-white fw-bold">Lịch sử khám bệnh</div>
-            <div class="card-body text-center text-muted py-5">
+        <section class="clinical-sheet h-100">
+            <div class="sheet-heading"><div><span class="sheet-index">02</span><h2>Lịch sử khám bệnh</h2></div></div>
+            <div class="empty-ledger">
                 <p class="mb-0">Chưa có lượt khám nào. Phân hệ Khám bệnh & Điều trị sẽ hiển thị tại đây khi triển khai.</p>
             </div>
-        </div>
+        </section>
     </div>
 </div>

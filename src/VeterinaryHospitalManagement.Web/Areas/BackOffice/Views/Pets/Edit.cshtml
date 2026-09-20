@@ -1,24 +1,29 @@
 @model EditPetViewModel
+@using Microsoft.AspNetCore.Authorization
+@inject IAuthorizationService AuthorizationService
 @{
     ViewData["Title"] = $"Chỉnh sửa - {Model.PetCode}";
     var speciesList = (ViewBag.SpeciesList as IReadOnlyList<SpeciesOption>) ?? [];
     var breedList = (ViewBag.BreedList as IReadOnlyList<BreedOption>) ?? [];
+    var canViewOwners = (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.OwnerView))).Succeeded;
 }
 
-<div class="mb-4">
+<header class="record-header">
+    <div>
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a asp-area="BackOffice" asp-controller="Owners" asp-action="Index">Chủ nuôi</a></li>
-            <li class="breadcrumb-item"><a asp-area="BackOffice" asp-controller="Owners" asp-action="Details" asp-route-id="@Model.OwnerId">@Model.OwnerFullName</a></li>
+            @if (canViewOwners) { <li class="breadcrumb-item"><a asp-area="BackOffice" asp-controller="Owners" asp-action="Index">Chủ nuôi</a></li> }
+            <li class="breadcrumb-item">@Model.OwnerFullName</li>
             <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.PetId">@Model.Name (@Model.PetCode)</a></li>
             <li class="breadcrumb-item active" aria-current="page">Chỉnh sửa</li>
         </ol>
     </nav>
-    <h2>Chỉnh sửa thông tin thú cưng <code>@Model.PetCode</code></h2>
-    <p class="text-muted">Chủ nuôi: <strong>@Model.OwnerFullName</strong> (Mã: <code>@Model.OwnerCode</code>)</p>
-</div>
+    <span class="record-kicker">Hồ sơ @Model.PetCode</span><h1>Chỉnh sửa @Model.Name</h1>
+    <p>Chủ nuôi @Model.OwnerFullName · @Model.OwnerCode</p>
+    </div>
+</header>
 
-<form asp-action="Edit" method="post" class="col-lg-7">
+<div class="clinical-sheet clinical-sheet--form"><form asp-action="Edit" method="post">
     <input type="hidden" asp-for="PetId" />
     <input type="hidden" asp-for="PetCode" />
     <input type="hidden" asp-for="OwnerId" />
@@ -87,11 +92,11 @@
         <span asp-validation-for="Notes" class="text-danger"></span>
     </div>
 
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+    <div class="form-actions">
+        <button type="submit" class="btn btn-brand">Lưu thay đổi</button>
         <a asp-action="Details" asp-route-id="@Model.PetId" class="btn btn-secondary">Hủy</a>
     </div>
-</form>
+</form></div>
 
 @section Scripts {
 <script>
