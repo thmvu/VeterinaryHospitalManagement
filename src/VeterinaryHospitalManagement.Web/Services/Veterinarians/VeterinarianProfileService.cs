@@ -55,5 +55,3 @@ public sealed class VeterinarianProfileService(ApplicationDbContext db, UserMana
     private async Task<T> InTransactionAsync<T>(Func<Task<T>> op,CancellationToken ct) { var strategy=db.Database.CreateExecutionStrategy(); return await strategy.ExecuteAsync(async()=>{ await using var tx=await db.Database.BeginTransactionAsync(IsolationLevel.Serializable,ct); try { var result=await op(); await tx.CommitAsync(ct); return result; } catch(DbUpdateException exception) when (exception is not DbUpdateConcurrencyException) { throw new VeterinarianManagementException("Mã bác sĩ hoặc tài khoản đã được sử dụng."); } }); }
     private static async Task GuardAsync(Func<Task> op) { try { await op(); } catch(DbUpdateConcurrencyException) { throw new VeterinarianConcurrencyException(); } }
 }
-
-
