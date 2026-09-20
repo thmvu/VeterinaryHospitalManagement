@@ -22,6 +22,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<Pet> Pets => Set<Pet>();
 
+    public DbSet<VeterinarianProfile> VeterinarianProfiles => Set<VeterinarianProfile>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

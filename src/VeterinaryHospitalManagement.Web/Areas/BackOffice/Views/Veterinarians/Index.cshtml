@@ -1,0 +1,7 @@
+@model IReadOnlyList<VeterinaryHospitalManagement.Web.Services.Veterinarians.VeterinarianListItem>
+@{ViewData["Title"]="Bác sĩ thú y";}
+<header class="record-header"><div><span class="record-kicker">Nhân sự lâm sàng</span><h1>Bác sĩ thú y</h1><p>Quản lý hồ sơ bác sĩ đủ điều kiện nhận lịch khám.</p></div><a asp-action="Create" class="btn btn-brand">Thêm bác sĩ</a></header>
+@if(TempData["StatusMessage"] is string message){<div class="alert alert-success">@message</div>}
+<div class="table-wrap"><div class="table-responsive"><table class="vhm-table"><thead><tr><th>Mã</th><th>Họ tên</th><th>Chuyên khoa</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+@foreach(var item in Model){<tr><td><code>@item.DoctorCode</code></td><td>@item.FullName</td><td>@(item.Specialty??"Chưa cập nhật")</td><td><span class="badge @(item.IsActive?"badge-success":"badge-neutral")">@(item.IsActive?"Hoạt động":"Tạm ngưng")</span></td><td><a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-ghost btn-sm">Chỉnh sửa</a></td></tr>}
+</tbody></table></div></div>
