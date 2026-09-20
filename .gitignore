@@ -365,4 +365,5 @@ FodyWeavers.xsd
 
 # Local reports, ledgers, and hand-off notes produced by coding agents.
 docs/agent-work/
+docs/superpowers/
 .superpowers/
