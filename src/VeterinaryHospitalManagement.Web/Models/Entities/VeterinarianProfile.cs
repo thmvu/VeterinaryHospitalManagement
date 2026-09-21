@@ -9,4 +9,5 @@ public sealed class VeterinarianProfile
     public bool IsActive { get; set; } = true;
     public byte[] RowVersion { get; set; } = [];
     public ApplicationUser User { get; set; } = null!;
+    public ICollection<VeterinarianShift> Shifts { get; set; } = new List<VeterinarianShift>();
 }

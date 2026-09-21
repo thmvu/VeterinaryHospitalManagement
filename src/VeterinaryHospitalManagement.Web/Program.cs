@@ -10,6 +10,7 @@ using VeterinaryHospitalManagement.Web.Services.Identity;
 using VeterinaryHospitalManagement.Web.Services.Owners;
 using VeterinaryHospitalManagement.Web.Services.Pets;
 using VeterinaryHospitalManagement.Web.Services.Time;
+using VeterinaryHospitalManagement.Web.Services.Scheduling;
 using VeterinaryHospitalManagement.Web.Services.Veterinarians;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,6 +45,7 @@ builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddSingleton<IOwnerPhoneNormalizer, OwnerPhoneNormalizer>();
 builder.Services.AddScoped<IOwnerService, OwnerService>();
 builder.Services.AddScoped<IVeterinarianProfileService, VeterinarianProfileService>();
+builder.Services.AddScoped<IVeterinarianShiftService, VeterinarianShiftService>();
 builder.Services.AddScoped<IPetService, PetService>();
 builder.Services.AddVeterinaryAuthorization();
 builder.Services

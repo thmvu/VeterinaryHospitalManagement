@@ -1,0 +1,92 @@
+@model IReadOnlyList<VeterinaryHospitalManagement.Web.Services.Scheduling.ShiftListItem>
+@inject VeterinaryHospitalManagement.Web.Services.Time.IVietnamTimeProvider VietnamTimeProvider
+@{
+    ViewData["Title"] = "Ca làm việc";
+    var vets = ViewBag.Veterinarians as IReadOnlyList<VeterinaryHospitalManagement.Web.Services.Scheduling.VeterinarianChoiceItem> ?? [];
+    int? selectedVetId = ViewBag.SelectedVeterinarianId as int?;
+    var offset = VietnamTimeProvider.LocalNow.Offset;
+}
+
+<header class="record-header">
+    <div>
+        <span class="record-kicker">Nhân sự &amp; Lịch trực</span>
+        <h1>Ca làm việc</h1>
+        <p>Quản lý ca trực của các bác sĩ thú y theo từng ngày.</p>
+    </div>
+    <a asp-action="Create" asp-route-veterinarianId="@selectedVetId" class="btn btn-brand">Tạo ca làm việc</a>
+</header>
+
+@if (TempData["StatusMessage"] is string message)
+{
+    <div class="alert alert-success">@message</div>
+}
+
+<div class="clinical-sheet mb-4 p-3">
+    <form method="get" class="d-flex align-items-center gap-3">
+        <label for="veterinarianId" class="fw-medium text-nowrap">Lọc theo bác sĩ:</label>
+        <select id="veterinarianId" name="veterinarianId" class="form-select w-auto" onchange="this.form.submit()">
+            <option value="">-- Tất cả bác sĩ --</option>
+            @foreach (var vet in vets)
+            {
+                <option value="@vet.Id" selected="@(selectedVetId == vet.Id ? "selected" : null)">
+                    @vet.DoctorCode - @vet.FullName
+                </option>
+            }
+        </select>
+        @if (selectedVetId.HasValue)
+        {
+            <a asp-action="Index" class="btn btn-ghost btn-sm">Bỏ lọc</a>
+        }
+    </form>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="clinical-sheet text-center py-5">
+        <h2>Chưa có ca làm việc nào</h2>
+        <p>Bắt đầu phân công ca trực cho các bác sĩ thú y đang hoạt động.</p>
+        <a asp-action="Create" asp-route-veterinarianId="@selectedVetId" class="btn btn-brand">Tạo ca làm việc đầu tiên</a>
+    </div>
+}
+else
+{
+    <div class="table-wrap">
+        <div class="table-responsive">
+            <table class="vhm-table">
+                <thead>
+                    <tr>
+                        <th>Bác sĩ</th>
+                        <th>Mã BS</th>
+                        <th>Ngày trực</th>
+                        <th>Giờ bắt đầu</th>
+                        <th>Giờ kết thúc</th>
+                        <th>Trạng thái</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model)
+                {
+                    var startLocal = item.StartAt.ToOffset(offset);
+                    var endLocal = item.EndAt.ToOffset(offset);
+                    <tr>
+                        <td><strong>@item.VeterinarianFullName</strong></td>
+                        <td><code>@item.DoctorCode</code></td>
+                        <td>@startLocal.ToString("dd/MM/yyyy")</td>
+                        <td>@startLocal.ToString("HH:mm")</td>
+                        <td>@endLocal.ToString("HH:mm")</td>
+                        <td>
+                            <span class="badge @(item.IsActive ? "badge-success" : "badge-neutral")">
+                                @(item.IsActive ? "Hoạt động" : "Tạm ngưng")
+                            </span>
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-ghost btn-sm">Chỉnh sửa</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

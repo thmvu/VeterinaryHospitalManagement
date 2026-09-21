@@ -24,6 +24,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<VeterinarianProfile> VeterinarianProfiles => Set<VeterinarianProfile>();
 
+    public DbSet<VeterinarianShift> VeterinarianShifts => Set<VeterinarianShift>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

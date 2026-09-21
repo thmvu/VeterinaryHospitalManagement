@@ -1,0 +1,48 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Schedules.CreateShiftViewModel
+@{
+    ViewData["Title"] = "Tạo ca làm việc";
+}
+
+<header class="record-header">
+    <div>
+        <span class="record-kicker">Phân công lịch trực</span>
+        <h1>Tạo ca làm việc</h1>
+        <p>Chỉ bác sĩ thú y đang hoạt động mới có thể phân công ca trực.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</header>
+
+<div class="clinical-sheet clinical-sheet--form">
+    <form method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="VeterinarianId" class="form-label"></label>
+            <select asp-for="VeterinarianId" asp-items="Model.Veterinarians" class="form-select">
+                <option value="">-- Chọn bác sĩ thú y --</option>
+            </select>
+            <span asp-validation-for="VeterinarianId" class="text-danger"></span>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="StartAtLocal" class="form-label"></label>
+                <input asp-for="StartAtLocal" type="datetime-local" class="form-control"
+                       value="@Model.StartAtLocal.ToString("yyyy-MM-ddTHH:mm")" />
+                <span asp-validation-for="StartAtLocal" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label asp-for="EndAtLocal" class="form-label"></label>
+                <input asp-for="EndAtLocal" type="datetime-local" class="form-control"
+                       value="@Model.EndAtLocal.ToString("yyyy-MM-ddTHH:mm")" />
+                <span asp-validation-for="EndAtLocal" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="form-actions mt-4">
+            <button class="btn btn-brand" type="submit">Tạo ca làm việc</button>
+            <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+        </div>
+    </form>
+</div>

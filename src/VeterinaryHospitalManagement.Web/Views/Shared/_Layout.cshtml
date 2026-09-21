@@ -9,6 +9,8 @@
         (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.OwnerView))).Succeeded;
     var canManageCatalog = isAuthenticated &&
         (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.CatalogManage))).Succeeded;
+    var canManageSchedule = isAuthenticated &&
+        (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.ScheduleManage))).Succeeded;
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction    = ViewContext.RouteData.Values["action"]?.ToString();
     var currentArea      = ViewContext.RouteData.Values["area"]?.ToString();
@@ -25,10 +27,12 @@
                            string.Equals(currentController, "Pets", StringComparison.OrdinalIgnoreCase)) && isBackOffice;
     bool isUsersActive  = string.Equals(currentController, "Users", StringComparison.OrdinalIgnoreCase) && isBackOffice;
     bool isVeterinariansActive = string.Equals(currentController, "Veterinarians", StringComparison.OrdinalIgnoreCase) && isBackOffice;
+    bool isSchedulesActive = string.Equals(currentController, "Schedules", StringComparison.OrdinalIgnoreCase) && isBackOffice;
 
     string ownersClass = "sidebar-nav-item" + (isOwnersActive ? " active" : "");
     string usersClass  = "sidebar-nav-item" + (isUsersActive  ? " active" : "");
     string veterinariansClass = "sidebar-nav-item" + (isVeterinariansActive ? " active" : "");
+    string schedulesClass = "sidebar-nav-item" + (isSchedulesActive ? " active" : "");
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -90,12 +94,21 @@
                     </a>
                 }
 
-                @if (canManageCatalog)
+                @if (canManageCatalog || canManageSchedule)
                 {
                     <span class="sidebar-section-label mt-2">Lâm sàng</span>
-                    <a class="@veterinariansClass" asp-area="BackOffice" asp-controller="Veterinarians" asp-action="Index" aria-current="@(isVeterinariansActive ? "page" : null)">
-                        <span aria-hidden="true">✚</span><span>Bác sĩ thú y</span>
-                    </a>
+                    @if (canManageCatalog)
+                    {
+                        <a class="@veterinariansClass" asp-area="BackOffice" asp-controller="Veterinarians" asp-action="Index" aria-current="@(isVeterinariansActive ? "page" : null)">
+                            <span aria-hidden="true">✚</span><span>Bác sĩ thú y</span>
+                        </a>
+                    }
+                    @if (canManageSchedule)
+                    {
+                        <a class="@schedulesClass" asp-area="BackOffice" asp-controller="Schedules" asp-action="Index" aria-current="@(isSchedulesActive ? "page" : null)">
+                            <span aria-hidden="true">📅</span><span>Ca làm việc</span>
+                        </a>
+                    }
                 }
 
                 @if (canManageUsers)

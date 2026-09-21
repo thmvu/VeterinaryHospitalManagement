@@ -1,0 +1,79 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Schedules.EditShiftViewModel
+@{
+    ViewData["Title"] = "Chỉnh sửa ca làm việc";
+}
+
+<header class="record-header">
+    <div>
+        <span class="record-kicker">@Model.DoctorCode</span>
+        <h1>BS. @Model.VeterinarianFullName</h1>
+        <p>Điều chỉnh thời gian hoặc chuyển đổi trạng thái ca trực.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</header>
+
+@if (TempData["StatusMessage"] is string message)
+{
+    <div class="alert alert-success">@message</div>
+}
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<div class="clinical-sheet clinical-sheet--form">
+    <form asp-action="Edit" method="post">
+        <input asp-for="Id" type="hidden" />
+        <input asp-for="RowVersion" type="hidden" />
+        <input asp-for="VeterinarianId" type="hidden" />
+        <input asp-for="DoctorCode" type="hidden" />
+        <input asp-for="VeterinarianFullName" type="hidden" />
+        <input asp-for="IsActive" type="hidden" />
+
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="StartAtLocal" class="form-label"></label>
+                <input asp-for="StartAtLocal" type="datetime-local" class="form-control"
+                       value="@Model.StartAtLocal.ToString("yyyy-MM-ddTHH:mm")" />
+                <span asp-validation-for="StartAtLocal" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label asp-for="EndAtLocal" class="form-label"></label>
+                <input asp-for="EndAtLocal" type="datetime-local" class="form-control"
+                       value="@Model.EndAtLocal.ToString("yyyy-MM-ddTHH:mm")" />
+                <span asp-validation-for="EndAtLocal" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-between mt-4">
+            <button class="btn btn-brand" type="submit">Lưu thay đổi</button>
+            <span class="badge @(Model.IsActive ? "badge-success" : "badge-neutral")">
+                @(Model.IsActive ? "Đang hoạt động" : "Đang tạm ngưng")
+            </span>
+        </div>
+    </form>
+
+    <hr class="my-4" />
+
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <strong>Trạng thái ca trực</strong>
+            <p class="text-muted mb-0 small">
+                @(Model.IsActive
+                    ? "Tạm ngưng ca này nếu bác sĩ bận đột xuất và không thể trực."
+                    : "Kích hoạt lại ca làm việc để bác sĩ tiếp tục nhận lịch.")
+            </p>
+        </div>
+        <form asp-action="SetActive" method="post" class="m-0">
+            <input asp-for="Id" type="hidden" />
+            <input asp-for="RowVersion" type="hidden" />
+            <input type="hidden" name="IsActive" value="@(!Model.IsActive)" />
+            <button class="btn @(Model.IsActive ? "btn-secondary" : "btn-brand")" type="submit">
+                @(Model.IsActive ? "Tạm ngưng ca trực" : "Kích hoạt lại")
+            </button>
+        </form>
+    </div>
+</div>
