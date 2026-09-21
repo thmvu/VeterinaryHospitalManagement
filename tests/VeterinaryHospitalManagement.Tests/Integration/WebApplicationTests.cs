@@ -83,6 +83,22 @@ public class WebApplicationTests : IClassFixture<FoundationWebApplicationFactory
     }
 
     [Fact]
+    public async Task User_create_page_renders_inside_the_authenticated_backoffice_shell()
+    {
+        var authenticationState = new LandingAuthenticationState();
+        using var factory = CreateAuthenticatedFactory(authenticationState, PermissionCodes.UserManage);
+        using var client = CreateClient(factory);
+
+        var response = await client.GetAsync("/BackOffice/Users/Create");
+        var html = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("class=\"app-shell\"", html);
+        Assert.Contains("id=\"main-content\"", html);
+        Assert.Contains("href=\"/css/site", html);
+    }
+
+    [Fact]
     public async Task Authenticated_user_without_user_manage_permission_does_not_see_user_management_link()
     {
         var authenticationState = new LandingAuthenticationState();

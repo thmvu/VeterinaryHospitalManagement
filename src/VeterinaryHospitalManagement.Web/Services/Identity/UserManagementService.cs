@@ -277,7 +277,7 @@ public sealed class UserManagementService(
     {
         if (!result.Succeeded)
         {
-            throw new UserManagementException(message);
+            throw new UserManagementException(UserManagementRules.ToSafeIdentityErrorMessage(result.Errors, message));
         }
     }
 
