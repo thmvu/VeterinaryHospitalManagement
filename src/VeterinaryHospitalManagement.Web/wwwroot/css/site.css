@@ -1263,6 +1263,7 @@ h1, h2, .section-title, .page-title, .record-header h1 {
 .alert-info.alert    { background: var(--info-bg);    color: #1e40af; border-color: var(--info-border); }
 .alert-warning.alert { background: var(--warning-bg); color: #92400e; border-color: var(--warning-border); }
 .alert-danger.alert  { background: var(--danger-bg);  color: #991b1b; border-color: var(--danger-border); }
+.validation-summary-valid { display: none; }
 
 /* table Bootstrap compat */
 .table { width: 100%; margin-bottom: 0; }
@@ -1286,6 +1287,9 @@ h1, h2, .section-title, .page-title, .record-header h1 {
 .botanical-empty-state p { max-width: 380px; margin: 0 auto 1rem; color: var(--text-secondary); }
 .botanical-table-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--stone); }
 .botanical-table-heading span { color: var(--text-secondary); font-size: .875rem; }
+.management-action-form { display: flex; align-items: end; gap: .75rem; flex-wrap: wrap; }
+.management-action-form > div { flex: 1 1 220px; }
+.management-action-form .btn { min-height: 42px; }
 .record-code { display: inline-block; padding: .2rem .45rem; border: 1px solid var(--stone); border-radius: 4px; color: var(--forest); background: var(--paper); font-size: .8rem; }
 .record-person { display: flex; align-items: center; gap: .625rem; min-width: 0; }
 .record-person__avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--brand-light); color: var(--forest); font-weight: 700; display: grid; place-items: center; flex-shrink: 0; }

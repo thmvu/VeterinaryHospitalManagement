@@ -7,9 +7,9 @@
     <div><span class="record-kicker">Quản trị nhân sự</span><h1>Tạo tài khoản nội bộ</h1><p>Chọn vai trò phù hợp để cấp quyền truy cập hệ thống.</p></div>
     <a asp-action="Index" class="btn btn-secondary">Quay lại danh sách</a>
 </header>
-<div class="clinical-sheet clinical-sheet--form">
+<div class="clinical-sheet clinical-sheet--form" data-ui="botanical-management-form">
 <form asp-action="Create" method="post">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
     <div class="mb-3"><label asp-for="FullName" class="form-label"></label><input asp-for="FullName" class="form-control" autocomplete="name" /><span asp-validation-for="FullName" class="text-danger"></span></div>
     <div class="mb-3"><label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control" autocomplete="email" /><span asp-validation-for="Email" class="text-danger"></span></div>
     <div class="mb-3"><label asp-for="Password" class="form-label"></label><input asp-for="Password" class="form-control" autocomplete="new-password" aria-describedby="password-guidance" /><span asp-validation-for="Password" class="text-danger"></span><p id="password-guidance" class="field-guidance mt-2 mb-0">Ít nhất 6 ký tự, gồm chữ hoa, chữ thường, chữ số và ký tự đặc biệt.</p></div>

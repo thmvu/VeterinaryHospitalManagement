@@ -100,6 +100,7 @@ public class WebApplicationTests : IClassFixture<FoundationWebApplicationFactory
         Assert.Contains("class=\"app-shell\"", html);
         Assert.Contains("id=\"main-content\"", html);
         Assert.Contains("href=\"/css/site", html);
+        Assert.Contains("data-ui=\"botanical-management-form\"", html);
     }
 
     [Fact]

@@ -1,4 +1,16 @@
 @model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Veterinarians.CreateVeterinarianViewModel
-@{ViewData["Title"]="Thêm bác sĩ";}
-<header class="record-header"><div><span class="record-kicker">Hồ sơ bác sĩ</span><h1>Thêm bác sĩ</h1><p>Chỉ tài khoản Veterinarian đang hoạt động được hiển thị.</p></div><a asp-action="Index" class="btn btn-secondary">Quay lại</a></header>
-<div class="clinical-sheet clinical-sheet--form"><form method="post"><div asp-validation-summary="ModelOnly" class="text-danger"></div><div class="mb-3"><label asp-for="UserId" class="form-label"></label><select asp-for="UserId" asp-items="Model.Users" class="form-select"><option value="">Chọn tài khoản</option></select><span asp-validation-for="UserId" class="text-danger"></span></div><div class="mb-3"><label asp-for="DoctorCode" class="form-label"></label><input asp-for="DoctorCode" class="form-control"/><span asp-validation-for="DoctorCode" class="text-danger"></span></div><div class="mb-3"><label asp-for="Specialty" class="form-label"></label><input asp-for="Specialty" class="form-control"/><span asp-validation-for="Specialty" class="text-danger"></span></div><div class="form-actions"><button class="btn btn-brand">Tạo hồ sơ</button><a asp-action="Index" class="btn btn-secondary">Hủy</a></div></form></div>
+@{ ViewData["Title"] = "Thêm bác sĩ"; }
+
+<header class="record-header">
+    <div><span class="record-kicker">Hồ sơ bác sĩ</span><h1>Thêm bác sĩ</h1><p>Chỉ tài khoản Veterinarian đang hoạt động được hiển thị.</p></div>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</header>
+<div class="clinical-sheet clinical-sheet--form" data-ui="botanical-management-form">
+    <form method="post">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+        <div class="mb-3"><label asp-for="UserId" class="form-label"></label><select asp-for="UserId" asp-items="Model.Users" class="form-select"><option value="">Chọn tài khoản</option></select><span asp-validation-for="UserId" class="text-danger"></span></div>
+        <div class="mb-3"><label asp-for="DoctorCode" class="form-label"></label><input asp-for="DoctorCode" class="form-control" /><span asp-validation-for="DoctorCode" class="text-danger"></span></div>
+        <div class="mb-3"><label asp-for="Specialty" class="form-label"></label><input asp-for="Specialty" class="form-control" /><span asp-validation-for="Specialty" class="text-danger"></span></div>
+        <div class="form-actions"><button type="submit" class="btn btn-brand">Tạo hồ sơ</button><a asp-action="Index" class="btn btn-secondary">Hủy</a></div>
+    </form>
+</div>

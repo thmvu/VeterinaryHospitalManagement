@@ -3,28 +3,48 @@
     ViewData["Title"] = "Quản lý tài khoản";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>Quản lý tài khoản</h1>
-    <a class="btn btn-primary" asp-action="Create">Tạo tài khoản</a>
-</div>
+<header class="record-header">
+    <div>
+        <span class="record-kicker">Quản trị nhân sự</span>
+        <h1>Quản lý tài khoản</h1>
+        <p>Xem và cập nhật quyền truy cập của nhân viên bệnh viện.</p>
+    </div>
+    <a class="btn btn-brand" asp-action="Create">Tạo tài khoản</a>
+</header>
 
 @if (TempData["StatusMessage"] is string statusMessage)
 {
-    <div class="alert alert-success">@statusMessage</div>
+    <div class="alert alert-success" role="status">@statusMessage</div>
 }
 
-<table class="table table-striped align-middle">
-    <thead><tr><th>Họ tên</th><th>Email</th><th>Role</th><th>Trạng thái</th><th></th></tr></thead>
-    <tbody>
-    @foreach (var user in Model)
-    {
-        <tr>
-            <td>@user.FullName</td>
-            <td>@user.Email</td>
-            <td>@user.RoleName</td>
-            <td>@(user.IsActive ? "Đang hoạt động" : "Đã khóa")</td>
-            <td><a class="btn btn-outline-secondary btn-sm" asp-action="Edit" asp-route-id="@user.Id">Quản lý</a></td>
-        </tr>
-    }
-    </tbody>
-</table>
+@if (Model.Count == 0)
+{
+    <div class="botanical-empty-state text-center">
+        <h2>Chưa có tài khoản nhân viên</h2>
+        <p>Tạo tài khoản đầu tiên và chọn vai trò phù hợp để nhân viên đăng nhập.</p>
+        <a class="btn btn-brand" asp-action="Create">Tạo tài khoản</a>
+    </div>
+}
+else
+{
+    <div class="table-wrap">
+        <div class="botanical-table-heading"><strong>Nhân viên</strong><span>@Model.Count tài khoản</span></div>
+        <div class="table-responsive" role="region" aria-label="Danh sách tài khoản nhân viên" tabindex="0">
+            <table class="vhm-table" aria-label="Tài khoản nhân viên">
+                <thead><tr><th scope="col">Họ tên</th><th scope="col">Email</th><th scope="col">Vai trò</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th></tr></thead>
+                <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td><strong>@user.FullName</strong></td>
+                        <td>@user.Email</td>
+                        <td>@user.RoleName</td>
+                        <td><span class="status-stamp @(user.IsActive ? "status-stamp--active" : "status-stamp--inactive")">@(user.IsActive ? "Đang hoạt động" : "Đã khóa")</span></td>
+                        <td><a class="btn btn-ghost btn-sm" asp-action="Edit" asp-route-id="@user.Id">Quản lý</a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

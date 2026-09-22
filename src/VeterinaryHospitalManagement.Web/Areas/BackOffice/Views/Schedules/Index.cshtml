@@ -22,9 +22,9 @@
 }
 
 <div class="clinical-sheet mb-4 p-3">
-    <form method="get" class="d-flex align-items-center gap-3">
-        <label for="veterinarianId" class="fw-medium text-nowrap">Lọc theo bác sĩ:</label>
-        <select id="veterinarianId" name="veterinarianId" class="form-select w-auto" onchange="this.form.submit()">
+    <form method="get" class="management-action-form">
+        <div><label for="veterinarianId" class="form-label">Lọc theo bác sĩ</label>
+        <select id="veterinarianId" name="veterinarianId" class="form-select" onchange="this.form.submit()">
             <option value="">-- Tất cả bác sĩ --</option>
             @foreach (var vet in vets)
             {
@@ -32,7 +32,7 @@
                     @vet.DoctorCode - @vet.FullName
                 </option>
             }
-        </select>
+        </select></div>
         @if (selectedVetId.HasValue)
         {
             <a asp-action="Index" class="btn btn-ghost btn-sm">Bỏ lọc</a>
@@ -51,8 +51,8 @@
 else
 {
     <div class="table-wrap">
-        <div class="table-responsive">
-            <table class="vhm-table">
+        <div class="table-responsive" role="region" aria-label="Danh sách ca làm việc" tabindex="0">
+            <table class="vhm-table" aria-label="Ca làm việc của bác sĩ">
                 <thead>
                     <tr>
                         <th>Bác sĩ</th>

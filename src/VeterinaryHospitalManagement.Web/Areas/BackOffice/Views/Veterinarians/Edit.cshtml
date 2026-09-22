@@ -1,5 +1,27 @@
 @model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Veterinarians.EditVeterinarianViewModel
-@{ViewData["Title"]="Hồ sơ bác sĩ";}
-<header class="record-header"><div><span class="record-kicker">@Model.DoctorCode</span><h1>@Model.FullName</h1><p>Mã bác sĩ được khóa sau khi tạo.</p></div><a asp-action="Index" class="btn btn-secondary">Quay lại</a></header>
-@if(TempData["StatusMessage"] is string message){<div class="alert alert-success">@message</div>} @if(TempData["ErrorMessage"] is string error){<div class="alert alert-danger">@error</div>}
-<div class="clinical-sheet clinical-sheet--form"><form asp-action="Edit" method="post"><input asp-for="Id" type="hidden"/><input asp-for="RowVersion" type="hidden"/><div asp-validation-summary="ModelOnly" class="text-danger"></div><div class="mb-3"><label asp-for="Specialty" class="form-label"></label><input asp-for="Specialty" class="form-control"/><span asp-validation-for="Specialty" class="text-danger"></span></div><button class="btn btn-brand">Lưu thay đổi</button></form><hr/><form asp-action="SetActive" method="post"><input asp-for="Id" type="hidden"/><input asp-for="RowVersion" type="hidden"/><input type="hidden" name="IsActive" value="@(!Model.IsActive)"/><button class="btn btn-secondary">@(Model.IsActive?"Tạm ngưng":"Kích hoạt")</button></form></div>
+@{ ViewData["Title"] = "Hồ sơ bác sĩ"; }
+
+<header class="record-header">
+    <div><span class="record-kicker">@Model.DoctorCode</span><h1>@Model.FullName</h1><p>Mã bác sĩ được khóa sau khi tạo.</p></div>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</header>
+@if (TempData["StatusMessage"] is string message) { <div class="alert alert-success" role="status">@message</div> }
+@if (TempData["ErrorMessage"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
+
+<section class="clinical-sheet clinical-sheet--form" data-ui="botanical-management-form">
+    <div class="sheet-heading"><div><span class="sheet-index">01</span><h2>Chuyên khoa</h2></div></div>
+    <form asp-action="Edit" method="post">
+        <input asp-for="Id" type="hidden" /><input asp-for="RowVersion" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+        <div class="mb-3"><label asp-for="Specialty" class="form-label"></label><input asp-for="Specialty" class="form-control" /><span asp-validation-for="Specialty" class="text-danger"></span></div>
+        <button type="submit" class="btn btn-brand">Lưu thay đổi</button>
+    </form>
+</section>
+<section class="clinical-sheet clinical-sheet--form clinical-sheet--status">
+    <div class="sheet-heading"><div><span class="sheet-index">02</span><h2>Trạng thái hồ sơ</h2></div></div>
+    <p class="mb-3">Hiện tại: <span class="status-stamp @(Model.IsActive ? "status-stamp--active" : "status-stamp--inactive")">@(Model.IsActive ? "Hoạt động" : "Tạm ngưng")</span></p>
+    <form asp-action="SetActive" method="post">
+        <input asp-for="Id" type="hidden" /><input asp-for="RowVersion" type="hidden" /><input type="hidden" name="IsActive" value="@(!Model.IsActive)" />
+        <button type="submit" class="btn @(Model.IsActive ? "btn-outline-warning" : "btn-outline-brand")">@(Model.IsActive ? "Tạm ngưng" : "Kích hoạt")</button>
+    </form>
+</section>

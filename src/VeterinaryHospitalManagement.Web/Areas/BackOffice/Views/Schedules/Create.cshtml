@@ -12,9 +12,9 @@
     <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
 </header>
 
-<div class="clinical-sheet clinical-sheet--form">
+<div class="clinical-sheet clinical-sheet--form" data-ui="botanical-management-form">
     <form method="post">
-        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3" role="alert"></div>
 
         <div class="mb-3">
             <label asp-for="VeterinarianId" class="form-label"></label>

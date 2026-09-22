@@ -1,8 +1,30 @@
 @model IReadOnlyList<VeterinaryHospitalManagement.Web.Services.Veterinarians.VeterinarianListItem>
-@{ViewData["Title"]="Bác sĩ thú y";}
-<header class="record-header"><div><span class="record-kicker">Nhân sự lâm sàng</span><h1>Bác sĩ thú y</h1><p>Quản lý hồ sơ bác sĩ đủ điều kiện nhận lịch khám.</p></div><a asp-action="Create" class="btn btn-brand">Thêm bác sĩ</a></header>
-@if(TempData["StatusMessage"] is string message){<div class="alert alert-success">@message</div>}
-@if(Model.Count==0){<div class="clinical-sheet text-center py-5"><h2>Chưa có hồ sơ bác sĩ</h2><p>Tạo hồ sơ từ một tài khoản Veterinarian đang hoạt động.</p><a asp-action="Create" class="btn btn-brand">Thêm bác sĩ đầu tiên</a></div>}
-else {<div class="table-wrap"><div class="table-responsive"><table class="vhm-table"><thead><tr><th>Mã</th><th>Họ tên</th><th>Chuyên khoa</th><th>Trạng thái</th><th></th></tr></thead><tbody>
-@foreach(var item in Model){<tr><td><code>@item.DoctorCode</code></td><td>@item.FullName</td><td>@(item.Specialty??"Chưa cập nhật")</td><td><span class="badge @(item.IsActive?"badge-success":"badge-neutral")">@(item.IsActive?"Hoạt động":"Tạm ngưng")</span></td><td><a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-ghost btn-sm">Chỉnh sửa</a></td></tr>}
-</tbody></table></div></div>}
+@{ ViewData["Title"] = "Bác sĩ thú y"; }
+
+<header class="record-header">
+    <div><span class="record-kicker">Nhân sự lâm sàng</span><h1>Bác sĩ thú y</h1><p>Quản lý hồ sơ bác sĩ đủ điều kiện nhận lịch khám.</p></div>
+    <a asp-action="Create" class="btn btn-brand">Thêm bác sĩ</a>
+</header>
+@if (TempData["StatusMessage"] is string message) { <div class="alert alert-success" role="status">@message</div> }
+
+@if (Model.Count == 0)
+{
+    <div class="botanical-empty-state text-center"><h2>Chưa có hồ sơ bác sĩ</h2><p>Tạo hồ sơ từ một tài khoản Veterinarian đang hoạt động.</p><a asp-action="Create" class="btn btn-brand">Thêm bác sĩ đầu tiên</a></div>
+}
+else
+{
+    <div class="table-wrap">
+        <div class="botanical-table-heading"><strong>Hồ sơ bác sĩ</strong><span>@Model.Count bác sĩ</span></div>
+        <div class="table-responsive" role="region" aria-label="Danh sách bác sĩ thú y" tabindex="0">
+            <table class="vhm-table" aria-label="Hồ sơ bác sĩ thú y">
+                <thead><tr><th scope="col">Mã</th><th scope="col">Họ tên</th><th scope="col">Chuyên khoa</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th></tr></thead>
+                <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr><td><code class="record-code">@item.DoctorCode</code></td><td><strong>@item.FullName</strong></td><td>@(item.Specialty ?? "Chưa cập nhật")</td><td><span class="status-stamp @(item.IsActive ? "status-stamp--active" : "status-stamp--inactive")">@(item.IsActive ? "Hoạt động" : "Tạm ngưng")</span></td><td><a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-ghost btn-sm">Chỉnh sửa</a></td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

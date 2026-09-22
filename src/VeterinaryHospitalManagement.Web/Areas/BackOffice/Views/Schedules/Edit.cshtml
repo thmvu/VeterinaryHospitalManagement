@@ -21,7 +21,7 @@
     <div class="alert alert-danger">@error</div>
 }
 
-<div class="clinical-sheet clinical-sheet--form">
+<div class="clinical-sheet clinical-sheet--form" data-ui="botanical-management-form">
     <form asp-action="Edit" method="post">
         <input asp-for="Id" type="hidden" />
         <input asp-for="RowVersion" type="hidden" />
@@ -30,7 +30,7 @@
         <input asp-for="VeterinarianFullName" type="hidden" />
         <input asp-for="IsActive" type="hidden" />
 
-        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3" role="alert"></div>
 
         <div class="row">
             <div class="col-md-6 mb-3">
