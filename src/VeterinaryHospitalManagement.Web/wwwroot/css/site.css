@@ -972,30 +972,29 @@ h1, h2, .section-title, .page-title, .record-header h1 {
   position: relative;
   overflow: hidden;
   padding-block: clamp(3.5rem, 7vw, 5.5rem);
-  background: linear-gradient(135deg, #f0fdf9 0%, #f9f9f8 55%, #f0f0ff 100%);
+  background: var(--paper);
 }
 .hero-landing::before,
 .landing-hero::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 80% 20%, rgba(13,143,135,.08) 0, transparent 50%),
-              radial-gradient(circle at 10% 80%, rgba(37,99,235,.05) 0, transparent 40%);
+  background: radial-gradient(circle at 80% 15%, rgba(140,154,132,.11) 0, transparent 47%);
   pointer-events: none;
 }
 .hero-title,
 .landing-title {
   font-size: clamp(2.25rem, 5.5vw, 3.75rem);
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1.1;
-  letter-spacing: -.045em;
+  letter-spacing: -.035em;
   color: var(--text-primary);
 }
 .hero-subtitle,
 .landing-lead {
   font-size: clamp(1rem, 2vw, 1.25rem);
-  font-weight: 600;
-  color: var(--brand);
+  font-weight: 400;
+  color: var(--text-secondary);
   line-height: 1.5;
   letter-spacing: -.01em;
 }
@@ -1102,16 +1101,15 @@ h1, h2, .section-title, .page-title, .record-header h1 {
 .section-heading { margin-bottom: 3rem; }
 .section-description { color: var(--text-secondary); font-size: 1.05rem; max-width: 44rem; line-height: 1.65; }
 .section-eyebrow {
-  font-size: .75rem;
-  font-weight: 700;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  color: var(--brand);
+  font-size: .875rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+  color: var(--sage);
   margin-bottom: .5rem;
 }
 .section-title {
   font-size: clamp(1.75rem, 4vw, 2.5rem);
-  font-weight: 800;
+  font-weight: 600;
   color: var(--text-primary);
   letter-spacing: -.03em;
   line-height: 1.15;
@@ -1155,6 +1153,39 @@ h1, h2, .section-title, .page-title, .record-header h1 {
 }
 
 /* ── Login Page ─────────────────────────────────────────────────────── */
+.botanical-hero__grid { position: relative; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr); align-items: center; gap: clamp(2rem, 7vw, 7rem); }
+.botanical-hero__content { max-width: 710px; }
+.botanical-overline { margin-bottom: 1.25rem; color: #526d4f; font-weight: 600; }
+.botanical-hero .landing-title { max-width: 13ch; font-size: clamp(2.75rem, 5.5vw, 5rem); }
+.botanical-hero .landing-lead { max-width: 35rem; margin: 1.75rem 0; }
+.botanical-hero__actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.botanical-hero__note { margin: 1.75rem 0 0; color: var(--text-secondary); font-size: .875rem; }
+.botanical-illustration { position: relative; justify-self: center; width: min(100%, 430px); text-align: center; }
+.botanical-illustration__arch { position: relative; width: 100%; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 48% 48% 16px 16px; background: linear-gradient(160deg, #dae2cf, #a9bba4 60%, #69836d); border: 10px solid #fff; box-shadow: 0 25px 65px rgba(45,58,49,.12); }
+.botanical-illustration__sun { position: absolute; width: 36%; aspect-ratio: 1; top: 16%; left: 32%; border-radius: 50%; background: #f5e4be; box-shadow: 0 0 55px #f5e4be9c; }
+.botanical-illustration__leaf { position: absolute; width: 48%; height: 62%; bottom: -13%; background: #405e49; border-radius: 90% 0 90% 0; transform-origin: bottom center; }
+.botanical-illustration__leaf--left { left: 2%; transform: rotate(-25deg); }
+.botanical-illustration__leaf--right { right: 0; transform: rotate(30deg) scaleX(-1); background: #54765d; }
+.botanical-illustration__pet { position: absolute; z-index: 1; left: 37%; bottom: 13%; width: 26%; aspect-ratio: 1; border-radius: 50% 50% 42% 42%; background: #e8d7c6; display: grid; place-items: center; color: var(--forest); font-size: 3rem; box-shadow: 0 9px 25px #2d3a3130; }
+.botanical-illustration__caption { display: block; margin-top: .75rem; color: var(--text-secondary); font-family: "Playfair Display", Georgia, serif; font-style: italic; }
+.botanical-feature-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
+.botanical-feature-grid .feature-card { padding: 1.75rem; background: #fff; border: 1px solid var(--stone); border-radius: var(--r-lg); box-shadow: none; }
+.botanical-feature-grid h3 { font-family: "Playfair Display", Georgia, serif; font-size: 1.35rem; margin: 1rem 0 .5rem; }
+.botanical-feature-grid p { margin: 0; color: var(--text-secondary); }
+.botanical-feature-number { color: #687f64; font-size: .875rem; font-weight: 700; }
+.botanical-workflow { display: grid; grid-template-columns: 1fr 1.3fr; gap: 3rem; }
+.botanical-steps { padding: 0; margin: 0; list-style: none; counter-reset: step; }
+.botanical-steps li { counter-increment: step; display: grid; grid-template-columns: 2.5rem 1fr; gap: .25rem 1rem; padding: 1.1rem 0; border-bottom: 1px solid var(--stone); }
+.botanical-steps li::before { content: "0" counter(step); grid-row: span 2; color: #687f64; font-family: "Playfair Display", Georgia, serif; font-size: 1.3rem; }
+.botanical-steps strong { font-size: 1.05rem; }
+.botanical-steps span { color: var(--text-secondary); }
+.botanical-form { max-width: 560px; margin-inline: auto; padding: clamp(1.5rem, 4vw, 2.5rem); background: #fff; border: 1px solid var(--stone); border-radius: var(--r-xl); box-shadow: 0 15px 40px rgba(45,58,49,.06); }
+.botanical-form h1 { margin-bottom: .5rem; font-size: clamp(2rem, 3vw, 2.5rem); }
+.botanical-form__intro { margin-bottom: 1.75rem; color: var(--text-secondary); }
+.botanical-utility { max-width: 760px; margin-inline: auto; padding: clamp(1.5rem, 4vw, 2.5rem); background: #fff; border: 1px solid var(--stone); border-radius: var(--r-xl); }
+.botanical-utility h1 { margin-bottom: 1rem; }
+@media (max-width: 991.98px) { .botanical-hero__grid { grid-template-columns: 1fr; } .botanical-illustration { width: min(100%, 320px); } }
+@media (max-width: 767.98px) { .botanical-feature-grid, .botanical-workflow { grid-template-columns: 1fr; } .botanical-hero__actions .btn { min-height: 44px; } }
 .login-shell {
   min-height: 100vh;
   display: grid;

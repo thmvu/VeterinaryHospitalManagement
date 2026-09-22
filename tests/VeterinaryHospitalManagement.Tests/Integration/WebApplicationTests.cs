@@ -44,6 +44,9 @@ public class WebApplicationTests : IClassFixture<FoundationWebApplicationFactory
         Assert.Contains("Veterinary Hospital Management", html);
         Assert.Contains("Quản lý bệnh viện thú y ngoại trú", html);
         Assert.Contains("<meta name=\"theme-color\" content=\"#2D3A31\"", html);
+        Assert.DoesNotContain("Miu Miu", html);
+        Assert.DoesNotContain("100%", html);
+        Assert.Contains("botanical-hero", html);
     }
 
     [Fact]

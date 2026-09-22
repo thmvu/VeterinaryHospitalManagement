@@ -3,12 +3,13 @@
     ViewData["Title"] = "Đăng nhập";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-5 col-lg-4">
-        <h1 class="h3 mb-4">Đăng nhập</h1>
+<div class="botanical-form">
+        <p class="botanical-overline">Cổng nhân viên</p>
+        <h1>Đăng nhập</h1>
+        <p class="botanical-form__intro">Truy cập hồ sơ và công việc được phân quyền cho bạn.</p>
         <form asp-action="Login" method="post">
             <input asp-for="ReturnUrl" type="hidden" />
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
             <div class="mb-3">
                 <label asp-for="Email" class="form-label"></label>
                 <input asp-for="Email" class="form-control" autocomplete="username" />
@@ -25,7 +26,6 @@
             </div>
             <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
         </form>
-    </div>
 </div>
 
 @section Scripts {
