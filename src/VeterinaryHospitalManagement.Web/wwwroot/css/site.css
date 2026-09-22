@@ -116,10 +116,11 @@
 }
 
 .record-header p { margin: 0; color: var(--text-secondary); }
+.record-header__content { width: 100%; min-width: 0; }
 .record-header .breadcrumb { margin-bottom: .75rem; }
 .record-kicker {
-  color: var(--brand);
-  font-size: .76rem;
+  color: #526d4f;
+  font-size: .875rem;
   font-weight: 700;
   letter-spacing: .01em;
 }
@@ -146,11 +147,11 @@
   margin: -1.4rem -1.4rem 1.2rem;
   padding: .85rem 1.15rem;
   border-bottom: 1px solid var(--border);
-  background: #f5f8f5;
+  background: var(--paper);
 }
 
 .sheet-heading > div { display: flex; align-items: center; gap: .65rem; }
-.sheet-heading h2 { margin: 0; font-size: 1rem; font-weight: 700; }
+.sheet-heading h2 { margin: 0; font-family: "Playfair Display", Georgia, serif; font-size: 1.25rem; font-weight: 600; }
 .sheet-index { color: var(--brand); font: 700 .72rem/1 ui-monospace, Consolas, monospace; }
 .sheet-count { color: var(--text-secondary); font-weight: 500; }
 .sheet-note { margin: 1rem 0 0; color: var(--text-secondary); font-size: .825rem; }
@@ -162,7 +163,7 @@
 }
 .record-grid dt,
 .record-grid dd { margin: 0; padding: .75rem .25rem; border-bottom: 1px solid var(--border); }
-.record-grid dt { color: var(--text-secondary); font-size: .82rem; font-weight: 600; }
+.record-grid dt { color: var(--text-secondary); font-size: .875rem; font-weight: 600; }
 .record-grid dd { color: var(--text-primary); }
 
 .status-stamp {
@@ -172,10 +173,10 @@
   font-size: .75rem;
   font-weight: 700;
 }
-.status-stamp--active { color: #167466; background: #e5f4f0; }
+.status-stamp--active { color: #315a3f; background: #e9eee6; }
 .status-stamp--inactive { color: #785b55; background: #f3ece9; }
 .form-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem; }
-.field-guidance { margin: -.25rem 0 1rem; color: var(--text-secondary); font-size: .8rem; }
+.field-guidance { margin: -.25rem 0 1rem; color: var(--text-secondary); font-size: .875rem; }
 .phone-number { font-family: ui-monospace, Consolas, monospace; font-size: .875rem; font-variant-numeric: tabular-nums; }
 .clinical-table { margin: 0; }
 .empty-ledger { display: grid; min-height: 180px; place-items: center; padding: 2rem; color: var(--text-secondary); text-align: center; }
@@ -754,10 +755,9 @@ h1, h2, .section-title, .page-title, .record-header h1 {
 .vhm-table th {
   padding: .625rem 1rem;
   text-align: left;
-  font-size: .75rem;
+  font-size: .875rem;
   font-weight: 600;
-  letter-spacing: .05em;
-  text-transform: uppercase;
+  letter-spacing: .01em;
   color: var(--text-secondary);
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
@@ -818,7 +818,7 @@ h1, h2, .section-title, .page-title, .record-header h1 {
 /* ── Forms ──────────────────────────────────────────────────────────── */
 .form-label {
   display: block;
-  font-size: .8125rem;
+  font-size: .875rem;
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: .375rem;
@@ -1101,10 +1101,10 @@ h1, h2, .section-title, .page-title, .record-header h1 {
 .section-heading { margin-bottom: 3rem; }
 .section-description { color: var(--text-secondary); font-size: 1.05rem; max-width: 44rem; line-height: 1.65; }
 .section-eyebrow {
-  font-size: .875rem;
+  font-size: 1rem;
   font-weight: 600;
   letter-spacing: .01em;
-  color: var(--sage);
+  color: #526d4f;
   margin-bottom: .5rem;
 }
 .section-title {
@@ -1280,6 +1280,18 @@ h1, h2, .section-title, .page-title, .record-header h1 {
   padding: 1.25rem 1.5rem;
   margin-bottom: 1.25rem;
 }
+.botanical-registry-header { padding-bottom: 1.25rem; border-bottom: 1px solid var(--stone); }
+.botanical-empty-state { padding: 3rem 1.5rem; background: #fff; border: 1px solid var(--stone); border-radius: var(--r-lg); }
+.botanical-empty-state h3 { font-family: "Playfair Display", Georgia, serif; font-size: 1.35rem; margin-bottom: .5rem; }
+.botanical-empty-state p { max-width: 380px; margin: 0 auto 1rem; color: var(--text-secondary); }
+.botanical-table-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--stone); }
+.botanical-table-heading span { color: var(--text-secondary); font-size: .875rem; }
+.record-code { display: inline-block; padding: .2rem .45rem; border: 1px solid var(--stone); border-radius: 4px; color: var(--forest); background: var(--paper); font-size: .8rem; }
+.record-person { display: flex; align-items: center; gap: .625rem; min-width: 0; }
+.record-person__avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--brand-light); color: var(--forest); font-weight: 700; display: grid; place-items: center; flex-shrink: 0; }
+.record-person__name { font-weight: 600; overflow-wrap: anywhere; }
+.table-responsive { overflow-x: auto; }
+.vhm-table { min-width: 680px; }
 
 /* ── Responsive ─────────────────────────────────────────────────────── */
 @media (max-width: 991.98px) {

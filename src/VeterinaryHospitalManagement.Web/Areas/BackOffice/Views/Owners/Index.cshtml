@@ -10,7 +10,7 @@
 }
 
 <!-- Page Header -->
-<div class="page-header">
+<div class="page-header botanical-registry-header" data-ui="botanical-owner-registry">
     <div>
         <h1 class="page-title">Chủ nuôi &amp; Thú cưng</h1>
         <p class="page-subtitle">Tra cứu, quản lý hồ sơ chủ nuôi và liên kết thú cưng</p>
@@ -42,9 +42,9 @@
         <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style="color: var(--text-secondary);" aria-hidden="true">
             <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd"/>
         </svg>
-        <span style="font-weight: 600; font-size: .9375rem;">Tìm kiếm</span>
+        <strong>Tìm kiếm</strong>
     </div>
-    <p style="font-size: .8125rem; color: var(--text-secondary); margin-bottom: 1rem;">
+    <p class="field-guidance mb-3">
         Tra cứu theo số điện thoại hoặc mã chủ nuôi. Nhiều chủ nuôi có thể dùng chung một số điện thoại —
         hãy chọn đúng chủ nuôi theo mã trước khi thao tác.
     </p>
@@ -85,13 +85,13 @@
 {
     @if (Model.Results.Count == 0)
     {
-        <div class="d-flex flex-column align-items-center py-5" style="text-align: center;">
+        <div class="empty-ledger botanical-empty-state text-center">
             <svg width="48" height="48" viewBox="0 0 20 20" fill="currentColor"
                  style="color: var(--text-tertiary); margin-bottom: 1rem;" aria-hidden="true">
                 <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd"/>
             </svg>
-            <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: .5rem;">Không tìm thấy kết quả</h3>
-            <p style="color: var(--text-secondary); font-size: .875rem; max-width: 320px;">
+            <h3>Không tìm thấy kết quả</h3>
+            <p>
                 Không có chủ nuôi nào phù hợp với tiêu chí tìm kiếm. Thử lại với thông tin khác hoặc tạo mới.
             </p>
             @if (canManageOwners)
@@ -103,9 +103,9 @@
     else
     {
         <div class="table-wrap">
-            <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem;">
-                <span style="font-weight: 600; font-size: .9375rem;">Kết quả tìm kiếm</span>
-                <span style="font-size: .8rem; color: var(--text-secondary);">Tìm thấy @Model.Results.Count chủ nuôi</span>
+            <div class="botanical-table-heading">
+                <strong>Kết quả tìm kiếm</strong>
+                <span>Tìm thấy @Model.Results.Count chủ nuôi</span>
             </div>
             <div class="table-responsive">
                 <table class="vhm-table" aria-label="Kết quả tìm kiếm chủ nuôi">
@@ -116,7 +116,7 @@
                             <th>Số điện thoại</th>
                             <th>Thú cưng</th>
                             <th>Trạng thái</th>
-                            <th style="width: 90px;"></th>
+                            <th scope="col">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -124,21 +124,16 @@
                     {
                         <tr>
                             <td>
-                                <code style="font-size: .8rem; background: var(--bg-subtle);
-                                             padding: .15rem .45rem; border-radius: 4px;
-                                             border: 1px solid var(--border); color: var(--text-secondary);">
+                                <code class="record-code">
                                     @owner.OwnerCode
                                 </code>
                             </td>
                             <td>
-                                <div style="display: flex; align-items: center; gap: .625rem;">
-                                    <span style="width: 30px; height: 30px; border-radius: 50%;
-                                                 background: var(--brand-light); color: var(--brand);
-                                                 font-weight: 700; font-size: .75rem;
-                                                 display: grid; place-items: center; flex-shrink: 0;">
+                                <div class="record-person">
+                                    <span class="record-person__avatar">
                                         @(owner.FullName?.Length > 0 ? owner.FullName[0].ToString().ToUpper() : "?")
                                     </span>
-                                    <span style="font-weight: 600; font-size: .875rem;">@owner.FullName</span>
+                                    <span class="record-person__name">@owner.FullName</span>
                                 </div>
                             </td>
                             <td>

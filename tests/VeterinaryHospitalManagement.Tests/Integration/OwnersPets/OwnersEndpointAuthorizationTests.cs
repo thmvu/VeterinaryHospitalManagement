@@ -40,6 +40,9 @@ public sealed class OwnersEndpointAuthorizationTests
 
         using var indexResponse = await client.GetAsync(OwnersIndexPath);
         Assert.Equal(HttpStatusCode.OK, indexResponse.StatusCode);
+        var indexHtml = await indexResponse.Content.ReadAsStringAsync();
+        Assert.Contains("data-ui=\"botanical-owner-registry\"", indexHtml);
+        Assert.DoesNotContain("href=\"/BackOffice/Owners/Create\"", indexHtml);
 
         // GET /BackOffice/Owners/Create requires OwnerManage; Veterinarian only has OwnerView -> 403
         using var getCreateResponse = await client.GetAsync(OwnersCreatePath);
