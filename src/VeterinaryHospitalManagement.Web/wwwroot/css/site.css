@@ -6,37 +6,43 @@
 
 /* ── Design Tokens ──────────────────────────────────────────────────── */
 :root {
+  --paper: #F9F8F4;
+  --forest: #2D3A31;
+  --sage: #8C9A84;
+  --clay: #DCCFC2;
+  --stone: #E6E2DA;
+  --terracotta: #C27B66;
   /* Sidebar */
-  --sb-bg:         #1f1f1f;
+  --sb-bg:         var(--forest);
   --sb-bg-hover:   rgba(255,255,255,.07);
-  --sb-bg-active:  rgba(255,255,255,.12);
-  --sb-text:       #c9c9c9;
+  --sb-bg-active:  rgba(140,154,132,.30);
+  --sb-text:       #e0e8dc;
   --sb-text-active:#ffffff;
   --sb-border:     rgba(255,255,255,.08);
   --sb-width:      240px;
   --sb-width-sm:   64px;
 
   /* Surface */
-  --bg-body:       #f9f9f8;
+  --bg-body:       var(--paper);
   --bg-surface:    #ffffff;
-  --bg-subtle:     #f4f4f3;
-  --bg-hover:      #f0f0ee;
+  --bg-subtle:     #f1eee8;
+  --bg-hover:      #eae7df;
 
   /* Brand / Teal */
-  --brand:         #0d8f87;
-  --brand-dark:    #0a726b;
-  --brand-light:   #e6f7f6;
-  --brand-ring:    rgba(13,143,135,.25);
+  --brand:         var(--forest);
+  --brand-dark:    #1f2d24;
+  --brand-light:   #e9eee6;
+  --brand-ring:    rgba(84,112,81,.32);
 
   /* Text */
-  --text-primary:  #1a1a1a;
-  --text-secondary:#6b7280;
-  --text-tertiary: #9ca3af;
+  --text-primary:  var(--forest);
+  --text-secondary:#536055;
+  --text-tertiary: #66746a;
   --text-inverse:  #ffffff;
 
   /* Border */
-  --border:        #e5e7eb;
-  --border-strong: #d1d5db;
+  --border:        var(--stone);
+  --border-strong: #c8c4bb;
 
   /* Status */
   --success:       #059669;
@@ -72,12 +78,8 @@
 }
 
 /* Clinical record workspace ------------------------------------------------ */
-.app-shell,
-.page-content,
-.form-control,
-.form-select,
-.btn {
-  font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif;
+.app-shell, .page-content, .form-control, .form-select, .btn {
+  font-family: "Source Sans 3", "Segoe UI Variable", "Segoe UI", sans-serif;
 }
 
 .topbar-timezone {
@@ -101,14 +103,15 @@
   gap: 1.5rem;
   margin-bottom: 1.5rem;
   padding: .25rem 0 1.1rem;
-  border-bottom: 2px solid var(--brand);
+  border-bottom: 2px solid var(--sage);
 }
 
 .record-header h1 {
   margin: .15rem 0 .25rem;
   color: var(--text-primary);
   font-size: clamp(1.65rem, 3vw, 2.25rem);
-  font-weight: 680;
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 600;
   letter-spacing: -.035em;
 }
 
@@ -118,17 +121,16 @@
   color: var(--brand);
   font-size: .76rem;
   font-weight: 700;
-  letter-spacing: .09em;
-  text-transform: uppercase;
+  letter-spacing: .01em;
 }
 
 .clinical-sheet {
   margin-bottom: 1.25rem;
   padding: 1.4rem;
-  background: #fffefb;
+  background: #fff;
   border: 1px solid var(--border);
-  border-left: 4px solid #a7d6cf;
-  border-radius: 4px;
+  border-left: 4px solid var(--sage);
+  border-radius: var(--r-lg);
   box-shadow: 0 2px 9px rgba(22, 55, 63, .055);
 }
 
@@ -200,12 +202,22 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
-  font-size: .9375rem;
+  font-family: "Source Sans 3", "Segoe UI Variable", "Segoe UI", sans-serif;
+  font-size: 1rem;
   line-height: 1.6;
   color: var(--text-primary);
   background: var(--bg-body);
   -webkit-font-smoothing: antialiased;
+  isolation: isolate;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .10;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.10'/%3E%3C/svg%3E");
 }
 
 a {
@@ -221,6 +233,11 @@ h1,h2,h3,h4,h5,h6 {
   line-height: 1.3;
   letter-spacing: -.02em;
   color: var(--text-primary);
+}
+h1, h2, .section-title, .page-title, .record-header h1 {
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 600;
+  letter-spacing: -.025em;
 }
 
 /* ── Accessibility ──────────────────────────────────────────────────── */
@@ -285,7 +302,7 @@ h1,h2,h3,h4,h5,h6 {
   width: 36px;
   height: 36px;
   flex-shrink: 0;
-  background: var(--brand);
+  background: var(--sage);
   border-radius: var(--r-md);
   display: grid;
   place-items: center;
@@ -316,8 +333,7 @@ h1,h2,h3,h4,h5,h6 {
   font-size: .7rem;
   font-weight: 500;
   color: var(--sb-text);
-  text-transform: uppercase;
-  letter-spacing: .08em;
+  letter-spacing: .01em;
   white-space: nowrap;
 }
 
@@ -334,9 +350,8 @@ h1,h2,h3,h4,h5,h6 {
   padding: .5rem .75rem .25rem;
   font-size: .68rem;
   font-weight: 600;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,.35);
+  letter-spacing: .01em;
+  color: #d6e2d2;
   white-space: nowrap;
   overflow: hidden;
 }
@@ -370,6 +385,7 @@ h1,h2,h3,h4,h5,h6 {
   background: var(--sb-bg-active);
   color: var(--sb-text-active);
   font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--sage);
 }
 .sidebar-item svg,
 .sidebar-item .sb-icon,
@@ -474,7 +490,7 @@ h1,h2,h3,h4,h5,h6 {
 .vhm-brand__mark {
   width: 36px;
   height: 36px;
-  background: var(--brand);
+  background: var(--sage);
   border-radius: var(--r-md);
   display: grid;
   place-items: center;
@@ -498,8 +514,7 @@ h1,h2,h3,h4,h5,h6 {
   font-size: .7rem;
   font-weight: 500;
   color: var(--sb-text);
-  text-transform: uppercase;
-  letter-spacing: .08em;
+  letter-spacing: .01em;
 }
 .site-header .navbar-nav .nav-link {
   color: var(--sb-text);
@@ -615,7 +630,7 @@ h1,h2,h3,h4,h5,h6 {
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
-.page-title { font-size: 1.375rem; font-weight: 700; }
+.page-title { font-size: clamp(1.75rem, 2vw, 2.25rem); font-weight: 600; }
 .page-subtitle { font-size: .875rem; color: var(--text-secondary); margin-top: .25rem; font-weight: 400; }
 
 /* ── Buttons ────────────────────────────────────────────────────────── */
@@ -642,14 +657,14 @@ h1,h2,h3,h4,h5,h6 {
 }
 .btn:active { transform: translateY(1px); }
 
-/* Brand / Teal */
+/* Botanical actions */
 .btn-brand {
   background: var(--brand);
   color: #fff;
   border-color: var(--brand);
-  box-shadow: 0 1px 2px rgba(13,143,135,.2);
+  box-shadow: none;
 }
-.btn-brand:hover { background: var(--brand-dark); border-color: var(--brand-dark); color: #fff; box-shadow: 0 4px 8px rgba(13,143,135,.25); }
+.btn-brand:hover { background: var(--brand-dark); border-color: var(--brand-dark); color: #fff; box-shadow: none; }
 
 /* Outline Brand */
 .btn-outline-brand {
