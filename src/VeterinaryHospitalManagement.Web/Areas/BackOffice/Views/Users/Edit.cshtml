@@ -40,7 +40,7 @@
     <p>Vai trò hiện tại: <strong>@Model.RoleName</strong>. Trạng thái: <span class="status-stamp @(Model.IsActive ? "status-stamp--active" : "status-stamp--inactive")">@(Model.IsActive ? "Đang hoạt động" : "Đã khóa")</span></p>
     <form asp-action="ChangeRole" method="post" class="management-action-form">
         <input asp-for="Id" type="hidden" /><input asp-for="ConcurrencyStamp" type="hidden" />
-        <div><label for="newRoleName" class="form-label">Vai trò mới</label><select id="newRoleName" name="RoleName" class="form-select"><option value="@SystemRoleNames.Receptionist">Receptionist</option><option value="@SystemRoleNames.Veterinarian">Veterinarian</option><option value="@SystemRoleNames.Manager">Manager</option><option value="@SystemRoleNames.Admin">Admin</option></select></div>
+        <div><label for="newRoleName" class="form-label">Vai trò mới</label><select id="newRoleName" name="RoleName" class="form-select"><option value="@SystemRoleNames.Receptionist" selected="@(Model.RoleName == SystemRoleNames.Receptionist)">Receptionist</option><option value="@SystemRoleNames.Veterinarian" selected="@(Model.RoleName == SystemRoleNames.Veterinarian)">Veterinarian</option><option value="@SystemRoleNames.Manager" selected="@(Model.RoleName == SystemRoleNames.Manager)">Manager</option><option value="@SystemRoleNames.Admin" selected="@(Model.RoleName == SystemRoleNames.Admin)">Admin</option></select></div>
         <button type="submit" class="btn btn-outline-brand">Đổi vai trò</button>
     </form>
     <form asp-action="SetActive" method="post" class="mt-3">
