@@ -10,16 +10,155 @@ namespace VeterinaryHospitalManagement.Web.Services.Scheduling;
 
 public sealed class AppointmentService(ApplicationDbContext db, TimeProvider clock) : IAppointmentService
 {
-    public async Task<IReadOnlyList<AppointmentListItem>> ListAsync(DateTimeOffset from, DateTimeOffset to,
-        int? veterinarianId = null, CancellationToken ct = default)
+    public async Task<IReadOnlyList<AppointmentListItem>> ListAsync(DateTimeOffset? from = null, DateTimeOffset? to = null,
+        int? veterinarianId = null, string? status = null, CancellationToken ct = default)
     {
-        AppointmentRules.ValidateTimeRange(from, to);
-        var query = db.Appointments.AsNoTracking()
-            .Where(x => x.StartAt < to && from < x.EndAt);
-        if (veterinarianId.HasValue) query = query.Where(x => x.VeterinarianId == veterinarianId.Value);
+        var query = db.Appointments.AsNoTracking();
+        if (from.HasValue && to.HasValue)
+        {
+            AppointmentRules.ValidateTimeRange(from.Value, to.Value);
+            query = query.Where(x => x.StartAt < to.Value && from.Value < x.EndAt);
+        }
+        else if (from.HasValue)
+        {
+            query = query.Where(x => x.EndAt > from.Value);
+        }
+        else if (to.HasValue)
+        {
+            query = query.Where(x => x.StartAt < to.Value);
+        }
+
+        if (veterinarianId.HasValue)
+            query = query.Where(x => x.VeterinarianId == veterinarianId.Value);
+
+        if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<AppointmentStatus>(status, true, out var parsedStatus))
+            query = query.Where(x => x.Status == parsedStatus);
+
         return await query.OrderBy(x => x.StartAt).Select(x => new AppointmentListItem(
             x.Id, x.AppointmentNumber, x.PetId, x.Pet.Name, x.VeterinarianId,
             x.Veterinarian.User.FullName, x.StartAt, x.EndAt, x.Reason, x.Status.ToString())).ToListAsync(ct);
+    }
+
+    public async Task<AppointmentDetailItem?> GetDetailsAsync(int id, CancellationToken ct = default)
+    {
+        return await db.Appointments.AsNoTracking()
+            .Where(x => x.Id == id)
+            .Select(x => new AppointmentDetailItem(
+                x.Id,
+                x.AppointmentNumber,
+                x.PetId,
+                x.Pet.Name,
+                x.Pet.Owner.FullName,
+                x.Pet.Owner.PhoneNumber,
+                x.VeterinarianId,
+                x.Veterinarian.User.FullName,
+                x.StartAt,
+                x.EndAt,
+                x.Reason,
+                x.Status.ToString(),
+                x.CancellationReason,
+                x.CreatedByUser.FullName,
+                x.CreatedAt,
+                x.RowVersion))
+            .FirstOrDefaultAsync(ct);
+    }
+
+    public async Task CancelAsync(int id, string actorUserId, string reason, byte[] rowVersion, CancellationToken ct = default)
+    {
+        var normalizedReason = AppointmentRules.NormalizeCancellationReason(reason);
+        var strategy = db.Database.CreateExecutionStrategy();
+        try
+        {
+            await strategy.ExecuteAsync(async () =>
+            {
+                await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+                var appointment = await db.Appointments
+                    .FirstOrDefaultAsync(x => x.Id == id, ct);
+                if (appointment is null)
+                    throw new AppointmentManagementException("Không tìm thấy lịch hẹn.");
+
+                AppointmentRules.ValidateCanCancel(appointment.Status);
+
+                db.Entry(appointment).Property(x => x.RowVersion).OriginalValue = rowVersion;
+                appointment.Status = AppointmentStatus.Cancelled;
+                appointment.CancellationReason = normalizedReason;
+
+                db.AuditLogs.Add(new AuditLog
+                {
+                    ActorType = "Internal",
+                    UserId = actorUserId,
+                    Action = "Appointment.Cancelled",
+                    EntityName = "Appointment",
+                    EntityId = appointment.Id.ToString(CultureInfo.InvariantCulture),
+                    Description = $"Cancelled appointment {appointment.AppointmentNumber}. Reason: {normalizedReason}",
+                    CreatedAt = clock.GetUtcNow()
+                });
+
+                await db.SaveChangesAsync(ct);
+                await tx.CommitAsync(ct);
+            });
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new AppointmentManagementException("Lịch hẹn đã bị thay đổi bởi người khác. Vui lòng tải lại trang.");
+        }
+        catch (DbUpdateException ex) when (FindSqlException(ex) is { Number: 547 })
+        {
+            throw new AppointmentManagementException("Dữ liệu hủy lịch hẹn không hợp lệ.");
+        }
+        catch (SqlException ex) when (ex.Number == 1205)
+        {
+            throw new AppointmentManagementException("Lịch hẹn vừa được thay đổi bởi người khác. Hãy thử lại.");
+        }
+    }
+
+    public async Task MarkNoShowAsync(int id, string actorUserId, byte[] rowVersion, CancellationToken ct = default)
+    {
+        var now = clock.GetUtcNow();
+        var strategy = db.Database.CreateExecutionStrategy();
+        try
+        {
+            await strategy.ExecuteAsync(async () =>
+            {
+                await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+                var appointment = await db.Appointments
+                    .FirstOrDefaultAsync(x => x.Id == id, ct);
+                if (appointment is null)
+                    throw new AppointmentManagementException("Không tìm thấy lịch hẹn.");
+
+                AppointmentRules.ValidateCanMarkNoShow(appointment.Status, appointment.EndAt, now);
+
+                db.Entry(appointment).Property(x => x.RowVersion).OriginalValue = rowVersion;
+                appointment.Status = AppointmentStatus.NoShow;
+                appointment.CancellationReason = null;
+
+                db.AuditLogs.Add(new AuditLog
+                {
+                    ActorType = "Internal",
+                    UserId = actorUserId,
+                    Action = "Appointment.MarkedNoShow",
+                    EntityName = "Appointment",
+                    EntityId = appointment.Id.ToString(CultureInfo.InvariantCulture),
+                    Description = $"Marked appointment {appointment.AppointmentNumber} as NoShow.",
+                    CreatedAt = clock.GetUtcNow()
+                });
+
+                await db.SaveChangesAsync(ct);
+                await tx.CommitAsync(ct);
+            });
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new AppointmentManagementException("Lịch hẹn đã bị thay đổi bởi người khác. Vui lòng tải lại trang.");
+        }
+        catch (DbUpdateException ex) when (FindSqlException(ex) is { Number: 547 })
+        {
+            throw new AppointmentManagementException("Dữ liệu đánh dấu vắng mặt không hợp lệ.");
+        }
+        catch (SqlException ex) when (ex.Number == 1205)
+        {
+            throw new AppointmentManagementException("Lịch hẹn vừa được thay đổi bởi người khác. Hãy thử lại.");
+        }
     }
 
     public async Task<AppointmentAvailability> CheckAvailabilityAsync(int petId, int veterinarianId,

@@ -1,0 +1,178 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Lịch ngày & tuần";
+    var vets = ViewBag.Veterinarians as IReadOnlyList<SelectListItem> ?? [];
+    int? selectedVetId = ViewBag.SelectedVeterinarianId as int?;
+}
+
+<header class="record-header">
+    <div>
+        <span class="record-kicker">Tổng quan vận hành</span>
+        <h1>Lịch ngày &amp; Lịch tuần</h1>
+        <p>Theo dõi ca trực của bác sĩ và các lịch hẹn khám theo thời gian thực.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-area="BackOffice" asp-controller="Appointments" asp-action="Index" class="btn btn-ghost">
+            📋 Danh sách bảng
+        </a>
+        <a asp-area="BackOffice" asp-controller="Appointments" asp-action="Create" class="btn btn-brand">
+            ➕ Đặt lịch hẹn mới
+        </a>
+    </div>
+</header>
+
+<div class="clinical-sheet mb-4 p-3">
+    <div class="row g-3 align-items-center">
+        <div class="col-md-5">
+            <label for="calendarVetFilter" class="form-label mb-1">Lọc theo bác sĩ</label>
+            <select id="calendarVetFilter" class="form-select">
+                <option value="">-- Tất cả bác sĩ --</option>
+                @foreach (var vet in vets)
+                {
+                    <option value="@vet.Value" selected="@(selectedVetId?.ToString() == vet.Value ? "selected" : null)">
+                        @vet.Text
+                    </option>
+                }
+            </select>
+        </div>
+        <div class="col-md-7 d-flex justify-content-md-end gap-3 align-items-center mt-md-4 pt-md-2">
+            <span class="badge bg-success-subtle text-success border border-success p-2">■ Ca làm việc</span>
+            <span class="badge bg-primary-subtle text-primary border border-primary p-2">■ Lịch chờ khám</span>
+            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning p-2">■ Đã tiếp nhận</span>
+            <span class="badge bg-danger-subtle text-danger border border-danger p-2">■ Vắng mặt</span>
+            <span class="badge bg-secondary-subtle text-secondary border border-secondary p-2">■ Đã hủy</span>
+        </div>
+    </div>
+</div>
+
+<div class="clinical-sheet p-3">
+    <div id="fullCalendarWrap" style="min-height: 700px;"></div>
+</div>
+
+@section Scripts {
+    <!-- FullCalendar v6 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const calendarEl = document.getElementById('fullCalendarWrap');
+            const vetFilter = document.getElementById('calendarVetFilter');
+
+            function getEventsUrl() {
+                const vetId = vetFilter.value;
+                let url = '@Url.Action("Events", "Calendar", new { area = "BackOffice" })';
+                if (vetId) {
+                    url += (url.includes('?') ? '&' : '?') + 'veterinarianId=' + encodeURIComponent(vetId);
+                }
+                return url;
+            }
+
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridDay',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'timeGridDay,timeGridWeek,dayGridMonth'
+                },
+                buttonText: {
+                    today: 'Hôm nay',
+                    month: 'Tháng',
+                    week: 'Tuần',
+                    day: 'Ngày'
+                },
+                locale: 'vi',
+                slotMinTime: '07:00:00',
+                slotMaxTime: '21:00:00',
+                allDaySlot: false,
+                slotDuration: '00:30:00',
+                nowIndicator: true,
+                events: function (fetchInfo, successCallback, failureCallback) {
+                    const url = getEventsUrl() + (getEventsUrl().includes('?') ? '&' : '?') +
+                        'start=' + encodeURIComponent(fetchInfo.startStr) +
+                        '&end=' + encodeURIComponent(fetchInfo.endStr);
+
+                    fetch(url)
+                        .then(res => res.json())
+                        .then(events => successCallback(events))
+                        .catch(err => {
+                            console.error('Lỗi tải sự kiện calendar:', err);
+                            failureCallback(err);
+                        });
+                },
+                eventDidMount: function (info) {
+                    // Tooltip hiển thị thông tin tóm tắt
+                    const props = info.event.extendedProps;
+                    let tooltipContent = info.event.title;
+                    if (props.type === 'appointment') {
+                        tooltipContent = `Lịch hẹn: ${props.PetName}\nBác sĩ: ${props.VeterinarianName}\nTrạng thái: ${props.StatusText}\nLý do: ${props.Reason || 'Không có'}`;
+                    } else if (props.type === 'shift') {
+                        tooltipContent = `Ca làm việc: ${props.VeterinarianName}`;
+                    }
+                    info.el.setAttribute('title', tooltipContent);
+                }
+            });
+
+            calendar.render();
+
+            vetFilter.addEventListener('change', function () {
+                calendar.refetchEvents();
+            });
+        });
+    </script>
+    <style>
+        .event-shift {
+            background-color: #e8f5e9 !important;
+            border-color: #81c784 !important;
+            color: #1b5e20 !important;
+            font-size: 0.85rem;
+            opacity: 0.85;
+        }
+        .event-scheduled {
+            background-color: #e3f2fd !important;
+            border-color: #64b5f6 !important;
+            color: #0d47a1 !important;
+            font-weight: 500;
+        }
+        .event-checked-in {
+            background-color: #fff9c4 !important;
+            border-color: #fff176 !important;
+            color: #f57f17 !important;
+            font-weight: 500;
+        }
+        .event-cancelled {
+            background-color: #eeeeee !important;
+            border-color: #bdbdbd !important;
+            color: #757575 !important;
+            text-decoration: line-through;
+        }
+        .event-noshow {
+            background-color: #ffebee !important;
+            border-color: #e57373 !important;
+            color: #b71c1c !important;
+            font-weight: 500;
+        }
+        .fc-theme-standard td, .fc-theme-standard th {
+            border-color: #e0e5e0;
+        }
+        .fc-col-header-cell-cushion {
+            color: #2d3a31;
+            font-weight: 600;
+            padding: 8px 4px;
+        }
+        .fc-timegrid-slot-label-cushion {
+            color: #5c6b60;
+            font-size: 0.82rem;
+        }
+        .fc-button-primary {
+            background-color: #2d3a31 !important;
+            border-color: #2d3a31 !important;
+        }
+        .fc-button-primary:hover {
+            background-color: #1e2721 !important;
+            border-color: #1e2721 !important;
+        }
+        .fc-button-active {
+            background-color: #4a5c50 !important;
+            border-color: #4a5c50 !important;
+        }
+    </style>
+}

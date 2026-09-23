@@ -58,6 +58,46 @@ public sealed class AppointmentServiceSqlServerTests
         await using var scope=f.Services.CreateAsyncScope(); Assert.Equal(1,await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Appointments.CountAsync());
     }
 
+    [IdentitySqlServerFact]
+    public async Task Cancel_updates_status_sets_reason_and_writes_audit()
+    {
+        await IdentitySqlServerTestEnvironment.RecreateAndMigrateAsync(); using var f=new IdentitySqlServerWebApplicationFactory(); var data=await Setup(f);
+        var start=new DateTimeOffset(2026,11,1,11,0,0,TimeSpan.FromHours(7));
+        var id=await With(f,s=>s.CreateAsync(new(data.Actor,data.Pet,data.Vet,start,start.AddMinutes(30),"Khám")));
+        var details=(await With(f,s=>s.GetDetailsAsync(id)))!;
+        await With(f,async s=>{await s.CancelAsync(id,data.Actor,"Khách bận việc",details.RowVersion);return true;});
+
+        await using var scope=f.Services.CreateAsyncScope(); var db=scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var item=await db.Appointments.SingleAsync(x=>x.Id==id);
+        Assert.Equal(AppointmentStatus.Cancelled,item.Status);
+        Assert.Equal("Khách bận việc",item.CancellationReason);
+        Assert.True(await db.AuditLogs.AnyAsync(x=>x.Action=="Appointment.Cancelled"&&x.EntityId==id.ToString()));
+    }
+
+    [IdentitySqlServerFact]
+    public async Task MarkNoShow_updates_status_and_writes_audit()
+    {
+        await IdentitySqlServerTestEnvironment.RecreateAndMigrateAsync(); using var f=new IdentitySqlServerWebApplicationFactory(); var data=await Setup(f);
+        // Tạo appointment với thời gian kết thúc trước thời gian hiện tại của clock
+        var now=DateTimeOffset.UtcNow;
+        var start=now.AddHours(-2);
+        // Cần ca làm việc bao trọn thời gian này
+        await using(var shiftScope=f.Services.CreateAsyncScope()){
+            var shiftDb=shiftScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            shiftDb.VeterinarianShifts.Add(new VeterinarianShift{VeterinarianId=data.Vet,StartAt=start.AddHours(-1),EndAt=start.AddHours(4),IsActive=true});
+            await shiftDb.SaveChangesAsync();
+        }
+        var id=await With(f,s=>s.CreateAsync(new(data.Actor,data.Pet,data.Vet,start,start.AddMinutes(30),"Khám")));
+        var details=(await With(f,s=>s.GetDetailsAsync(id)))!;
+        await With(f,async s=>{await s.MarkNoShowAsync(id,data.Actor,details.RowVersion);return true;});
+
+        await using var scope=f.Services.CreateAsyncScope(); var db=scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var item=await db.Appointments.SingleAsync(x=>x.Id==id);
+        Assert.Equal(AppointmentStatus.NoShow,item.Status);
+        Assert.Null(item.CancellationReason);
+        Assert.True(await db.AuditLogs.AnyAsync(x=>x.Action=="Appointment.MarkedNoShow"&&x.EntityId==id.ToString()));
+    }
+
     private static async Task<(string Actor,int Pet,int Vet)> Setup(IdentitySqlServerWebApplicationFactory f)
     {
         using(var c=f.CreateClient()) await c.GetAsync("/"); await using var scope=f.Services.CreateAsyncScope(); var sp=scope.ServiceProvider; var db=sp.GetRequiredService<ApplicationDbContext>();

@@ -1,0 +1,165 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Appointments.AppointmentDetailViewModel
+@inject VeterinaryHospitalManagement.Web.Services.Time.IVietnamTimeProvider VietnamTimeProvider
+@using Microsoft.AspNetCore.Authorization
+@using VeterinaryHospitalManagement.Web.Authorization
+@inject IAuthorizationService AuthorizationService
+@{
+    ViewData["Title"] = $"Chi tiết lịch hẹn {Model.AppointmentNumber}";
+    var nowLocal = VietnamTimeProvider.LocalNow.DateTime;
+    var canCancel = Model.CanCancel && (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.AppointmentCancel))).Succeeded;
+    var canNoShow = Model.CanMarkNoShow(nowLocal) && (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.AppointmentMarkNoShow))).Succeeded;
+}
+
+<header class="record-header">
+    <div>
+        <span class="record-kicker">Lịch hẹn</span>
+        <h1>@Model.AppointmentNumber</h1>
+        <p>Chi tiết thông tin lịch hẹn khám thú cưng.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-ghost">← Danh sách lịch hẹn</a>
+        @if (canCancel)
+        {
+            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                ❌ Hủy lịch hẹn
+            </button>
+        }
+        @if (canNoShow)
+        {
+            <form asp-action="MarkNoShow" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn đánh dấu khách hàng vắng mặt (No-Show)?');">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Id" value="@Model.Id" />
+                <input type="hidden" name="RowVersionBase64" value="@Model.RowVersionBase64" />
+                <button type="submit" class="btn btn-danger">
+                    ⚠ Báo vắng mặt (No-Show)
+                </button>
+            </form>
+        }
+    </div>
+</header>
+
+@if (TempData["StatusMessage"] is string message)
+{
+    <div class="alert alert-success">@message</div>
+}
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="clinical-sheet p-4 mb-4">
+            <h2 class="h5 pb-2 mb-3 border-bottom">Thông tin lịch khám</h2>
+            <dl class="row mb-0">
+                <dt class="col-sm-4 text-muted">Trạng thái:</dt>
+                <dd class="col-sm-8">
+                    @switch (Model.Status)
+                    {
+                        case "Scheduled":
+                            <span class="badge bg-primary fs-6">Chờ khám</span>
+                            break;
+                        case "CheckedIn":
+                            <span class="badge bg-warning text-dark fs-6">Đã tiếp nhận</span>
+                            break;
+                        case "Cancelled":
+                            <span class="badge bg-secondary fs-6">Đã hủy</span>
+                            break;
+                        case "NoShow":
+                            <span class="badge bg-danger fs-6">Vắng mặt (No-Show)</span>
+                            break;
+                        default:
+                            <span class="badge bg-light text-dark fs-6">@Model.Status</span>
+                            break;
+                    }
+                </dd>
+
+                <dt class="col-sm-4 text-muted">Thời gian khám:</dt>
+                <dd class="col-sm-8 fw-semibold">
+                    @Model.StartAtLocal.ToString("HH:mm") - @Model.EndAtLocal.ToString("HH:mm") (@Model.StartAtLocal.ToString("dd/MM/yyyy"))
+                </dd>
+
+                <dt class="col-sm-4 text-muted">Bác sĩ phụ trách:</dt>
+                <dd class="col-sm-8">
+                    <strong>BS. @Model.VeterinarianName</strong>
+                </dd>
+
+                <dt class="col-sm-4 text-muted">Lý do khám:</dt>
+                <dd class="col-sm-8 text-break">@Model.Reason</dd>
+
+                @if (!string.IsNullOrWhiteSpace(Model.CancellationReason))
+                {
+                    <dt class="col-sm-4 text-danger">Lý do hủy:</dt>
+                    <dd class="col-sm-8 text-danger fw-semibold">@Model.CancellationReason</dd>
+                }
+            </dl>
+        </div>
+
+        <div class="clinical-sheet p-4">
+            <h2 class="h5 pb-2 mb-3 border-bottom">Thông tin người tạo &amp; Ghi nhận</h2>
+            <dl class="row mb-0">
+                <dt class="col-sm-4 text-muted">Người tiếp nhận/tạo:</dt>
+                <dd class="col-sm-8">@Model.CreatedByName</dd>
+
+                <dt class="col-sm-4 text-muted">Thời điểm tạo:</dt>
+                <dd class="col-sm-8">@Model.CreatedAtLocal.ToString("dd/MM/yyyy HH:mm")</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="clinical-sheet p-4">
+            <h2 class="h5 pb-2 mb-3 border-bottom">Bệnh nhân &amp; Chủ nuôi</h2>
+            <dl class="mb-0">
+                <dt class="text-muted">Thú cưng:</dt>
+                <dd class="fw-bold fs-5 text-brand">@Model.PetName</dd>
+
+                <dt class="text-muted">Chủ nuôi:</dt>
+                <dd class="fw-semibold">@Model.OwnerName</dd>
+
+                <dt class="text-muted">Số điện thoại liên hệ:</dt>
+                <dd>
+                    <a href="tel:@Model.OwnerPhone" class="text-decoration-none">
+                        📞 @Model.OwnerPhone
+                    </a>
+                </dd>
+            </dl>
+            <hr />
+            <a asp-area="BackOffice" asp-controller="Pets" asp-action="Details" asp-route-id="@Model.PetId" class="btn btn-sm btn-outline-brand w-100">
+                Xem hồ sơ thú cưng
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Hủy lịch hẹn -->
+@if (canCancel)
+{
+    <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="Cancel" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="Id" value="@Model.Id" />
+                    <input type="hidden" name="RowVersionBase64" value="@Model.RowVersionBase64" />
+
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="cancelModalLabel">Hủy lịch hẹn @Model.AppointmentNumber</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="cancelReason" class="form-label">Lý do hủy lịch <span class="text-danger">*</span></label>
+                            <textarea id="cancelReason" name="Reason" class="form-control" rows="3" required
+                                      placeholder="Khách báo bận, đổi lịch hẹn, v.v..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}

@@ -1,0 +1,126 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Appointments.CreateAppointmentViewModel
+@{
+    ViewData["Title"] = "Đặt lịch hẹn mới";
+}
+
+<header class="record-header">
+    <div>
+        <span class="record-kicker">Lịch hẹn</span>
+        <h1>Đặt lịch hẹn mới</h1>
+        <p>Chọn thú cưng, bác sĩ phụ trách và khung giờ khám hợp lệ.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-ghost">← Danh sách lịch hẹn</a>
+</header>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="clinical-sheet p-4">
+            <form asp-action="Create" method="post" id="createAppointmentForm">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <div class="mb-3">
+                    <label asp-for="PetId" class="form-label">Thú cưng <span class="text-danger">*</span></label>
+                    <select asp-for="PetId" asp-items="Model.Pets" class="form-select" id="petSelect">
+                        <option value="">-- Chọn thú cưng --</option>
+                    </select>
+                    <span asp-validation-for="PetId" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="VeterinarianId" class="form-label">Bác sĩ phụ trách <span class="text-danger">*</span></label>
+                    <select asp-for="VeterinarianId" asp-items="Model.Veterinarians" class="form-select" id="vetSelect">
+                        <option value="">-- Chọn bác sĩ --</option>
+                    </select>
+                    <span asp-validation-for="VeterinarianId" class="text-danger small"></span>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="StartAtLocal" class="form-label">Thời gian bắt đầu <span class="text-danger">*</span></label>
+                        <input asp-for="StartAtLocal" type="datetime-local" class="form-control" id="startAtInput" />
+                        <span asp-validation-for="StartAtLocal" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="EndAtLocal" class="form-label">Thời gian kết thúc <span class="text-danger">*</span></label>
+                        <input asp-for="EndAtLocal" type="datetime-local" class="form-control" id="endAtInput" />
+                        <span asp-validation-for="EndAtLocal" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <!-- Availability Feedback Box -->
+                <div id="availabilityFeedback" class="mb-3 p-3 rounded" style="display: none;">
+                    <div id="availabilityMessage" class="small fw-semibold"></div>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Reason" class="form-label">Lý do khám <span class="text-danger">*</span></label>
+                    <textarea asp-for="Reason" rows="3" class="form-control" placeholder="Mô tả triệu chứng hoặc lý do tái khám..."></textarea>
+                    <span asp-validation-for="Reason" class="text-danger small"></span>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <a asp-action="Index" class="btn btn-ghost">Hủy</a>
+                    <button type="submit" class="btn btn-brand" id="submitBtn">Xác nhận đặt lịch</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const petSelect = document.getElementById('petSelect');
+            const vetSelect = document.getElementById('vetSelect');
+            const startInput = document.getElementById('startAtInput');
+            const endInput = document.getElementById('endAtInput');
+            const feedbackBox = document.getElementById('availabilityFeedback');
+            const feedbackMsg = document.getElementById('availabilityMessage');
+
+            async function checkSlot() {
+                const petId = petSelect.value;
+                const vetId = vetSelect.value;
+                const start = startInput.value;
+                const end = endInput.value;
+
+                if (!petId || !vetId || !start || !end) {
+                    feedbackBox.style.display = 'none';
+                    return;
+                }
+
+                if (new Date(start) >= new Date(end)) {
+                    feedbackBox.style.display = 'block';
+                    feedbackBox.className = 'mb-3 p-3 rounded bg-danger-subtle text-danger border border-danger';
+                    feedbackMsg.textContent = 'Thời gian kết thúc phải sau thời gian bắt đầu.';
+                    return;
+                }
+
+                try {
+                    const url = `@Url.Action("CheckAvailability", "Appointments", new { area = "BackOffice" })?petId=${petId}&veterinarianId=${vetId}&startAtLocal=${encodeURIComponent(start)}&endAtLocal=${encodeURIComponent(end)}`;
+                    const res = await fetch(url);
+                    if (res.ok) {
+                        const data = await res.json();
+                        feedbackBox.style.display = 'block';
+                        if (data.isAvailable) {
+                            feedbackBox.className = 'mb-3 p-3 rounded bg-success-subtle text-success border border-success';
+                            feedbackMsg.textContent = '✓ Khung giờ hợp lệ: Bác sĩ có ca trực và không bị trùng lịch.';
+                        } else {
+                            feedbackBox.className = 'mb-3 p-3 rounded bg-warning-subtle text-warning-emphasis border border-warning';
+                            feedbackMsg.textContent = '⚠ ' + (data.reason || 'Khung giờ này không khả dụng.');
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error checking availability:', e);
+                }
+            }
+
+            petSelect.addEventListener('change', checkSlot);
+            vetSelect.addEventListener('change', checkSlot);
+            startInput.addEventListener('change', checkSlot);
+            endInput.addEventListener('change', checkSlot);
+        });
+    </script>
+}

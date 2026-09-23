@@ -1,0 +1,147 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Appointments.AppointmentListViewModel
+@inject VeterinaryHospitalManagement.Web.Services.Time.IVietnamTimeProvider VietnamTimeProvider
+@using Microsoft.AspNetCore.Authorization
+@using VeterinaryHospitalManagement.Web.Authorization
+@inject IAuthorizationService AuthorizationService
+@{
+    ViewData["Title"] = "Danh sách lịch hẹn";
+    var offset = VietnamTimeProvider.LocalNow.Offset;
+    var canCreate = (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.AppointmentCreate))).Succeeded;
+}
+
+<header class="record-header">
+    <div>
+        <span class="record-kicker">Tiếp đón &amp; Lịch khám</span>
+        <h1>Danh sách lịch hẹn</h1>
+        <p>Quản lý lịch hẹn khám của thú cưng với các bác sĩ.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-area="BackOffice" asp-controller="Calendar" asp-action="Index" class="btn btn-outline-brand">
+            📅 Xem lịch ngày/tuần
+        </a>
+        @if (canCreate)
+        {
+            <a asp-action="Create" class="btn btn-brand">➕ Đặt lịch hẹn</a>
+        }
+    </div>
+</header>
+
+@if (TempData["StatusMessage"] is string message)
+{
+    <div class="alert alert-success">@message</div>
+}
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<div class="clinical-sheet mb-4 p-3">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label asp-for="FilterDate" class="form-label">Ngày khám</label>
+            <input asp-for="FilterDate" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="FilterVeterinarianId" class="form-label">Bác sĩ phụ trách</label>
+            <select asp-for="FilterVeterinarianId" asp-items="Model.Veterinarians" class="form-select">
+                <option value="">-- Tất cả bác sĩ --</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="FilterStatus" class="form-label">Trạng thái</label>
+            <select asp-for="FilterStatus" class="form-select">
+                <option value="">-- Tất cả trạng thái --</option>
+                <option value="Scheduled">Chờ khám (Scheduled)</option>
+                <option value="CheckedIn">Đã tiếp nhận (Checked-in)</option>
+                <option value="Cancelled">Đã hủy (Cancelled)</option>
+                <option value="NoShow">Vắng mặt (No-Show)</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-brand w-100">Lọc</button>
+            <a asp-action="Index" class="btn btn-ghost">Xóa</a>
+        </div>
+    </form>
+</div>
+
+@if (Model.Items.Count == 0)
+{
+    <div class="clinical-sheet text-center py-5">
+        <h2>Không tìm thấy lịch hẹn nào</h2>
+        <p>Thử điều chỉnh bộ lọc hoặc tạo một lịch hẹn mới cho khách hàng.</p>
+        @if (canCreate)
+        {
+            <a asp-action="Create" class="btn btn-brand">Đặt lịch hẹn mới</a>
+        }
+    </div>
+}
+else
+{
+    <div class="table-wrap">
+        <div class="table-responsive" role="region" aria-label="Danh sách lịch hẹn" tabindex="0">
+            <table class="vhm-table" aria-label="Danh sách lịch hẹn">
+                <thead>
+                    <tr>
+                        <th>Mã lịch</th>
+                        <th>Thú cưng</th>
+                        <th>Bác sĩ phụ trách</th>
+                        <th>Thời gian khám</th>
+                        <th>Lý do</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        var startLocal = item.StartAt.ToOffset(offset);
+                        var endLocal = item.EndAt.ToOffset(offset);
+                        <tr>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@item.Id" class="fw-semibold">
+                                    @item.AppointmentNumber
+                                </a>
+                            </td>
+                            <td>@item.PetName</td>
+                            <td>BS. @item.VeterinarianName</td>
+                            <td>
+                                <div>@startLocal.ToString("dd/MM/yyyy")</div>
+                                <small class="text-muted">@startLocal.ToString("HH:mm") - @endLocal.ToString("HH:mm")</small>
+                            </td>
+                            <td>
+                                <span class="d-inline-block text-truncate" style="max-width: 200px;" title="@item.Reason">
+                                    @item.Reason
+                                </span>
+                            </td>
+                            <td>
+                                @switch (item.Status)
+                                {
+                                    case "Scheduled":
+                                        <span class="badge bg-primary">Chờ khám</span>
+                                        break;
+                                    case "CheckedIn":
+                                        <span class="badge bg-warning text-dark">Đã tiếp nhận</span>
+                                        break;
+                                    case "Cancelled":
+                                        <span class="badge bg-secondary">Đã hủy</span>
+                                        break;
+                                    case "NoShow":
+                                        <span class="badge bg-danger">Vắng mặt</span>
+                                        break;
+                                    default:
+                                        <span class="badge bg-light text-dark">@item.Status</span>
+                                        break;
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-brand">
+                                    Chi tiết
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

@@ -11,6 +11,10 @@
         (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.CatalogManage))).Succeeded;
     var canManageSchedule = isAuthenticated &&
         (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.ScheduleManage))).Succeeded;
+    var canViewAppointments = isAuthenticated &&
+        (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.AppointmentView))).Succeeded;
+    var canViewCalendar = isAuthenticated &&
+        (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.CalendarView))).Succeeded;
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction    = ViewContext.RouteData.Values["action"]?.ToString();
     var currentArea      = ViewContext.RouteData.Values["area"]?.ToString();
@@ -30,6 +34,8 @@
     bool isServiceCatalogsActive = string.Equals(currentController, "ServiceCatalogs", StringComparison.OrdinalIgnoreCase) && isBackOffice;
     bool isMedicinesActive = string.Equals(currentController, "Medicines", StringComparison.OrdinalIgnoreCase) && isBackOffice;
     bool isSchedulesActive = string.Equals(currentController, "Schedules", StringComparison.OrdinalIgnoreCase) && isBackOffice;
+    bool isAppointmentsActive = string.Equals(currentController, "Appointments", StringComparison.OrdinalIgnoreCase) && isBackOffice;
+    bool isCalendarActive = string.Equals(currentController, "Calendar", StringComparison.OrdinalIgnoreCase) && isBackOffice;
 
     string ownersClass = "sidebar-nav-item" + (isOwnersActive ? " active" : "");
     string usersClass  = "sidebar-nav-item" + (isUsersActive  ? " active" : "");
@@ -37,6 +43,8 @@
     string serviceCatalogsClass = "sidebar-nav-item" + (isServiceCatalogsActive ? " active" : "");
     string medicinesClass = "sidebar-nav-item" + (isMedicinesActive ? " active" : "");
     string schedulesClass = "sidebar-nav-item" + (isSchedulesActive ? " active" : "");
+    string appointmentsClass = "sidebar-nav-item" + (isAppointmentsActive ? " active" : "");
+    string calendarClass = "sidebar-nav-item" + (isCalendarActive ? " active" : "");
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -99,6 +107,23 @@
                         </svg>
                         <span>Chủ nuôi &amp; Thú cưng</span>
                     </a>
+                }
+
+                @if (canViewAppointments || canViewCalendar)
+                {
+                    <span class="sidebar-section-label mt-2">Lịch tiếp đón</span>
+                    @if (canViewAppointments)
+                    {
+                        <a class="@appointmentsClass" asp-area="BackOffice" asp-controller="Appointments" asp-action="Index" aria-current="@(isAppointmentsActive ? "page" : null)">
+                            <span aria-hidden="true">📋</span><span>Lịch hẹn</span>
+                        </a>
+                    }
+                    @if (canViewCalendar)
+                    {
+                        <a class="@calendarClass" asp-area="BackOffice" asp-controller="Calendar" asp-action="Index" aria-current="@(isCalendarActive ? "page" : null)">
+                            <span aria-hidden="true">📅</span><span>Lịch ngày/tuần</span>
+                        </a>
+                    }
                 }
 
                 @if (canManageCatalog || canManageSchedule)
