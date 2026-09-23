@@ -48,6 +48,7 @@ builder.Services.AddScoped<IOwnerService, OwnerService>();
 builder.Services.AddScoped<IVeterinarianProfileService, VeterinarianProfileService>();
 builder.Services.AddScoped<IVeterinarianShiftService, VeterinarianShiftService>();
 builder.Services.AddScoped<IServiceCatalogService, ServiceCatalogService>();
+builder.Services.AddScoped<IMedicineService, MedicineService>();
 builder.Services.AddScoped<IPetService, PetService>();
 builder.Services.AddVeterinaryAuthorization();
 builder.Services
