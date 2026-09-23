@@ -20,4 +20,5 @@ public class Pet
     public Owner Owner { get; set; } = null!;
     public Species Species { get; set; } = null!;
     public Breed? Breed { get; set; }
+    public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }

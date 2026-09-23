@@ -29,6 +29,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<ServiceCatalog> ServiceCatalogs => Set<ServiceCatalog>();
 
     public DbSet<Medicine> Medicines => Set<Medicine>();
+    public DbSet<Appointment> Appointments => Set<Appointment>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

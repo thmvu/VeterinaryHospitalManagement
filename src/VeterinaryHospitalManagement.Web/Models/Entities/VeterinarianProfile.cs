@@ -10,4 +10,5 @@ public sealed class VeterinarianProfile
     public byte[] RowVersion { get; set; } = [];
     public ApplicationUser User { get; set; } = null!;
     public ICollection<VeterinarianShift> Shifts { get; set; } = new List<VeterinarianShift>();
+    public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }
