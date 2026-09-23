@@ -1,6 +1,7 @@
 using System.Data;
 using System.Globalization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using VeterinaryHospitalManagement.Web.Authorization;
 using VeterinaryHospitalManagement.Web.Data;
@@ -52,6 +53,29 @@ public sealed class VeterinarianProfileService(ApplicationDbContext db, UserMana
 
     private async Task<VeterinarianProfile> LoadAsync(int id,byte[] version,CancellationToken ct) { var x=await db.VeterinarianProfiles.SingleOrDefaultAsync(p=>p.Id==id,ct) ?? throw new VeterinarianManagementException("Không tìm thấy hồ sơ bác sĩ."); if(!x.RowVersion.AsSpan().SequenceEqual(version)) throw new VeterinarianConcurrencyException(); return x; }
     private void AddAudit(string actor,string action,int id,string description)=>db.AuditLogs.Add(new AuditLog { ActorType="Internal",UserId=actor,Action=action,EntityName="VeterinarianProfile",EntityId=id.ToString(CultureInfo.InvariantCulture),Description=description,CreatedAt=clock.GetUtcNow() });
-    private async Task<T> InTransactionAsync<T>(Func<Task<T>> op,CancellationToken ct) { var strategy=db.Database.CreateExecutionStrategy(); return await strategy.ExecuteAsync(async()=>{ await using var tx=await db.Database.BeginTransactionAsync(IsolationLevel.Serializable,ct); try { var result=await op(); await tx.CommitAsync(ct); return result; } catch(DbUpdateException exception) when (exception is not DbUpdateConcurrencyException) { throw new VeterinarianManagementException("Mã bác sĩ hoặc tài khoản đã được sử dụng."); } }); }
+    private async Task<T> InTransactionAsync<T>(Func<Task<T>> op,CancellationToken ct)
+    {
+        var strategy=db.Database.CreateExecutionStrategy();
+        try
+        {
+            return await strategy.ExecuteAsync(async()=>
+            {
+                await using var tx=await db.Database.BeginTransactionAsync(IsolationLevel.Serializable,ct);
+                try { var result=await op(); await tx.CommitAsync(ct); return result; }
+                catch(DbUpdateException exception) when (exception is not DbUpdateConcurrencyException)
+                { throw new VeterinarianManagementException("Mã bác sĩ hoặc tài khoản đã được sử dụng."); }
+            });
+        }
+        catch(Exception exception) when (ContainsSqlDeadlock(exception))
+        {
+            throw new VeterinarianManagementException("Mã bác sĩ hoặc tài khoản đã được sử dụng.");
+        }
+    }
+    private static bool ContainsSqlDeadlock(Exception exception)
+    {
+        for (Exception? current=exception; current is not null; current=current.InnerException)
+            if (current is SqlException { Number: 1205 }) return true;
+        return false;
+    }
     private static async Task GuardAsync(Func<Task> op) { try { await op(); } catch(DbUpdateConcurrencyException) { throw new VeterinarianConcurrencyException(); } }
 }
