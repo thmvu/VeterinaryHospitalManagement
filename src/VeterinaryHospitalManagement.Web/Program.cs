@@ -47,6 +47,7 @@ builder.Services.AddSingleton<IOwnerPhoneNormalizer, OwnerPhoneNormalizer>();
 builder.Services.AddScoped<IOwnerService, OwnerService>();
 builder.Services.AddScoped<IVeterinarianProfileService, VeterinarianProfileService>();
 builder.Services.AddScoped<IVeterinarianShiftService, VeterinarianShiftService>();
+builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IServiceCatalogService, ServiceCatalogService>();
 builder.Services.AddScoped<IMedicineService, MedicineService>();
 builder.Services.AddScoped<IPetService, PetService>();
