@@ -27,11 +27,13 @@
                            string.Equals(currentController, "Pets", StringComparison.OrdinalIgnoreCase)) && isBackOffice;
     bool isUsersActive  = string.Equals(currentController, "Users", StringComparison.OrdinalIgnoreCase) && isBackOffice;
     bool isVeterinariansActive = string.Equals(currentController, "Veterinarians", StringComparison.OrdinalIgnoreCase) && isBackOffice;
+    bool isServiceCatalogsActive = string.Equals(currentController, "ServiceCatalogs", StringComparison.OrdinalIgnoreCase) && isBackOffice;
     bool isSchedulesActive = string.Equals(currentController, "Schedules", StringComparison.OrdinalIgnoreCase) && isBackOffice;
 
     string ownersClass = "sidebar-nav-item" + (isOwnersActive ? " active" : "");
     string usersClass  = "sidebar-nav-item" + (isUsersActive  ? " active" : "");
     string veterinariansClass = "sidebar-nav-item" + (isVeterinariansActive ? " active" : "");
+    string serviceCatalogsClass = "sidebar-nav-item" + (isServiceCatalogsActive ? " active" : "");
     string schedulesClass = "sidebar-nav-item" + (isSchedulesActive ? " active" : "");
 }
 <!DOCTYPE html>
@@ -104,6 +106,9 @@
                     {
                         <a class="@veterinariansClass" asp-area="BackOffice" asp-controller="Veterinarians" asp-action="Index" aria-current="@(isVeterinariansActive ? "page" : null)">
                             <span aria-hidden="true">✚</span><span>Bác sĩ thú y</span>
+                        </a>
+                        <a class="@serviceCatalogsClass" asp-area="BackOffice" asp-controller="ServiceCatalogs" asp-action="Index" aria-current="@(isServiceCatalogsActive ? "page" : null)">
+                            <span aria-hidden="true">₫</span><span>Danh mục dịch vụ</span>
                         </a>
                     }
                     @if (canManageSchedule)

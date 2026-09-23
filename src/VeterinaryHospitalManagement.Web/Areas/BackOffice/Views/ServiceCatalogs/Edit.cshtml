@@ -1,0 +1,46 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.ServiceCatalogs.EditServiceCatalogViewModel
+@{ ViewData["Title"] = "Chỉnh sửa dịch vụ"; }
+
+<header class="record-header">
+    <div>
+        <span class="record-kicker">Dịch vụ @Model.Code</span>
+        <h1>Chỉnh sửa dịch vụ</h1>
+        <p>Cập nhật thông tin dùng cho các lượt khám mới. Dữ liệu đã chụp trước đó không thay đổi.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</header>
+
+@if (TempData["StatusMessage"] is string message) { <div class="alert alert-success" role="status">@message</div> }
+@if (TempData["ErrorMessage"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
+
+<div class="clinical-sheet clinical-sheet--form" data-ui="botanical-management-form">
+    <div class="d-flex justify-content-between align-items-center gap-3 mb-4">
+        <div><span class="text-muted">Mã cố định</span><div><code>@Model.Code</code></div></div>
+        <span class="badge @(Model.IsActive ? "badge-success" : "badge-neutral")">@(Model.IsActive ? "Đang dùng" : "Tạm ngưng")</span>
+    </div>
+    <form method="post" asp-action="Edit">
+        <input asp-for="Id" type="hidden" />
+        <input asp-for="RowVersion" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3" role="alert"></div>
+        <div class="row">
+            <div class="col-md-7 mb-3"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" /><span asp-validation-for="Name" class="text-danger"></span></div>
+            <div class="col-md-5 mb-3"><label asp-for="Category" class="form-label"></label><input asp-for="Category" class="form-control" /><span asp-validation-for="Category" class="text-danger"></span></div>
+        </div>
+        <div class="mb-3"><label asp-for="Price" class="form-label"></label><div class="input-group"><input asp-for="Price" type="number" min="0" step="0.01" class="form-control" /><span class="input-group-text">VNĐ</span></div><span asp-validation-for="Price" class="text-danger"></span></div>
+        <div class="mb-3"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="4"></textarea><span asp-validation-for="Description" class="text-danger"></span></div>
+        <div class="form-actions mt-4"><button type="submit" class="btn btn-brand">Lưu thay đổi</button><a asp-action="Index" class="btn btn-secondary">Hủy</a></div>
+    </form>
+</div>
+
+<section class="clinical-sheet clinical-sheet--status mt-4" aria-labelledby="status-title">
+    <h2 id="status-title">Trạng thái sử dụng</h2>
+    <p>@(Model.IsActive ? "Tạm ngưng để không cho chọn dịch vụ này trong lượt khám mới." : "Mở lại để dịch vụ xuất hiện trong các lựa chọn mới.")</p>
+    <form method="post" asp-action="SetActive" class="management-action-form">
+        <input asp-for="Id" type="hidden" />
+        <input asp-for="RowVersion" type="hidden" />
+        <input type="hidden" name="IsActive" value="@(!Model.IsActive ? "true" : "false")" />
+        <button type="submit" class="btn @(Model.IsActive ? "btn-outline-danger" : "btn-brand")">@(Model.IsActive ? "Tạm ngưng dịch vụ" : "Mở lại dịch vụ")</button>
+    </form>
+</section>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -1,0 +1,57 @@
+@model IReadOnlyList<VeterinaryHospitalManagement.Web.Services.Catalogs.ServiceCatalogListItem>
+@{ ViewData["Title"] = "Danh mục dịch vụ"; }
+
+<header class="record-header">
+    <div>
+        <span class="record-kicker">Danh mục điều trị</span>
+        <h1>Dịch vụ thú y</h1>
+        <p>Quản lý dịch vụ và đơn giá dùng khi ghi nhận lượt khám.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-brand">Thêm dịch vụ</a>
+</header>
+
+@if (TempData["StatusMessage"] is string message)
+{
+    <div class="alert alert-success" role="status">@message</div>
+}
+
+@if (Model.Count == 0)
+{
+    <section class="clinical-sheet text-center py-5" aria-labelledby="empty-title">
+        <h2 id="empty-title">Chưa có dịch vụ</h2>
+        <p>Thêm dịch vụ đầu tiên để bác sĩ có thể ghi nhận chi phí trong lượt khám.</p>
+        <a asp-action="Create" class="btn btn-brand">Thêm dịch vụ đầu tiên</a>
+    </section>
+}
+else
+{
+    <div class="table-wrap">
+        <div class="table-responsive" role="region" aria-label="Danh sách dịch vụ thú y" tabindex="0">
+            <table class="vhm-table">
+                <thead>
+                    <tr>
+                        <th>Mã</th>
+                        <th>Tên dịch vụ</th>
+                        <th>Nhóm</th>
+                        <th class="text-end">Đơn giá</th>
+                        <th>Trạng thái</th>
+                        <th><span class="visually-hidden">Thao tác</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><code>@item.Code</code></td>
+                        <td><strong>@item.Name</strong></td>
+                        <td>@item.Category</td>
+                        <td class="text-end">@item.Price.ToString("N2") ₫</td>
+                        <td><span class="badge @(item.IsActive ? "badge-success" : "badge-neutral")">@(item.IsActive ? "Đang dùng" : "Tạm ngưng")</span></td>
+                        <td><a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-ghost btn-sm">Chỉnh sửa</a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

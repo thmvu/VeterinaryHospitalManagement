@@ -1,0 +1,50 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.ServiceCatalogs.CreateServiceCatalogViewModel
+@{ ViewData["Title"] = "Thêm dịch vụ"; }
+
+<header class="record-header">
+    <div>
+        <span class="record-kicker">Danh mục điều trị</span>
+        <h1>Thêm dịch vụ</h1>
+        <p>Mã dịch vụ sẽ được chuẩn hóa thành chữ hoa và không thể đổi sau khi tạo.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</header>
+
+<div class="clinical-sheet clinical-sheet--form" data-ui="botanical-management-form">
+    <form method="post">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3" role="alert"></div>
+        <div class="row">
+            <div class="col-md-5 mb-3">
+                <label asp-for="Code" class="form-label"></label>
+                <input asp-for="Code" class="form-control" autocomplete="off" placeholder="VD: DV-KHAM" />
+                <span asp-validation-for="Code" class="text-danger"></span>
+            </div>
+            <div class="col-md-7 mb-3">
+                <label asp-for="Category" class="form-label"></label>
+                <input asp-for="Category" class="form-control" placeholder="VD: Khám, xét nghiệm, tiêm chủng" />
+                <span asp-validation-for="Category" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Price" class="form-label"></label>
+            <div class="input-group"><input asp-for="Price" type="number" min="0" step="0.01" class="form-control" /><span class="input-group-text">VNĐ</span></div>
+            <span asp-validation-for="Price" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+        <div class="form-actions mt-4">
+            <button type="submit" class="btn btn-brand">Tạo dịch vụ</button>
+            <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
