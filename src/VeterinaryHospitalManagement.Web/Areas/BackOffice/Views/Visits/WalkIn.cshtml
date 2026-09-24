@@ -1,0 +1,72 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Visits.WalkInViewModel
+@{
+    ViewData["Title"] = "Tiếp nhận vãng lai (Walk-in)";
+}
+
+<header class="record-header">
+    <div>
+        <span class="record-kicker">Hàng đợi &amp; Tiếp đón</span>
+        <h1>Tiếp nhận vãng lai (Walk-in)</h1>
+        <p>Tiếp nhận thú cưng vào khám trực tiếp không có lịch hẹn trước.</p>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-ghost">← Quay lại hàng đợi</a>
+    </div>
+</header>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="clinical-sheet p-4">
+            <form asp-action="WalkIn" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+
+                <div class="mb-3">
+                    <label asp-for="PetId" class="form-label fw-semibold">
+                        Chọn Thú cưng <span class="text-danger">*</span>
+                    </label>
+                    <select asp-for="PetId" asp-items="Model.PetOptions" class="form-select">
+                        <option value="">-- Tìm và chọn thú cưng --</option>
+                    </select>
+                    <span asp-validation-for="PetId" class="text-danger small"></span>
+                    <div class="form-text">
+                        Chỉ các thú cưng và chủ nuôi đang hoạt động mới có thể tiếp nhận khám.
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="VeterinarianId" class="form-label fw-semibold">
+                        Phân công Bác sĩ phụ trách <span class="text-danger">*</span>
+                    </label>
+                    <select asp-for="VeterinarianId" asp-items="Model.VeterinarianOptions" class="form-select">
+                        <option value="">-- Chọn bác sĩ phụ trách --</option>
+                    </select>
+                    <span asp-validation-for="VeterinarianId" class="text-danger small"></span>
+                    <div class="form-text">
+                        Mỗi lượt khám phải được phân công một bác sĩ phụ trách cụ thể.
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-end pt-3 border-top">
+                    <a asp-action="Index" class="btn btn-ghost">Hủy bỏ</a>
+                    <button type="submit" class="btn btn-brand">Tiếp nhận vào hàng đợi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="clinical-sheet p-4 bg-light">
+            <h5 class="fw-bold mb-3">Quy tắc tiếp nhận Walk-in</h5>
+            <ul class="small text-muted ps-3 mb-0">
+                <li class="mb-2">Thú cưng chỉ có thể có <strong>tối đa 1 lượt khám đang mở</strong> (Chờ khám hoặc Đang khám) tại một thời điểm.</li>
+                <li class="mb-2">Lượt khám vãng lai sẽ được tạo ở trạng thái <strong>Chờ khám (Waiting)</strong>.</li>
+                <li class="mb-2">Thông tin tên thú cưng, chủ nuôi, số điện thoại và bác sĩ sẽ được <strong>lưu snapshot cố định</strong> để bảo đảm toàn vẹn lịch sử.</li>
+                <li>Lễ tân có thể phân công lại bác sĩ khác khi lượt khám còn ở trạng thái Chờ khám.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

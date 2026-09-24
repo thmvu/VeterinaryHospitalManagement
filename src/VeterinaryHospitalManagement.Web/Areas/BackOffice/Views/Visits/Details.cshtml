@@ -1,0 +1,253 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Visits.VisitDetailViewModel
+@using Microsoft.AspNetCore.Authorization
+@using VeterinaryHospitalManagement.Web.Authorization
+@inject IAuthorizationService AuthorizationService
+@{
+    ViewData["Title"] = $"Chi tiết lượt khám {Model.Detail.VisitNumber}";
+    var canStart = Model.CanStart && (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.VisitStart))).Succeeded;
+    var canAssign = Model.CanAssign && (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.VisitAssign))).Succeeded;
+    var canCancel = Model.CanCancel && (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.VisitCancel))).Succeeded;
+}
+
+<header class="record-header">
+    <div>
+        <span class="record-kicker">Lượt khám bệnh</span>
+        <h1>@Model.Detail.VisitNumber</h1>
+        <p>Chi tiết quá trình tiếp nhận và khám bệnh cho thú cưng.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-ghost">← Hàng đợi khám</a>
+
+        @if (canStart)
+        {
+            <form asp-action="Start" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn bắt đầu lượt khám này?');">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="VisitId" value="@Model.Detail.Id" />
+                <input type="hidden" name="RowVersionBase64" value="@Model.RowVersionBase64" />
+                <button type="submit" class="btn btn-brand">
+                    ▶ Bắt đầu khám
+                </button>
+            </form>
+        }
+
+        @if (canAssign)
+        {
+            <button type="button" class="btn btn-outline-brand" data-bs-toggle="modal" data-bs-target="#assignModal">
+                ⇄ Phân công lại bác sĩ
+            </button>
+        }
+
+        @if (canCancel)
+        {
+            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                ❌ Hủy lượt khám
+            </button>
+        }
+    </div>
+</header>
+
+@if (TempData["StatusMessage"] is string message)
+{
+    <div class="alert alert-success">@message</div>
+}
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<div class="row g-4">
+    <!-- Left Column: Details & Snapshots -->
+    <div class="col-lg-8">
+        <div class="clinical-sheet p-4 mb-4">
+            <h2 class="h5 pb-2 mb-3 border-bottom">Thông tin lượt khám</h2>
+            <dl class="row mb-0">
+                <dt class="col-sm-4 text-muted">Trạng thái:</dt>
+                <dd class="col-sm-8">
+                    @switch (Model.Detail.Status)
+                    {
+                        case "Waiting":
+                            <span class="badge bg-warning text-dark fs-6">Chờ khám (Waiting)</span>
+                            break;
+                        case "InProgress":
+                            <span class="badge bg-primary fs-6">Đang khám (In Progress)</span>
+                            break;
+                        case "Completed":
+                            <span class="badge bg-success fs-6">Hoàn tất (Completed)</span>
+                            break;
+                        case "Cancelled":
+                            <span class="badge bg-danger fs-6">Đã hủy (Cancelled)</span>
+                            break;
+                        default:
+                            <span class="badge bg-light text-dark fs-6">@Model.Detail.Status</span>
+                            break;
+                    }
+                </dd>
+
+                <dt class="col-sm-4 text-muted">Hình thức:</dt>
+                <dd class="col-sm-8">
+                    @if (Model.Detail.AppointmentId.HasValue)
+                    {
+                        <span class="badge bg-info text-dark">Đặt trước qua Lịch hẹn</span>
+                        <a asp-controller="Appointments" asp-action="Details" asp-route-id="@Model.Detail.AppointmentId.Value" class="ms-2 small text-decoration-none">
+                            Xem lịch hẹn →
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Khách vãng lai (Walk-in)</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-4 text-muted">Bác sĩ phụ trách:</dt>
+                <dd class="col-sm-8">
+                    <strong>BS. @Model.Detail.VeterinarianName</strong>
+                </dd>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Detail.CancellationReason))
+                {
+                    <dt class="col-sm-4 text-danger">Lý do hủy:</dt>
+                    <dd class="col-sm-8 text-danger fw-semibold">@Model.Detail.CancellationReason</dd>
+                }
+            </dl>
+        </div>
+
+        <div class="clinical-sheet p-4">
+            <h2 class="h5 pb-2 mb-3 border-bottom">Thông tin Thú cưng &amp; Chủ nuôi (Snapshot)</h2>
+            <dl class="row mb-0">
+                <dt class="col-sm-4 text-muted">Tên thú cưng:</dt>
+                <dd class="col-sm-8 fw-semibold">
+                    <a asp-controller="Pets" asp-action="Details" asp-route-id="@Model.Detail.PetId" class="text-decoration-none">
+                        @Model.Detail.PetName
+                    </a>
+                </dd>
+
+                <dt class="col-sm-4 text-muted">Chủ nuôi:</dt>
+                <dd class="col-sm-8">@Model.Detail.OwnerName</dd>
+
+                <dt class="col-sm-4 text-muted">Số điện thoại:</dt>
+                <dd class="col-sm-8 font-monospace">@Model.Detail.OwnerPhone</dd>
+            </dl>
+        </div>
+    </div>
+
+    <!-- Right Column: Timeline -->
+    <div class="col-lg-4">
+        <div class="clinical-sheet p-4">
+            <h2 class="h5 pb-2 mb-3 border-bottom">Tiến trình khám</h2>
+            <div class="timeline">
+                <!-- Check-in -->
+                <div class="mb-3 ps-3 border-start border-3 border-success">
+                    <div class="small fw-semibold text-success">✓ Tiếp nhận khám</div>
+                    <div class="fw-bold">@Model.CheckedInAtLocal.ToString("HH:mm - dd/MM/yyyy")</div>
+                    <div class="small text-muted">Tiếp nhận bởi: @Model.Detail.CheckedInByName</div>
+                </div>
+
+                <!-- Started -->
+                <div class="mb-3 ps-3 border-start border-3 @(Model.StartedAtLocal.HasValue ? "border-primary" : "border-secondary")">
+                    <div class="small fw-semibold @(Model.StartedAtLocal.HasValue ? "text-primary" : "text-muted")">
+                        @(Model.StartedAtLocal.HasValue ? "✓ Bắt đầu khám" : "Chưa bắt đầu khám")
+                    </div>
+                    @if (Model.StartedAtLocal.HasValue)
+                    {
+                        <div class="fw-bold">@Model.StartedAtLocal.Value.ToString("HH:mm - dd/MM/yyyy")</div>
+                    }
+                    else
+                    {
+                        <div class="small text-muted fst-italic">Bác sĩ phụ trách sẽ bấm bắt đầu khi đón thú cưng vào phòng khám.</div>
+                    }
+                </div>
+
+                <!-- Completed -->
+                <div class="ps-3 border-start border-3 @(Model.CompletedAtLocal.HasValue ? "border-success" : "border-secondary")">
+                    <div class="small fw-semibold @(Model.CompletedAtLocal.HasValue ? "text-success" : "text-muted")">
+                        @(Model.CompletedAtLocal.HasValue ? "✓ Hoàn tất khám" : "Chưa hoàn tất")
+                    </div>
+                    @if (Model.CompletedAtLocal.HasValue)
+                    {
+                        <div class="fw-bold">@Model.CompletedAtLocal.Value.ToString("HH:mm - dd/MM/yyyy")</div>
+                    }
+                    else
+                    {
+                        <div class="small text-muted fst-italic">Hoàn tất khi bác sĩ hoàn thành bệnh án và kê đơn thuốc (Milestone 6).</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Phân công lại bác sĩ -->
+@if (canAssign)
+{
+    <div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="Assign" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="VisitId" value="@Model.Detail.Id" />
+                    <input type="hidden" name="RowVersionBase64" value="@Model.RowVersionBase64" />
+
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="assignModalLabel">Phân công lại bác sĩ phụ trách</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-3">
+                            Phân công lại bác sĩ cho lượt khám <strong>@Model.Detail.VisitNumber</strong> (Thú cưng: <strong>@Model.Detail.PetName</strong>).
+                        </p>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Bác sĩ mới <span class="text-danger">*</span></label>
+                            <select name="NewVeterinarianId" class="form-select" required>
+                                <option value="">-- Chọn bác sĩ mới --</option>
+                                @foreach (var vet in Model.VeterinarianOptions)
+                                {
+                                    <option value="@vet.Value" selected="@(vet.Value == Model.Detail.VeterinarianId.ToString() ? "selected" : null)">
+                                        @vet.Text
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-brand">Xác nhận phân công</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal: Hủy lượt khám -->
+@if (canCancel)
+{
+    <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="Cancel" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="VisitId" value="@Model.Detail.Id" />
+                    <input type="hidden" name="RowVersionBase64" value="@Model.RowVersionBase64" />
+
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger" id="cancelModalLabel">Hủy lượt khám</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted">
+                            Bạn đang chuẩn bị hủy lượt khám <strong>@Model.Detail.VisitNumber</strong> của thú cưng <strong>@Model.Detail.PetName</strong>. Hành động này không thể hoàn tác.
+                        </p>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Lý do hủy <span class="text-danger">*</span></label>
+                            <textarea name="CancellationReason" class="form-control" rows="3" required maxlength="500" placeholder="Nhập lý do hủy lượt khám..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}

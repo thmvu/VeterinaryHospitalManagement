@@ -228,9 +228,10 @@ public sealed class AppointmentService(ApplicationDbContext db, TimeProvider clo
 
     private Task<bool> HasConflictAsync(int petId, int veterinarianId, DateTimeOffset startAt,
         DateTimeOffset endAt, CancellationToken ct) => db.Appointments.AnyAsync(x =>
-            (x.Status == AppointmentStatus.Scheduled || x.Status == AppointmentStatus.CheckedIn)
-            && (x.PetId == petId || x.VeterinarianId == veterinarianId)
-            && x.StartAt < endAt && startAt < x.EndAt, ct);
+            (x.PetId == petId || x.VeterinarianId == veterinarianId)
+            && x.StartAt < endAt && startAt < x.EndAt
+            && (x.Status == AppointmentStatus.Scheduled
+                || (x.Status == AppointmentStatus.CheckedIn && (x.Visit == null || (x.Visit.Status != VisitStatus.Completed && x.Visit.Status != VisitStatus.Cancelled)))), ct);
 
     private async Task AcquireLocksAsync(int petId, int veterinarianId, CancellationToken ct)
     {

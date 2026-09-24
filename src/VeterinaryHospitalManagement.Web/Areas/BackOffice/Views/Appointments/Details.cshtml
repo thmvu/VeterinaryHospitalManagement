@@ -8,6 +8,7 @@
     var nowLocal = VietnamTimeProvider.LocalNow.DateTime;
     var canCancel = Model.CanCancel && (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.AppointmentCancel))).Succeeded;
     var canNoShow = Model.CanMarkNoShow(nowLocal) && (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.AppointmentMarkNoShow))).Succeeded;
+    var canCheckIn = Model.Status == "Scheduled" && (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.VisitCheckIn))).Succeeded;
 }
 
 <header class="record-header">
@@ -18,6 +19,18 @@
     </div>
     <div class="d-flex gap-2">
         <a asp-action="Index" class="btn btn-ghost">← Danh sách lịch hẹn</a>
+
+        @if (canCheckIn)
+        {
+            <form asp-area="BackOffice" asp-controller="Visits" asp-action="CheckIn" method="post" class="d-inline" onsubmit="return confirm('Tiếp nhận lịch hẹn này vào hàng đợi khám?');">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="appointmentId" value="@Model.Id" />
+                <button type="submit" class="btn btn-brand">
+                    🐾 Tiếp nhận khám
+                </button>
+            </form>
+        }
+
         @if (canCancel)
         {
             <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">

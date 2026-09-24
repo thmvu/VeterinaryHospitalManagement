@@ -15,6 +15,8 @@
         (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.AppointmentView))).Succeeded;
     var canViewCalendar = isAuthenticated &&
         (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.CalendarView))).Succeeded;
+    var canViewVisits = isAuthenticated &&
+        (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.VisitView))).Succeeded;
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction    = ViewContext.RouteData.Values["action"]?.ToString();
     var currentArea      = ViewContext.RouteData.Values["area"]?.ToString();
@@ -36,6 +38,7 @@
     bool isSchedulesActive = string.Equals(currentController, "Schedules", StringComparison.OrdinalIgnoreCase) && isBackOffice;
     bool isAppointmentsActive = string.Equals(currentController, "Appointments", StringComparison.OrdinalIgnoreCase) && isBackOffice;
     bool isCalendarActive = string.Equals(currentController, "Calendar", StringComparison.OrdinalIgnoreCase) && isBackOffice;
+    bool isVisitsActive = string.Equals(currentController, "Visits", StringComparison.OrdinalIgnoreCase) && isBackOffice;
 
     string ownersClass = "sidebar-nav-item" + (isOwnersActive ? " active" : "");
     string usersClass  = "sidebar-nav-item" + (isUsersActive  ? " active" : "");
@@ -45,6 +48,7 @@
     string schedulesClass = "sidebar-nav-item" + (isSchedulesActive ? " active" : "");
     string appointmentsClass = "sidebar-nav-item" + (isAppointmentsActive ? " active" : "");
     string calendarClass = "sidebar-nav-item" + (isCalendarActive ? " active" : "");
+    string visitsClass = "sidebar-nav-item" + (isVisitsActive ? " active" : "");
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -109,9 +113,15 @@
                     </a>
                 }
 
-                @if (canViewAppointments || canViewCalendar)
+                @if (canViewVisits || canViewAppointments || canViewCalendar)
                 {
-                    <span class="sidebar-section-label mt-2">Lịch tiếp đón</span>
+                    <span class="sidebar-section-label mt-2">Tiếp đón &amp; Lịch</span>
+                    @if (canViewVisits)
+                    {
+                        <a class="@visitsClass" asp-area="BackOffice" asp-controller="Visits" asp-action="Index" aria-current="@(isVisitsActive ? "page" : null)">
+                            <span aria-hidden="true">🐾</span><span>Hàng đợi khám</span>
+                        </a>
+                    }
                     @if (canViewAppointments)
                     {
                         <a class="@appointmentsClass" asp-area="BackOffice" asp-controller="Appointments" asp-action="Index" aria-current="@(isAppointmentsActive ? "page" : null)">

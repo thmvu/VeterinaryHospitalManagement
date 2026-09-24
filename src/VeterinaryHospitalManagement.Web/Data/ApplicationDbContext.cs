@@ -29,7 +29,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<ServiceCatalog> ServiceCatalogs => Set<ServiceCatalog>();
 
     public DbSet<Medicine> Medicines => Set<Medicine>();
+
     public DbSet<Appointment> Appointments => Set<Appointment>();
+
+    public DbSet<Visit> Visits => Set<Visit>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -49,6 +52,13 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .IncrementsBy(1)
             .HasMin(1)
             .HasMax(999999)
+            .IsCyclic(false);
+
+        builder.HasSequence<long>("VisitNumberSequence")
+            .StartsAt(1)
+            .IncrementsBy(1)
+            .HasMin(1)
+            .HasMax(9999)
             .IsCyclic(false);
 
         builder.Entity<IdentityUserRole<string>>()

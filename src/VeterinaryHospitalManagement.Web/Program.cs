@@ -13,6 +13,7 @@ using VeterinaryHospitalManagement.Web.Services.Time;
 using VeterinaryHospitalManagement.Web.Services.Scheduling;
 using VeterinaryHospitalManagement.Web.Services.Veterinarians;
 using VeterinaryHospitalManagement.Web.Services.Catalogs;
+using VeterinaryHospitalManagement.Web.Services.Visits;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +49,7 @@ builder.Services.AddScoped<IOwnerService, OwnerService>();
 builder.Services.AddScoped<IVeterinarianProfileService, VeterinarianProfileService>();
 builder.Services.AddScoped<IVeterinarianShiftService, VeterinarianShiftService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+builder.Services.AddScoped<IVisitService, VisitService>();
 builder.Services.AddScoped<IServiceCatalogService, ServiceCatalogService>();
 builder.Services.AddScoped<IMedicineService, MedicineService>();
 builder.Services.AddScoped<IPetService, PetService>();
