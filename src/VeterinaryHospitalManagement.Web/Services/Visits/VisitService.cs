@@ -48,6 +48,11 @@ public sealed class VisitService(ApplicationDbContext db, TimeProvider clock) : 
                     throw new VisitManagementException(
                         $"Chỉ có thể check-in lịch hẹn ở trạng thái Scheduled. Trạng thái hiện tại: {apt.Status}.");
 
+                if (!apt.Pet.IsActive || !apt.Pet.Owner.IsActive)
+                    throw new VisitManagementException("Thú cưng hoặc chủ nuôi không hoạt động.");
+                if (!apt.Veterinarian.IsActive || !apt.Veterinarian.User.IsActive)
+                    throw new VisitManagementException("Bác sĩ thú y không hoạt động.");
+
                 // Kiểm tra Pet không có Visit đang mở
                 var petHasActive = await db.Visits.AnyAsync(
                     v => v.PetId == apt.PetId &&

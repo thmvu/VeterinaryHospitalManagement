@@ -15,6 +15,7 @@ namespace VeterinaryHospitalManagement.Web.Areas.BackOffice.Controllers;
 [Authorize]
 [PermissionAuthorize(PermissionCodes.CalendarView)]
 public sealed class CalendarController(
+    IAuthorizationService authorizationService,
     IAppointmentService appointmentService,
     IVeterinarianShiftService shiftService,
     IVietnamTimeProvider timeProvider,
@@ -45,7 +46,11 @@ public sealed class CalendarController(
         var events = new List<CalendarEventDto>();
 
         // 1. Load Appointments
-        var appointments = await appointmentService.ListAsync(start, end, veterinarianId, null, ct);
+        var canViewAppointments = (await authorizationService.AuthorizeAsync(
+            User, PermissionPolicyName.For(PermissionCodes.AppointmentView))).Succeeded;
+        var appointments = canViewAppointments
+            ? await appointmentService.ListAsync(start, end, veterinarianId, null, ct)
+            : [];
         foreach (var apt in appointments)
         {
             var startLocal = apt.StartAt.ToOffset(offset);

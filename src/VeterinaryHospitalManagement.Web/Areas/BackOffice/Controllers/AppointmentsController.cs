@@ -149,9 +149,11 @@ public sealed class AppointmentsController(
             await appointmentService.CancelAsync(vm.Id, CurrentUserId(), vm.Reason, rowVersion, ct);
             TempData["StatusMessage"] = "Đã hủy lịch hẹn thành công.";
         }
-        catch (AppointmentManagementException ex)
+        catch (Exception ex) when (ex is AppointmentManagementException or FormatException)
         {
-            TempData["ErrorMessage"] = ex.Message;
+            TempData["ErrorMessage"] = ex is FormatException
+                ? "Dữ liệu trang đã không còn hợp lệ. Hãy tải lại trang và thử lại."
+                : ex.Message;
         }
 
         return RedirectToAction(nameof(Details), new { id = vm.Id });
@@ -174,9 +176,11 @@ public sealed class AppointmentsController(
             await appointmentService.MarkNoShowAsync(vm.Id, CurrentUserId(), rowVersion, ct);
             TempData["StatusMessage"] = "Đã ghi nhận vắng mặt (No-Show) cho lịch hẹn.";
         }
-        catch (AppointmentManagementException ex)
+        catch (Exception ex) when (ex is AppointmentManagementException or FormatException)
         {
-            TempData["ErrorMessage"] = ex.Message;
+            TempData["ErrorMessage"] = ex is FormatException
+                ? "Dữ liệu trang đã không còn hợp lệ. Hãy tải lại trang và thử lại."
+                : ex.Message;
         }
 
         return RedirectToAction(nameof(Details), new { id = vm.Id });

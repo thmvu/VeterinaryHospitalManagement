@@ -43,9 +43,9 @@ public sealed class VisitConfiguration : IEntityTypeConfiguration<Visit>
             .HasMaxLength(20);
 
         builder.Property(v => v.PetNameSnapshot).IsRequired().HasMaxLength(100);
-        builder.Property(v => v.OwnerNameSnapshot).IsRequired().HasMaxLength(100);
+        builder.Property(v => v.OwnerNameSnapshot).IsRequired().HasMaxLength(150);
         builder.Property(v => v.OwnerPhoneSnapshot).IsRequired().HasMaxLength(20);
-        builder.Property(v => v.VeterinarianNameSnapshot).IsRequired().HasMaxLength(100);
+        builder.Property(v => v.VeterinarianNameSnapshot).IsRequired().HasMaxLength(150);
 
         builder.Property(v => v.CancellationReason).HasMaxLength(500);
         builder.Property(v => v.CheckedInByUserId).IsRequired().HasMaxLength(450);

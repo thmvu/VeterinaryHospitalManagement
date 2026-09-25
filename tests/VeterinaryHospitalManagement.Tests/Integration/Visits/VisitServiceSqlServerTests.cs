@@ -16,6 +16,78 @@ namespace VeterinaryHospitalManagement.Tests.Integration.Visits;
 public sealed class VisitServiceSqlServerTests
 {
     [IdentitySqlServerFact]
+    public async Task CheckIn_rejects_participants_deactivated_after_booking()
+    {
+        await IdentitySqlServerTestEnvironment.RecreateAndMigrateAsync();
+        using var factory = new IdentitySqlServerWebApplicationFactory();
+        var data = await Setup(factory);
+        var start = new DateTimeOffset(2026, 11, 1, 9, 0, 0, TimeSpan.FromHours(7));
+        var appointmentId = await WithAppointmentService(factory, s =>
+            s.CreateAsync(new(data.ActorUserId, data.PetId, data.VetProfileId, start, start.AddMinutes(30), "Khám")));
+
+        foreach (var participant in new[] { "Pet", "Owner", "Veterinarian", "User" })
+        {
+            await using (var scope = factory.Services.CreateAsyncScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                switch (participant)
+                {
+                    case "Pet": (await db.Pets.FindAsync(data.PetId))!.IsActive = false; break;
+                    case "Owner": (await db.Owners.SingleAsync())!.IsActive = false; break;
+                    case "Veterinarian": (await db.VeterinarianProfiles.FindAsync(data.VetProfileId))!.IsActive = false; break;
+                    case "User": (await db.Users.FindAsync(data.VetUserId))!.IsActive = false; break;
+                }
+                await db.SaveChangesAsync();
+            }
+
+            await Assert.ThrowsAsync<VisitManagementException>(() => WithVisitService(factory, s =>
+                s.CheckInFromAppointmentAsync(new(appointmentId, data.ActorUserId))));
+
+            await using (var scope = factory.Services.CreateAsyncScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                switch (participant)
+                {
+                    case "Pet": (await db.Pets.FindAsync(data.PetId))!.IsActive = true; break;
+                    case "Owner": (await db.Owners.SingleAsync())!.IsActive = true; break;
+                    case "Veterinarian": (await db.VeterinarianProfiles.FindAsync(data.VetProfileId))!.IsActive = true; break;
+                    case "User": (await db.Users.FindAsync(data.VetUserId))!.IsActive = true; break;
+                }
+                await db.SaveChangesAsync();
+            }
+        }
+
+        await using var verifyScope = factory.Services.CreateAsyncScope();
+        var verify = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Equal(AppointmentStatus.Scheduled, (await verify.Appointments.FindAsync(appointmentId))!.Status);
+        Assert.Equal(0, await verify.Visits.CountAsync());
+        Assert.Equal(0, await verify.AuditLogs.CountAsync(x => x.Action == "Visit.CheckedIn"));
+    }
+
+    [IdentitySqlServerFact]
+    public async Task WalkIn_keeps_full_150_character_owner_and_veterinarian_names()
+    {
+        await IdentitySqlServerTestEnvironment.RecreateAndMigrateAsync();
+        using var factory = new IdentitySqlServerWebApplicationFactory();
+        var data = await Setup(factory);
+        var ownerName = new string('O', 150);
+        var vetName = new string('V', 150);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            (await db.Owners.SingleAsync()).FullName = ownerName;
+            (await db.Users.FindAsync(data.VetUserId))!.FullName = vetName;
+            await db.SaveChangesAsync();
+        }
+        var visitId = await WithVisitService(factory, s =>
+            s.WalkInAsync(new(data.PetId, data.VetProfileId, data.ActorUserId)));
+        await using var verifyScope = factory.Services.CreateAsyncScope();
+        var visit = (await verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Visits.FindAsync(visitId))!;
+        Assert.Equal(ownerName, visit.OwnerNameSnapshot);
+        Assert.Equal(vetName, visit.VeterinarianNameSnapshot);
+    }
+
+    [IdentitySqlServerFact]
     public async Task CheckIn_from_appointment_is_idempotent_and_creates_snapshots()
     {
         await IdentitySqlServerTestEnvironment.RecreateAndMigrateAsync();

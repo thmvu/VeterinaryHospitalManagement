@@ -18,9 +18,9 @@ public sealed class VisitSchemaModelTests
         Assert.Equal(20, entity.FindProperty("VisitNumber")!.GetMaxLength());
         Assert.Equal(20, entity.FindProperty("Status")!.GetMaxLength());
         Assert.Equal(100, entity.FindProperty("PetNameSnapshot")!.GetMaxLength());
-        Assert.Equal(100, entity.FindProperty("OwnerNameSnapshot")!.GetMaxLength());
+        Assert.Equal(150, entity.FindProperty("OwnerNameSnapshot")!.GetMaxLength());
         Assert.Equal(20, entity.FindProperty("OwnerPhoneSnapshot")!.GetMaxLength());
-        Assert.Equal(100, entity.FindProperty("VeterinarianNameSnapshot")!.GetMaxLength());
+        Assert.Equal(150, entity.FindProperty("VeterinarianNameSnapshot")!.GetMaxLength());
         Assert.Equal(500, entity.FindProperty("CancellationReason")!.GetMaxLength());
         Assert.Equal(450, entity.FindProperty("CheckedInByUserId")!.GetMaxLength());
         Assert.True(entity.FindProperty("RowVersion")!.IsConcurrencyToken);

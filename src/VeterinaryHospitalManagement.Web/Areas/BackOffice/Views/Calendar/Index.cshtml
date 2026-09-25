@@ -1,8 +1,13 @@
 @using Microsoft.AspNetCore.Mvc.Rendering
+@using Microsoft.AspNetCore.Authorization
+@using VeterinaryHospitalManagement.Web.Authorization
+@inject IAuthorizationService AuthorizationService
 @{
     ViewData["Title"] = "Lịch ngày & tuần";
     var vets = ViewBag.Veterinarians as IReadOnlyList<SelectListItem> ?? [];
     int? selectedVetId = ViewBag.SelectedVeterinarianId as int?;
+    var canViewAppointments = (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.AppointmentView))).Succeeded;
+    var canCreateAppointments = (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.AppointmentCreate))).Succeeded;
 }
 
 <header class="record-header">
@@ -12,12 +17,14 @@
         <p>Theo dõi ca trực của bác sĩ và các lịch hẹn khám theo thời gian thực.</p>
     </div>
     <div class="d-flex gap-2">
-        <a asp-area="BackOffice" asp-controller="Appointments" asp-action="Index" class="btn btn-ghost">
-            📋 Danh sách bảng
-        </a>
-        <a asp-area="BackOffice" asp-controller="Appointments" asp-action="Create" class="btn btn-brand">
-            ➕ Đặt lịch hẹn mới
-        </a>
+        @if (canViewAppointments)
+        {
+            <a asp-area="BackOffice" asp-controller="Appointments" asp-action="Index" class="btn btn-ghost">📋 Danh sách bảng</a>
+        }
+        @if (canCreateAppointments)
+        {
+            <a asp-area="BackOffice" asp-controller="Appointments" asp-action="Create" class="btn btn-brand">➕ Đặt lịch hẹn mới</a>
+        }
     </div>
 </header>
 
@@ -103,9 +110,9 @@
                     const props = info.event.extendedProps;
                     let tooltipContent = info.event.title;
                     if (props.type === 'appointment') {
-                        tooltipContent = `Lịch hẹn: ${props.PetName}\nBác sĩ: ${props.VeterinarianName}\nTrạng thái: ${props.StatusText}\nLý do: ${props.Reason || 'Không có'}`;
+                        tooltipContent = `Lịch hẹn: ${props.petName}\nBác sĩ: ${props.veterinarianName}\nTrạng thái: ${props.statusText}\nLý do: ${props.reason || 'Không có'}`;
                     } else if (props.type === 'shift') {
-                        tooltipContent = `Ca làm việc: ${props.VeterinarianName}`;
+                        tooltipContent = `Ca làm việc: ${props.veterinarianName}`;
                     }
                     info.el.setAttribute('title', tooltipContent);
                 }
