@@ -7,6 +7,8 @@
     var canStart = Model.CanStart && (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.VisitStart))).Succeeded;
     var canAssign = Model.CanAssign && (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.VisitAssign))).Succeeded;
     var canCancel = Model.CanCancel && (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.VisitCancel))).Succeeded;
+    var canViewMedicalRecord = Model.CanViewMedicalRecord &&
+        (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.MedicalRecordView))).Succeeded;
 }
 
 <header class="record-header">
@@ -128,6 +130,17 @@
                 <dd class="col-sm-8 font-monospace">@Model.Detail.OwnerPhone</dd>
             </dl>
         </div>
+        @if (canViewMedicalRecord && Model.Detail.Status != "Waiting" && Model.Detail.Status != "Cancelled")
+        {
+            <div class="clinical-sheet p-4 mt-4 d-flex justify-content-between align-items-center gap-3">
+                <div>
+                    <span class="record-kicker">Lâm sàng</span>
+                    <h2 class="h5 mb-1">Bệnh án</h2>
+                    <p class="text-muted mb-0">Ghi triệu chứng, chỉ số, chẩn đoán và hướng xử trí.</p>
+                </div>
+                <a asp-controller="MedicalRecords" asp-action="Details" asp-route-id="@Model.Detail.Id" class="btn btn-outline-brand">Mở bệnh án</a>
+            </div>
+        }
     </div>
 
     <!-- Right Column: Timeline -->
@@ -168,7 +181,7 @@
                     }
                     else
                     {
-                        <div class="small text-muted fst-italic">Hoàn tất khi bác sĩ hoàn thành bệnh án và kê đơn thuốc (Milestone 6).</div>
+                        <div class="small text-muted fst-italic">Hoàn tất sau khi bác sĩ chốt bệnh án và các chỉ định cần thiết.</div>
                     }
                 </div>
             </div>

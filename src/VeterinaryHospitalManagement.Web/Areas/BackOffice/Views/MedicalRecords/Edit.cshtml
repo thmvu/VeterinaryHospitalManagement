@@ -1,0 +1,73 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.MedicalRecords.EditMedicalRecordViewModel
+@{
+    ViewData["Title"] = $"Ghi bệnh án {Model.VisitNumber}";
+}
+
+<header class="record-header">
+    <div>
+        <span class="record-kicker">Bản nháp bệnh án · @Model.VisitNumber</span>
+        <h1>Ghi bệnh án cho @Model.PetName</h1>
+        <p>Lưu thông tin khám thực tế; có thể bổ sung chẩn đoán trước khi hoàn tất lượt khám.</p>
+    </div>
+    <a asp-action="Details" asp-route-id="@Model.VisitId" class="btn btn-ghost">← Xem bệnh án</a>
+</header>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="clinical-sheet p-4">
+            <form asp-action="Edit" method="post">
+                @Html.AntiForgeryToken()
+                <input asp-for="VisitId" type="hidden" />
+                <input asp-for="RowVersionBase64" type="hidden" />
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <div class="mb-4">
+                    <label asp-for="ChiefComplaint" class="form-label fw-semibold">Lý do khám <span class="text-danger">*</span></label>
+                    <textarea asp-for="ChiefComplaint" class="form-control" rows="3" maxlength="2000" placeholder="Lý do đưa thú cưng đến khám"></textarea>
+                    <span asp-validation-for="ChiefComplaint" class="text-danger small"></span>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="Symptoms" class="form-label fw-semibold">Triệu chứng và quan sát</label>
+                    <textarea asp-for="Symptoms" class="form-control" rows="4" placeholder="Những dấu hiệu được ghi nhận khi khám"></textarea>
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label asp-for="WeightKg" class="form-label fw-semibold">Cân nặng (kg)</label>
+                        <input asp-for="WeightKg" type="number" min="0.01" max="9999.99" step="0.01" class="form-control" />
+                        <span asp-validation-for="WeightKg" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="TemperatureC" class="form-label fw-semibold">Nhiệt độ (°C)</label>
+                        <input asp-for="TemperatureC" type="number" step="0.1" class="form-control" />
+                        <span asp-validation-for="TemperatureC" class="text-danger small"></span>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="Diagnosis" class="form-label fw-semibold">Chẩn đoán</label>
+                    <textarea asp-for="Diagnosis" class="form-control" rows="4" placeholder="Chẩn đoán của bác sĩ"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="TreatmentNotes" class="form-label fw-semibold">Hướng xử trí</label>
+                    <textarea asp-for="TreatmentNotes" class="form-control" rows="4" placeholder="Theo dõi, điều trị và dặn dò"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="FollowUpDate" class="form-label fw-semibold">Ngày tái khám dự kiến</label>
+                    <input asp-for="FollowUpDate" type="date" class="form-control" />
+                </div>
+                <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                    <a asp-action="Details" asp-route-id="@Model.VisitId" class="btn btn-ghost">Hủy thay đổi</a>
+                    <button type="submit" class="btn btn-brand">Lưu bản nháp</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="clinical-sheet p-4">
+            <span class="record-kicker">Trạng thái tài liệu</span>
+            <h2 class="h5 mt-2">Bản nháp có thể chỉnh sửa</h2>
+            <p class="text-muted mb-0">Bệnh án sẽ được chốt khi bác sĩ hoàn tất lượt khám. Sau đó không thể sửa bằng biểu mẫu này.</p>
+        </div>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

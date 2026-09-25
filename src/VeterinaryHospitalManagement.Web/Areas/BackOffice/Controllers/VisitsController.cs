@@ -58,6 +58,7 @@ public sealed class VisitsController(
             StartedAtLocal = detail.StartedAt.HasValue ? detail.StartedAt.Value.ToOffset(offset).DateTime : null,
             CompletedAtLocal = detail.CompletedAt.HasValue ? detail.CompletedAt.Value.ToOffset(offset).DateTime : null,
             CanStart = detail.Status == "Waiting" && isAssignedVet,
+            CanViewMedicalRecord = isAssignedVet || User.IsInRole(SystemRoleNames.Admin),
             VeterinarianOptions = await GetActiveVeterinariansAsync(ct)
         };
 

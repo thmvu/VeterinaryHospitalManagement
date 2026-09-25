@@ -1,0 +1,61 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.MedicalRecords.MedicalRecordPageViewModel
+@{
+    ViewData["Title"] = $"Bệnh án {Model.VisitNumber}";
+    var record = Model.Record;
+}
+
+<header class="record-header">
+    <div>
+        <span class="record-kicker">Hồ sơ lâm sàng · @Model.VisitNumber</span>
+        <h1>Bệnh án của @Model.PetName</h1>
+        <p>BS. @Model.VeterinarianName · @(Model.VisitStatus == "InProgress" ? "Đang khám" : "Lượt khám đã kết thúc")</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="Visits" asp-action="Details" asp-route-id="@Model.VisitId" class="btn btn-ghost">← Lượt khám</a>
+        @if (Model.CanEdit)
+        {
+            <a asp-action="Edit" asp-route-id="@Model.VisitId" class="btn btn-brand">@(record is null ? "Tạo bệnh án" : "Sửa bản nháp")</a>
+        }
+    </div>
+</header>
+
+@if (TempData["StatusMessage"] is string message)
+{
+    <div class="alert alert-success" role="status">@message</div>
+}
+
+@if (record is null)
+{
+    <div class="clinical-sheet p-5 text-center">
+        <span class="record-kicker">Chưa có dữ liệu</span>
+        <h2 class="h4 mt-2">Bệnh án chưa được ghi</h2>
+        <p class="text-muted mb-0">Bác sĩ phụ trách có thể tạo bản nháp khi lượt khám đang diễn ra.</p>
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="clinical-sheet p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+                    <h2 class="h5 mb-0">Ghi nhận khám bệnh</h2>
+                    <span class="badge @(record.Status == "Finalized" ? "bg-success" : "bg-warning text-dark")">@(record.Status == "Finalized" ? "Đã chốt" : "Bản nháp")</span>
+                </div>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted">Lý do khám</dt><dd class="col-sm-8 text-break">@record.ChiefComplaint</dd>
+                    <dt class="col-sm-4 text-muted">Triệu chứng</dt><dd class="col-sm-8 text-break">@(record.Symptoms ?? "Chưa ghi")</dd>
+                    <dt class="col-sm-4 text-muted">Chẩn đoán</dt><dd class="col-sm-8 text-break">@(record.Diagnosis ?? "Chưa ghi")</dd>
+                    <dt class="col-sm-4 text-muted">Hướng xử trí</dt><dd class="col-sm-8 text-break">@(record.TreatmentNotes ?? "Chưa ghi")</dd>
+                    <dt class="col-sm-4 text-muted">Tái khám</dt><dd class="col-sm-8">@(record.FollowUpDate?.ToString("dd/MM/yyyy") ?? "Chưa hẹn")</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="clinical-sheet p-4">
+                <span class="record-kicker">Chỉ số lâm sàng</span>
+                <div class="d-flex justify-content-between border-bottom py-3"><span>Cân nặng</span><strong>@(record.WeightKg?.ToString("0.##") ?? "—") @(record.WeightKg.HasValue ? "kg" : "")</strong></div>
+                <div class="d-flex justify-content-between pt-3"><span>Nhiệt độ</span><strong>@(record.TemperatureC?.ToString("0.#") ?? "—") @(record.TemperatureC.HasValue ? "°C" : "")</strong></div>
+            </div>
+        </div>
+    </div>
+}

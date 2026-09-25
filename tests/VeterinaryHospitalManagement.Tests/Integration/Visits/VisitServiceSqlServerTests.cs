@@ -1,3 +1,6 @@
+using System.Net;
+using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using VeterinaryHospitalManagement.Tests.Infrastructure.Identity;
@@ -6,6 +9,7 @@ using VeterinaryHospitalManagement.Web.Data;
 using VeterinaryHospitalManagement.Web.Models.Entities;
 using VeterinaryHospitalManagement.Web.Models.Enums;
 using VeterinaryHospitalManagement.Web.Services.Identity;
+using VeterinaryHospitalManagement.Web.Services.Clinical;
 using VeterinaryHospitalManagement.Web.Services.Scheduling;
 using VeterinaryHospitalManagement.Web.Services.Veterinarians;
 using VeterinaryHospitalManagement.Web.Services.Visits;
@@ -15,6 +19,98 @@ namespace VeterinaryHospitalManagement.Tests.Integration.Visits;
 [Collection(IdentitySqlServerTestCollection.Name)]
 public sealed class VisitServiceSqlServerTests
 {
+    [IdentitySqlServerFact]
+    public async Task Assigned_veterinarian_can_save_draft_from_form_while_other_veterinarian_cannot_read_it()
+    {
+        await IdentitySqlServerTestEnvironment.RecreateAndMigrateAsync();
+        using var factory = new IdentitySqlServerWebApplicationFactory();
+        var data = await Setup(factory);
+        var visitId = await WithVisitService(factory, s => s.WalkInAsync(new(data.PetId, data.VetProfileId, data.ActorUserId)));
+        var visit = (await WithVisitService(factory, s => s.GetDetailsAsync(visitId)))!;
+        await WithVisitService(factory, async s => { await s.StartAsync(new(visitId, data.VetUserId, visit.RowVersion)); return true; });
+
+        using (var otherDoctor = Client(factory))
+        {
+            await Login(otherDoctor, "vet2@vet.test", "Integration.Vet123!");
+            Assert.Equal(HttpStatusCode.Forbidden, (await otherDoctor.GetAsync($"/BackOffice/MedicalRecords/Details/{visitId}")).StatusCode);
+        }
+
+        using var doctor = Client(factory);
+        await Login(doctor, "vet1@vet.test", "Integration.Vet123!");
+        var editPage = await doctor.GetStringAsync($"/BackOffice/MedicalRecords/Edit/{visitId}");
+        Assert.Contains("Ghi bệnh án cho Milo", editPage);
+        using var response = await doctor.PostAsync("/BackOffice/MedicalRecords/Edit", new FormUrlEncodedContent([
+            new("VisitId", visitId.ToString()), new("ChiefComplaint", "Bỏ ăn"),
+            new("Diagnosis", "Theo dõi tiêu hóa"), new("WeightKg", "8.25"),
+            new("__RequestVerificationToken", Token(editPage))]));
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal($"/BackOffice/MedicalRecords/Details/{visitId}", response.Headers.Location?.ToString());
+        var details = await doctor.GetStringAsync($"/BackOffice/MedicalRecords/Details/{visitId}");
+        Assert.Contains("Theo dõi tiêu hóa", WebUtility.HtmlDecode(details));
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        Assert.Equal(1, await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().MedicalRecords.CountAsync());
+    }
+
+    [IdentitySqlServerFact]
+    public async Task Medical_record_draft_is_saved_and_stale_or_other_veterinarian_edits_are_rejected()
+    {
+        await IdentitySqlServerTestEnvironment.RecreateAndMigrateAsync();
+        using var factory = new IdentitySqlServerWebApplicationFactory();
+        var data = await Setup(factory);
+        var visitId = await WithVisitService(factory, s => s.WalkInAsync(new(data.PetId, data.VetProfileId, data.ActorUserId)));
+        var visit = (await WithVisitService(factory, s => s.GetDetailsAsync(visitId)))!;
+        await WithVisitService(factory, async s => { await s.StartAsync(new(visitId, data.VetUserId, visit.RowVersion)); return true; });
+
+        var id = await WithMedicalRecordService(factory, s => s.SaveDraftAsync(new(
+            visitId, data.VetUserId, null, "  Bỏ ăn  ", "Mệt mỏi", 8.25m, 38.5m,
+            null, "Theo dõi", new DateOnly(2026, 11, 5))));
+        var original = (await WithMedicalRecordService(factory, s => s.FindByVisitAsync(visitId)))!;
+        Assert.Equal(id, original.Id);
+        Assert.Equal("Bỏ ăn", original.ChiefComplaint);
+        Assert.Equal(8.25m, original.WeightKg);
+        Assert.Equal("Draft", original.Status);
+
+        await Assert.ThrowsAsync<MedicalRecordAccessException>(() => WithMedicalRecordService(factory, s => s.SaveDraftAsync(new(
+            visitId, data.SecondVetUserId, original.RowVersion, "Sai bác sĩ", null, null, null, null, null, null))));
+        await WithMedicalRecordService(factory, s => s.SaveDraftAsync(new(
+            visitId, data.VetUserId, original.RowVersion, "Đã ăn lại", null, 8.30m, null, "Theo dõi tiếp", null, null)));
+        await Assert.ThrowsAsync<MedicalRecordManagementException>(() => WithMedicalRecordService(factory, s => s.SaveDraftAsync(new(
+            visitId, data.VetUserId, original.RowVersion, "Dữ liệu cũ", null, null, null, null, null, null))));
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Equal("Đã ăn lại", (await db.MedicalRecords.SingleAsync()).ChiefComplaint);
+        Assert.Equal(2, await db.AuditLogs.CountAsync(x => x.Action == "MedicalRecord.DraftSaved"));
+    }
+
+    [IdentitySqlServerFact]
+    public async Task Medical_record_cannot_be_saved_before_visit_starts_or_after_finalization()
+    {
+        await IdentitySqlServerTestEnvironment.RecreateAndMigrateAsync();
+        using var factory = new IdentitySqlServerWebApplicationFactory();
+        var data = await Setup(factory);
+        var visitId = await WithVisitService(factory, s => s.WalkInAsync(new(data.PetId, data.VetProfileId, data.ActorUserId)));
+        await Assert.ThrowsAsync<MedicalRecordManagementException>(() => WithMedicalRecordService(factory, s => s.SaveDraftAsync(new(
+            visitId, data.VetUserId, null, "Khám", null, null, null, null, null, null))));
+        var visit = (await WithVisitService(factory, s => s.GetDetailsAsync(visitId)))!;
+        await WithVisitService(factory, async s => { await s.StartAsync(new(visitId, data.VetUserId, visit.RowVersion)); return true; });
+        await WithMedicalRecordService(factory, s => s.SaveDraftAsync(new(
+            visitId, data.VetUserId, null, "Khám", null, null, null, "Chẩn đoán", null, null)));
+        var original = (await WithMedicalRecordService(factory, s => s.FindByVisitAsync(visitId)))!;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var record = await db.MedicalRecords.SingleAsync();
+            record.Status = ClinicalDocumentStatus.Finalized;
+            record.FinalizedAt = DateTimeOffset.UtcNow;
+            record.FinalizedByVeterinarianId = data.VetProfileId;
+            await db.SaveChangesAsync();
+        }
+        await Assert.ThrowsAsync<MedicalRecordManagementException>(() => WithMedicalRecordService(factory, s => s.SaveDraftAsync(new(
+            visitId, data.VetUserId, original.RowVersion, "Sửa sau chốt", null, null, null, null, null, null))));
+    }
+
     [IdentitySqlServerFact]
     public async Task CheckIn_rejects_participants_deactivated_after_booking()
     {
@@ -332,6 +428,29 @@ public sealed class VisitServiceSqlServerTests
         var service = scope.ServiceProvider.GetRequiredService<IVisitService>();
         return await execute(service);
     }
+
+    private static async Task<T> WithMedicalRecordService<T>(
+        IdentitySqlServerWebApplicationFactory factory,
+        Func<IMedicalRecordService, Task<T>> execute)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        return await execute(scope.ServiceProvider.GetRequiredService<IMedicalRecordService>());
+    }
+
+    private static HttpClient Client(IdentitySqlServerWebApplicationFactory factory) =>
+        factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, BaseAddress = new Uri("https://localhost") });
+
+    private static async Task Login(HttpClient client, string email, string password)
+    {
+        var token = Token(await client.GetStringAsync("/Account/Login"));
+        using var response = await client.PostAsync("/Account/Login", new FormUrlEncodedContent([
+            new("Email", email), new("Password", password), new("RememberMe", "false"),
+            new("__RequestVerificationToken", token)]));
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+    }
+
+    private static string Token(string html) =>
+        Regex.Match(html, "<input[^>]*name=\"__RequestVerificationToken\"[^>]*value=\"(?<token>[^\"]+)\"").Groups["token"].Value;
 
     private static async Task<T> WithAppointmentService<T>(
         IdentitySqlServerWebApplicationFactory factory,

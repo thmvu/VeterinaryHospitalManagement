@@ -15,6 +15,7 @@ public sealed class VisitDetailViewModel
     public bool CanAssign => Detail.Status == "Waiting";
     public bool CanCancel => Detail.Status == "Waiting";
     public bool CanStart { get; set; }
+    public bool CanViewMedicalRecord { get; set; }
 
     public IReadOnlyList<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> VeterinarianOptions { get; set; } = [];
 }
