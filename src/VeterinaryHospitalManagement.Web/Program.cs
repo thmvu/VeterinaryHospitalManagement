@@ -49,7 +49,7 @@ builder.Services.AddScoped<IOwnerService, OwnerService>();
 builder.Services.AddScoped<IVeterinarianProfileService, VeterinarianProfileService>();
 builder.Services.AddScoped<IVeterinarianShiftService, VeterinarianShiftService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
-builder.Services.AddScoped<IVisitService, VisitService>();
+builder.Services.AddScoped<IVisitService, VeterinaryHospitalManagement.Web.Services.Visits.VisitService>();
 builder.Services.AddScoped<IServiceCatalogService, ServiceCatalogService>();
 builder.Services.AddScoped<IMedicineService, MedicineService>();
 builder.Services.AddScoped<IPetService, PetService>();

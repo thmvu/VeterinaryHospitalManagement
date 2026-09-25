@@ -34,6 +34,14 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<Visit> Visits => Set<Visit>();
 
+    public DbSet<MedicalRecord> MedicalRecords => Set<MedicalRecord>();
+
+    public DbSet<Prescription> Prescriptions => Set<Prescription>();
+
+    public DbSet<PrescriptionItem> PrescriptionItems => Set<PrescriptionItem>();
+
+    public DbSet<VisitService> VisitServices => Set<VisitService>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

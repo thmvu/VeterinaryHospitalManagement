@@ -50,4 +50,7 @@ public sealed class Visit
     public Pet Pet { get; set; } = null!;
     public VeterinarianProfile Veterinarian { get; set; } = null!;
     public ApplicationUser CheckedInByUser { get; set; } = null!;
+    public MedicalRecord? MedicalRecord { get; set; }
+    public Prescription? Prescription { get; set; }
+    public ICollection<VisitService> Services { get; set; } = new List<VisitService>();
 }
