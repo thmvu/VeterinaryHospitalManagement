@@ -2,13 +2,15 @@
 @{ ViewData["Title"] = "Thêm bác sĩ"; }
 
 <header class="record-header">
-    <div><span class="record-kicker">Hồ sơ bác sĩ</span><h1>Thêm bác sĩ</h1><p>Chỉ tài khoản Veterinarian đang hoạt động được hiển thị. Mã bác sĩ được hệ thống cấp sau khi lưu.</p></div>
+    <div><span class="record-kicker">Nhân sự lâm sàng</span><h1>Thêm bác sĩ</h1><p>Tạo tài khoản đăng nhập và hồ sơ bác sĩ trong một bước. Hệ thống tự cấp mã bác sĩ sau khi lưu.</p></div>
     <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
 </header>
 <div class="clinical-sheet clinical-sheet--form" data-ui="botanical-management-form">
     <form method="post">
         <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
-        <div class="mb-3"><label asp-for="UserId" class="form-label"></label><select asp-for="UserId" asp-items="Model.Users" class="form-select"><option value="">Chọn tài khoản</option></select><span asp-validation-for="UserId" class="text-danger"></span></div>
+        <div class="mb-3"><label asp-for="FullName" class="form-label"></label><input asp-for="FullName" class="form-control" autocomplete="name" /><span asp-validation-for="FullName" class="text-danger"></span></div>
+        <div class="mb-3"><label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control" type="email" autocomplete="email" /><span asp-validation-for="Email" class="text-danger"></span></div>
+        <div class="mb-3"><label asp-for="Password" class="form-label"></label><input asp-for="Password" class="form-control" autocomplete="new-password" aria-describedby="doctor-password-guidance" /><span asp-validation-for="Password" class="text-danger"></span><p id="doctor-password-guidance" class="field-guidance mt-2 mb-0">Ít nhất 6 ký tự, gồm chữ hoa, chữ thường, chữ số và ký tự đặc biệt. Bác sĩ có thể đổi mật khẩu sau khi đăng nhập.</p></div>
         <div class="mb-3"><label asp-for="Specialty" class="form-label"></label><input asp-for="Specialty" class="form-control" /><span asp-validation-for="Specialty" class="text-danger"></span></div>
         <div class="form-actions"><button type="submit" class="btn btn-brand">Tạo hồ sơ</button><a asp-action="Index" class="btn btn-secondary">Hủy</a></div>
     </form>

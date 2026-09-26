@@ -1,15 +1,17 @@
 @model IReadOnlyList<VeterinaryHospitalManagement.Web.Services.Veterinarians.VeterinarianListItem>
-@{ ViewData["Title"] = "Bác sĩ thú y"; }
+@using Microsoft.AspNetCore.Authorization
+@inject IAuthorizationService AuthorizationService
+@{ ViewData["Title"] = "Bác sĩ thú y"; var canCreate = (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.UserManage))).Succeeded; }
 
 <header class="record-header">
     <div><span class="record-kicker">Nhân sự lâm sàng</span><h1>Bác sĩ thú y</h1><p>Quản lý hồ sơ bác sĩ đủ điều kiện nhận lịch khám.</p></div>
-    <a asp-action="Create" class="btn btn-brand">Thêm bác sĩ</a>
+    @if (canCreate) { <a asp-action="Create" class="btn btn-brand">Thêm bác sĩ</a> }
 </header>
 @if (TempData["StatusMessage"] is string message) { <div class="alert alert-success" role="status">@message</div> }
 
 @if (Model.Count == 0)
 {
-    <div class="botanical-empty-state text-center"><h2>Chưa có hồ sơ bác sĩ</h2><p>Tạo hồ sơ từ một tài khoản Veterinarian đang hoạt động.</p><a asp-action="Create" class="btn btn-brand">Thêm bác sĩ đầu tiên</a></div>
+    <div class="botanical-empty-state text-center"><h2>Chưa có hồ sơ bác sĩ</h2><p>@(canCreate ? "Tạo tài khoản đăng nhập và hồ sơ bác sĩ trong một bước." : "Người quản trị tài khoản có thể thêm bác sĩ tại đây.")</p>@if (canCreate) { <a asp-action="Create" class="btn btn-brand">Thêm bác sĩ đầu tiên</a> }</div>
 }
 else
 {

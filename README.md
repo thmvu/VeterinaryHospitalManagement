@@ -36,7 +36,7 @@ $env:ASPNETCORE_ENVIRONMENT = "Development"
 dotnet run --project src/VeterinaryHospitalManagement.Web --no-launch-profile -- --seed-demo-only
 ```
 
-Seed tạo 2 chủ nuôi, 2 thú cưng, danh mục Chó/Mèo, 2 giống, 1 dịch vụ và 1 thuốc mẫu. Các bản ghi mẫu được nhận diện bằng mã `DEMO-` hoặc tên có “dữ liệu mẫu”; chạy lại không tạo trùng và không sửa bản ghi đã có. Nếu số điện thoại mẫu đã thuộc người khác, seed bỏ qua chủ nuôi đó. Seed không tạo tài khoản hay mật khẩu bác sĩ; Admin có thể tạo tài khoản Veterinarian rồi tạo hồ sơ để mã bác sĩ tự được cấp. Lệnh seed chỉ chạy trong Development và tự thoát sau khi hoàn tất.
+Seed tạo 2 chủ nuôi, 2 thú cưng, danh mục Chó/Mèo, 2 giống, 1 dịch vụ và 1 thuốc mẫu. Các bản ghi mẫu được nhận diện bằng mã `DEMO-` hoặc tên có “dữ liệu mẫu”; chạy lại không tạo trùng và không sửa bản ghi đã có. Nếu số điện thoại mẫu đã thuộc người khác, seed bỏ qua chủ nuôi đó. Seed không tạo tài khoản hay mật khẩu bác sĩ. Admin vào mục **Bác sĩ thú y → Thêm bác sĩ**, nhập họ tên, email đăng nhập, mật khẩu ban đầu và chuyên khoa; tài khoản Veterinarian và hồ sơ được tạo cùng lúc, mã bác sĩ tự được cấp. Lệnh seed chỉ chạy trong Development và tự thoát sau khi hoàn tất.
 
 ## Build và test
 
