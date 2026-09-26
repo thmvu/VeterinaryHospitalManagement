@@ -41,6 +41,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<PrescriptionItem> PrescriptionItems => Set<PrescriptionItem>();
 
     public DbSet<VisitService> VisitServices => Set<VisitService>();
+    public DbSet<Invoice> Invoices => Set<Invoice>();
+    public DbSet<InvoiceItem> InvoiceItems => Set<InvoiceItem>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -74,6 +76,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .IncrementsBy(1)
             .HasMin(1)
             .HasMax(9999)
+            .IsCyclic(false);
+
+        builder.HasSequence<long>("InvoiceNumberSequence")
+            .StartsAt(1)
+            .IncrementsBy(1)
+            .HasMin(1)
             .IsCyclic(false);
 
         builder.Entity<IdentityUserRole<string>>()

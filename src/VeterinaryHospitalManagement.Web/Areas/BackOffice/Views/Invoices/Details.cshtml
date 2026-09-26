@@ -1,0 +1,42 @@
+@model VeterinaryHospitalManagement.Web.Services.Billing.InvoiceDetails
+@inject VeterinaryHospitalManagement.Web.Services.Time.IVietnamTimeProvider VietnamTimeProvider
+@{
+    ViewData["Title"] = $"Hóa đơn {Model.InvoiceNumber}";
+}
+<header class="record-header">
+    <div><span class="record-kicker">Đã thanh toán · @Model.VisitNumber</span>
+        <h1>Hóa đơn @Model.InvoiceNumber</h1>
+        <p>@Model.PetName · Chủ nuôi @Model.OwnerName · @Model.OwnerPhone</p></div>
+    <a asp-action="Index" class="btn btn-ghost">← Thanh toán &amp; hóa đơn</a>
+</header>
+@if (TempData["StatusMessage"] is string message) { <div class="alert alert-success" role="status">@message</div> }
+<div class="clinical-sheet p-4">
+    <dl class="row border-bottom pb-3">
+        <dt class="col-sm-3">Ngày thanh toán</dt><dd class="col-sm-9">@Model.PaidAt.ToOffset(VietnamTimeProvider.LocalNow.Offset).ToString("dd/MM/yyyy HH:mm")</dd>
+        <dt class="col-sm-3">Người thu</dt><dd class="col-sm-9">@Model.ProcessedByName</dd>
+        <dt class="col-sm-3">Phương thức</dt><dd class="col-sm-9">@(Model.PaymentMethod == VeterinaryHospitalManagement.Web.Models.Enums.PaymentMethod.Cash ? "Tiền mặt" : "Chuyển khoản")</dd>
+    </dl>
+    <h2 class="h5">Dịch vụ đã thanh toán</h2>
+    @if (Model.Items.Count == 0)
+    {
+        <p class="text-muted">Hóa đơn không có dịch vụ tính phí.</p>
+    }
+    else
+    {
+        <div class="table-responsive" role="region" aria-label="Chi tiết hóa đơn" tabindex="0">
+            <table class="vhm-table">
+                <thead><tr><th>Dịch vụ</th><th>Số lượng</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead>
+                <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr><td>@item.Description</td><td>@item.Quantity.ToString("0.##")</td>
+                        <td>@item.UnitPrice.ToString("N0") ₫</td><td>@item.LineTotal.ToString("N0") ₫</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    <div class="d-flex justify-content-between border-top pt-3 mt-3">
+        <strong>Đã thanh toán</strong><strong class="h4 mb-0">@Model.TotalAmount.ToString("N0") ₫</strong>
+    </div>
+</div>

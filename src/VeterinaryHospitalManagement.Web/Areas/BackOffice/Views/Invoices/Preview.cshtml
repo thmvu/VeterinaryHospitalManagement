@@ -1,0 +1,50 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Invoices.CheckoutPageViewModel
+@{
+    ViewData["Title"] = $"Tạm tính {Model.Preview.VisitNumber}";
+}
+<header class="record-header">
+    <div><span class="record-kicker">Thu ngân · @Model.Preview.VisitNumber</span>
+        <h1>Xác nhận thanh toán</h1>
+        <p>@Model.Preview.PetName · Chủ nuôi @Model.Preview.OwnerName · @Model.Preview.OwnerPhone</p></div>
+    <a asp-action="Index" class="btn btn-ghost">← Danh sách chờ thu</a>
+</header>
+@if (TempData["ErrorMessage"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
+<div class="clinical-sheet p-4">
+    <h2 class="h5 border-bottom pb-3 mb-3">Dịch vụ đã thực hiện</h2>
+    @if (Model.Preview.Items.Count == 0)
+    {
+        <p class="text-muted">Không có dịch vụ tính phí. Vẫn có thể xác nhận hóa đơn 0 ₫.</p>
+    }
+    else
+    {
+        <div class="table-responsive" role="region" aria-label="Tạm tính dịch vụ" tabindex="0">
+            <table class="vhm-table">
+                <thead><tr><th>Dịch vụ</th><th>Số lượng</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead>
+                <tbody>
+                @foreach (var line in Model.Preview.Items)
+                {
+                    <tr><td>@line.Description</td><td>@line.Quantity.ToString("0.##")</td>
+                        <td>@line.UnitPrice.ToString("N0") ₫</td><td>@line.LineTotal.ToString("N0") ₫</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-3">
+        <strong>Tổng tạm tính</strong><strong class="h4 mb-0">@Model.Preview.TotalAmount.ToString("N0") ₫</strong>
+    </div>
+    <p class="text-muted small mt-3">Số tiền sẽ được tính lại trên server khi xác nhận.</p>
+    @if (Model.CanCheckout)
+    {
+        <form asp-action="Confirm" method="post" onsubmit="return confirm('Bạn xác nhận đã thu đủ tiền cho lượt khám này?');">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="VisitId" value="@Model.Preview.VisitId" />
+            <fieldset class="mt-3 mb-4">
+                <legend class="h6">Phương thức thanh toán</legend>
+                <label class="me-4"><input type="radio" name="PaymentMethod" value="Cash" checked /> Tiền mặt</label>
+                <label><input type="radio" name="PaymentMethod" value="BankTransfer" /> Chuyển khoản</label>
+            </fieldset>
+            <button type="submit" class="btn btn-brand">Xác nhận đã thu tiền</button>
+        </form>
+    }
+</div>

@@ -94,9 +94,20 @@ Trang đăng nhập ở `/Account/Login`. User bị khóa (`IsActive = false`) k
 
 Sau khi đăng nhập bằng Admin, mở `/BackOffice/Users`. Admin có thể tạo tài khoản nội bộ, sửa họ tên/email, đổi đúng một role, khóa/mở khóa và đặt lại mật khẩu. Không có xóa cứng tài khoản vì audit cần giữ lịch sử. Mọi thay đổi role, khóa hoặc reset mật khẩu thu hồi cookie cũ; hệ thống không cho khóa hoặc hạ quyền Admin đang hoạt động cuối cùng. Các thao tác này ghi AuditLog cùng transaction.
 
-## Đơn thuốc bản nháp
+## Khám, đơn thuốc và dịch vụ
 
-Bác sĩ phụ trách mở lượt khám đang `InProgress` rồi chọn **Mở đơn thuốc**. Trong bản nháp có thể chọn thuốc từ danh mục, nhập liều/đường dùng/tần suất/thời gian/số lượng, thêm hoặc bỏ dòng thuốc và lưu hướng dẫn chung. Tên và đơn vị thuốc được giữ theo thời điểm kê; thuốc đã ngừng hoạt động không thể thêm mới. Đơn thuốc là chỉ định, không tự tạo khoản thu trong hóa đơn. Giai đoạn này chưa có chốt hoặc in đơn thuốc. Schema đơn thuốc đã có từ migration `AddClinicalRecords`, nên thay đổi bản nháp này không cần migration mới.
+Bác sĩ phụ trách mở lượt khám đang `InProgress` để ghi bệnh án, lập đơn thuốc nếu cần và thêm dịch vụ. Dịch vụ được ghi `Pending`, rồi xác nhận `Performed` hoặc `Cancelled`; tên và giá được giữ theo thời điểm thêm. Chỉ dịch vụ `Performed` được tính tiền. Bệnh án phải có chẩn đoán, không còn dịch vụ `Pending`, và đơn thuốc nếu đã lập phải có dòng hợp lệ thì bác sĩ mới được **Hoàn tất khám**. Bệnh án và đơn thuốc được chốt cùng lượt khám trong một giao dịch; đơn thuốc là chỉ định điều trị, không tự cộng vào hóa đơn. Schema lâm sàng nằm trong migration `AddClinicalRecords`.
+
+## Thu tiền và hóa đơn
+
+Sau khi lượt khám `Completed`, lễ tân vào **Thanh toán & hóa đơn** trong sidebar. Trang tạm tính chỉ hiển thị dịch vụ đã thực hiện; khi xác nhận tiền mặt hoặc chuyển khoản, server đọc lại và tính lại tổng, lưu hóa đơn và audit trong một giao dịch. Mỗi lượt khám có tối đa một hóa đơn; bấm xác nhận lặp trả hóa đơn cũ và không đổi phương thức thanh toán. Lượt không có dịch vụ vẫn có thể có hóa đơn 0 ₫. Mốc này chưa có trang in hóa đơn.
+
+Trước khi dùng chức năng thu tiền trên database ứng dụng, áp dụng migration `AddInvoices` một lần trong thư mục gốc repository (kiểm tra connection string đang trỏ đúng database ứng dụng, không phải database test):
+
+```powershell
+dotnet tool restore
+dotnet ef database update --project src/VeterinaryHospitalManagement.Web --startup-project src/VeterinaryHospitalManagement.Web
+```
 
 ## Bằng chứng kiểm thử Foundation
 

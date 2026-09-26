@@ -17,6 +17,8 @@
         (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.CalendarView))).Succeeded;
     var canViewVisits = isAuthenticated &&
         (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.VisitView))).Succeeded;
+    var canViewInvoices = isAuthenticated &&
+        (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.InvoiceView))).Succeeded;
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction    = ViewContext.RouteData.Values["action"]?.ToString();
     var currentArea      = ViewContext.RouteData.Values["area"]?.ToString();
@@ -39,6 +41,7 @@
     bool isAppointmentsActive = string.Equals(currentController, "Appointments", StringComparison.OrdinalIgnoreCase) && isBackOffice;
     bool isCalendarActive = string.Equals(currentController, "Calendar", StringComparison.OrdinalIgnoreCase) && isBackOffice;
     bool isVisitsActive = string.Equals(currentController, "Visits", StringComparison.OrdinalIgnoreCase) && isBackOffice;
+    bool isInvoicesActive = string.Equals(currentController, "Invoices", StringComparison.OrdinalIgnoreCase) && isBackOffice;
 
     string ownersClass = "sidebar-nav-item" + (isOwnersActive ? " active" : "");
     string usersClass  = "sidebar-nav-item" + (isUsersActive  ? " active" : "");
@@ -49,6 +52,7 @@
     string appointmentsClass = "sidebar-nav-item" + (isAppointmentsActive ? " active" : "");
     string calendarClass = "sidebar-nav-item" + (isCalendarActive ? " active" : "");
     string visitsClass = "sidebar-nav-item" + (isVisitsActive ? " active" : "");
+    string invoicesClass = "sidebar-nav-item" + (isInvoicesActive ? " active" : "");
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -134,6 +138,15 @@
                             <span aria-hidden="true">📅</span><span>Lịch ngày/tuần</span>
                         </a>
                     }
+                }
+
+                @if (canViewInvoices)
+                {
+                    <span class="sidebar-section-label mt-2">Thu ngân</span>
+                    <a class="@invoicesClass" asp-area="BackOffice" asp-controller="Invoices" asp-action="Index"
+                       aria-current="@(isInvoicesActive ? "page" : null)">
+                        <span aria-hidden="true">₫</span><span>Thanh toán &amp; hóa đơn</span>
+                    </a>
                 }
 
                 @if (canManageCatalog || canManageSchedule)
