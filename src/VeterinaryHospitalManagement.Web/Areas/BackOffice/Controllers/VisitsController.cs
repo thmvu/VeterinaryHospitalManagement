@@ -8,6 +8,8 @@ using VeterinaryHospitalManagement.Web.Authorization;
 using VeterinaryHospitalManagement.Web.Data;
 using VeterinaryHospitalManagement.Web.Services.Time;
 using VeterinaryHospitalManagement.Web.Services.Visits;
+using VeterinaryHospitalManagement.Web.Services.Clinical;
+using VeterinaryHospitalManagement.Web.Services.Catalogs;
 
 namespace VeterinaryHospitalManagement.Web.Areas.BackOffice.Controllers;
 
@@ -16,7 +18,9 @@ namespace VeterinaryHospitalManagement.Web.Areas.BackOffice.Controllers;
 public sealed class VisitsController(
     IVisitService visitService,
     IVietnamTimeProvider timeProvider,
-    ApplicationDbContext db) : Controller
+    ApplicationDbContext db,
+    IClinicalServiceService clinicalServices,
+    IServiceCatalogService catalogs) : Controller
 {
     // ── Hàng đợi khám (Queue) ──────────────────────────────────────────────────
 
@@ -59,6 +63,9 @@ public sealed class VisitsController(
             CompletedAtLocal = detail.CompletedAt.HasValue ? detail.CompletedAt.Value.ToOffset(offset).DateTime : null,
             CanStart = detail.Status == "Waiting" && isAssignedVet,
             CanViewMedicalRecord = isAssignedVet || User.IsInRole(SystemRoleNames.Admin),
+            CanManageServices = isAssignedVet && detail.Status == "InProgress" && User.IsInRole(SystemRoleNames.Veterinarian),
+            ServiceLines = detail.Status is "InProgress" or "Completed" ? await clinicalServices.ListAsync(id, ct) : [],
+            ServiceOptions = detail.Status == "InProgress" ? (await catalogs.ListAsync(ct)).Where(x => x.IsActive && x.Price == decimal.Truncate(x.Price)).ToList() : [],
             VeterinarianOptions = await GetActiveVeterinariansAsync(ct)
         };
 
@@ -213,6 +220,53 @@ public sealed class VisitsController(
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────────
+
+    [HttpPost, ValidateAntiForgeryToken, PermissionAuthorize(PermissionCodes.VisitServiceManage)]
+    public async Task<IActionResult> AddService(int visitId, int serviceCatalogId, string quantity, CancellationToken ct)
+    {
+        if (!decimal.TryParse(quantity, System.Globalization.NumberStyles.Number,
+            System.Globalization.CultureInfo.InvariantCulture, out var parsed))
+        {
+            TempData["ErrorMessage"] = "Số lượng không hợp lệ.";
+            return RedirectToAction(nameof(Details), new { id = visitId });
+        }
+        try
+        {
+            await clinicalServices.AddAsync(new(visitId, GetCurrentUserId(), serviceCatalogId, parsed), ct);
+            TempData["StatusMessage"] = "Đã thêm dịch vụ vào lượt khám.";
+        }
+        catch (ClinicalServiceAccessException) { return Forbid(); }
+        catch (ClinicalServiceManagementException ex) { TempData["ErrorMessage"] = ex.Message; }
+        return RedirectToAction(nameof(Details), new { id = visitId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken, PermissionAuthorize(PermissionCodes.VisitServiceManage)]
+    public async Task<IActionResult> PerformService(int visitId, int lineId, string rowVersionBase64, CancellationToken ct)
+    {
+        try
+        {
+            await clinicalServices.PerformAsync(new(lineId, GetCurrentUserId(), Convert.FromBase64String(rowVersionBase64)), ct);
+            TempData["StatusMessage"] = "Đã xác nhận thực hiện dịch vụ.";
+        }
+        catch (ClinicalServiceAccessException) { return Forbid(); }
+        catch (Exception ex) when (ex is ClinicalServiceManagementException or FormatException)
+        { TempData["ErrorMessage"] = ex.Message; }
+        return RedirectToAction(nameof(Details), new { id = visitId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken, PermissionAuthorize(PermissionCodes.VisitServiceManage)]
+    public async Task<IActionResult> CancelService(int visitId, int lineId, string rowVersionBase64, string reason, CancellationToken ct)
+    {
+        try
+        {
+            await clinicalServices.CancelAsync(new(lineId, GetCurrentUserId(), Convert.FromBase64String(rowVersionBase64), reason), ct);
+            TempData["StatusMessage"] = "Đã hủy dòng dịch vụ.";
+        }
+        catch (ClinicalServiceAccessException) { return Forbid(); }
+        catch (Exception ex) when (ex is ClinicalServiceManagementException or FormatException)
+        { TempData["ErrorMessage"] = ex.Message; }
+        return RedirectToAction(nameof(Details), new { id = visitId });
+    }
 
     private string GetCurrentUserId() =>
         User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("Không tìm thấy thông tin đăng nhập.");
