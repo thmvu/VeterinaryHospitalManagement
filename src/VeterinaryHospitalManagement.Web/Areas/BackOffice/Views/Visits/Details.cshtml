@@ -6,6 +6,7 @@
 @{
     ViewData["Title"] = $"Chi tiết lượt khám {Model.Detail.VisitNumber}";
     var canStart = Model.CanStart && (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.VisitStart))).Succeeded;
+    var canComplete = Model.CanComplete && (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.VisitComplete))).Succeeded;
     var canAssign = Model.CanAssign && (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.VisitAssign))).Succeeded;
     var canCancel = Model.CanCancel && (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.VisitCancel))).Succeeded;
     var canViewMedicalRecord = Model.CanViewMedicalRecord &&
@@ -34,6 +35,15 @@
                 <button type="submit" class="btn btn-brand">
                     ▶ Bắt đầu khám
                 </button>
+            </form>
+        }
+        @if (canComplete)
+        {
+            <form asp-action="Complete" method="post" class="d-inline" onsubmit="return confirm('Hoàn tất khám sẽ chốt bệnh án và đơn thuốc. Bạn xác nhận?');">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="VisitId" value="@Model.Detail.Id" />
+                <input type="hidden" name="RowVersionBase64" value="@Model.RowVersionBase64" />
+                <button type="submit" class="btn btn-brand">✓ Hoàn tất khám</button>
             </form>
         }
 

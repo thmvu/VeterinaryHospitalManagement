@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using VeterinaryHospitalManagement.Web.Data;
 using VeterinaryHospitalManagement.Web.Models.Entities;
 using VeterinaryHospitalManagement.Web.Models.Enums;
+using VeterinaryHospitalManagement.Web.Authorization;
 
 namespace VeterinaryHospitalManagement.Web.Services.Visits;
 
@@ -315,8 +316,74 @@ public sealed class VisitService(ApplicationDbContext db, TimeProvider clock) : 
         }
     }
 
-    // ── Truy vấn ────────────────────────────────────────────────────────────────
+    // ── Hoàn tất khám ────────────────────────────────────────────────────────────
 
+    public async Task CompleteAsync(CompleteVisitRequest request, CancellationToken ct = default)
+    {
+        try
+        {
+            await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+            {
+                await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+                var visit = await db.Visits.Include(x => x.Veterinarian).ThenInclude(x => x.User)
+                    .SingleOrDefaultAsync(x => x.Id == request.VisitId, ct)
+                    ?? throw new VisitManagementException("Không tìm thấy lượt khám.");
+                var hasVetRole = await db.UserRoles.AnyAsync(link => link.UserId == request.PerformedByUserId &&
+                    db.Roles.Any(role => role.Id == link.RoleId && role.Name == SystemRoleNames.Veterinarian), ct);
+                if (visit.Veterinarian.UserId != request.PerformedByUserId ||
+                    !visit.Veterinarian.IsActive || !visit.Veterinarian.User.IsActive || !hasVetRole)
+                    throw new VisitManagementException("Chỉ bác sĩ phụ trách mới được hoàn tất lượt khám.");
+                if (visit.Status != VisitStatus.InProgress)
+                    throw new VisitManagementException("Chỉ có thể hoàn tất lượt khám đang diễn ra.");
+                if (request.RowVersion is null || !visit.RowVersion.AsSpan().SequenceEqual(request.RowVersion))
+                    throw new VisitManagementException("Lượt khám đã thay đổi. Hãy tải lại trang.");
+                db.Entry(visit).Property(x => x.RowVersion).OriginalValue = request.RowVersion;
+
+                var record = await db.MedicalRecords.SingleOrDefaultAsync(x => x.VisitId == visit.Id, ct);
+                if (record is null || record.Status != ClinicalDocumentStatus.Draft ||
+                    string.IsNullOrWhiteSpace(record.Diagnosis))
+                    throw new VisitManagementException("Cần lưu bệnh án có chẩn đoán trước khi hoàn tất khám.");
+                if (await db.VisitServices.AnyAsync(x => x.VisitId == visit.Id && x.Status == VisitServiceStatus.Pending, ct))
+                    throw new VisitManagementException("Còn dịch vụ đang chờ thực hiện hoặc hủy.");
+                var prescription = await db.Prescriptions.Include(x => x.Items)
+                    .SingleOrDefaultAsync(x => x.VisitId == visit.Id, ct);
+                if (prescription is not null &&
+                    (prescription.Status != ClinicalDocumentStatus.Draft || prescription.Items.Count == 0 ||
+                     prescription.Items.Any(item => item.Quantity <= 0 ||
+                         string.IsNullOrWhiteSpace(item.MedicineNameSnapshot) ||
+                         string.IsNullOrWhiteSpace(item.UnitSnapshot) ||
+                         string.IsNullOrWhiteSpace(item.Dosage) ||
+                         string.IsNullOrWhiteSpace(item.Route) ||
+                         string.IsNullOrWhiteSpace(item.Frequency) ||
+                         string.IsNullOrWhiteSpace(item.Duration))))
+                    throw new VisitManagementException("Đơn thuốc đã lập cần có ít nhất một dòng thuốc hợp lệ.");
+
+                var now = clock.GetUtcNow();
+                if (visit.StartedAt is { } started && now <= started) now = started.AddTicks(1);
+                if (prescription is not null && now < prescription.CreatedAt) now = prescription.CreatedAt;
+                record.Status = ClinicalDocumentStatus.Finalized;
+                record.FinalizedAt = now;
+                record.FinalizedByVeterinarianId = visit.VeterinarianId;
+                if (prescription is not null)
+                {
+                    prescription.Status = ClinicalDocumentStatus.Finalized;
+                    prescription.FinalizedAt = now;
+                }
+                visit.Status = VisitStatus.Completed;
+                visit.CompletedAt = now;
+                db.AuditLogs.Add(Audit(request.PerformedByUserId, "Visit.Completed",
+                    $"Visit {visit.VisitNumber} completed; clinical documents finalized.", visit, visit.VisitNumber));
+                await db.SaveChangesAsync(ct);
+                await tx.CommitAsync(ct);
+            });
+        }
+        catch (DbUpdateConcurrencyException)
+        { throw new VisitManagementException("Lượt khám hoặc hồ sơ đã thay đổi. Hãy tải lại trang."); }
+        catch (SqlException ex) when (ex.Number == 1205)
+        { throw new VisitManagementException("Dữ liệu đang được cập nhật. Hãy thử lại."); }
+    }
+
+    // ── Truy vấn ────────────────────────────────────────────────────────────────
     public async Task<IReadOnlyList<VisitQueueItem>> GetQueueAsync(int? veterinarianId, CancellationToken ct = default)
     {
         var q = db.Visits.AsNoTracking()

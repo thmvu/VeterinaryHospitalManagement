@@ -62,6 +62,7 @@ public sealed class VisitsController(
             StartedAtLocal = detail.StartedAt.HasValue ? detail.StartedAt.Value.ToOffset(offset).DateTime : null,
             CompletedAtLocal = detail.CompletedAt.HasValue ? detail.CompletedAt.Value.ToOffset(offset).DateTime : null,
             CanStart = detail.Status == "Waiting" && isAssignedVet,
+            CanComplete = detail.Status == "InProgress" && isAssignedVet && User.IsInRole(SystemRoleNames.Veterinarian),
             CanViewMedicalRecord = isAssignedVet || User.IsInRole(SystemRoleNames.Admin),
             CanManageServices = isAssignedVet && detail.Status == "InProgress" && User.IsInRole(SystemRoleNames.Veterinarian),
             ServiceLines = detail.Status is "InProgress" or "Completed" ? await clinicalServices.ListAsync(id, ct) : [],
@@ -219,8 +220,28 @@ public sealed class VisitsController(
         return RedirectToAction(nameof(Details), new { id = model.VisitId });
     }
 
-    // ── Helpers ─────────────────────────────────────────────────────────────────
+    // ── Hoàn tất khám ────────────────────────────────────────────────────────────
 
+    [HttpPost, ValidateAntiForgeryToken, PermissionAuthorize(PermissionCodes.VisitComplete)]
+    public async Task<IActionResult> Complete(CompleteVisitViewModel model, CancellationToken ct)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["ErrorMessage"] = "Dữ liệu hoàn tất lượt khám không hợp lệ. Hãy tải lại trang.";
+            return RedirectToAction(nameof(Details), new { id = model.VisitId });
+        }
+        try
+        {
+            await visitService.CompleteAsync(new(model.VisitId, GetCurrentUserId(),
+                Convert.FromBase64String(model.RowVersionBase64)), ct);
+            TempData["StatusMessage"] = "Đã hoàn tất lượt khám và chốt hồ sơ lâm sàng.";
+        }
+        catch (Exception ex) when (ex is VisitManagementException or FormatException)
+        { TempData["ErrorMessage"] = ex.Message; }
+        return RedirectToAction(nameof(Details), new { id = model.VisitId });
+    }
+
+    // ── Dịch vụ lượt khám ───────────────────────────────────────────────────────
     [HttpPost, ValidateAntiForgeryToken, PermissionAuthorize(PermissionCodes.VisitServiceManage)]
     public async Task<IActionResult> AddService(int visitId, int serviceCatalogId, string quantity, CancellationToken ct)
     {

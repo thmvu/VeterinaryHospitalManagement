@@ -17,6 +17,7 @@ public sealed class VisitDetailViewModel
     public bool CanAssign => Detail.Status == "Waiting";
     public bool CanCancel => Detail.Status == "Waiting";
     public bool CanStart { get; set; }
+    public bool CanComplete { get; set; }
     public bool CanViewMedicalRecord { get; set; }
     public bool CanManageServices { get; set; }
     public IReadOnlyList<ClinicalServiceLine> ServiceLines { get; set; } = [];

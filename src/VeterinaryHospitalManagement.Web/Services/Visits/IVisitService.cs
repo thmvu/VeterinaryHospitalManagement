@@ -17,6 +17,9 @@ public sealed record CancelVisitRequest(int VisitId, string CancellationReason, 
 /// <summary>Yêu cầu bắt đầu khám (InProgress), chỉ bác sĩ phụ trách.</summary>
 public sealed record StartVisitRequest(int VisitId, string PerformedByUserId, byte[] RowVersion);
 
+/// <summary>Chốt lượt khám và hồ sơ lâm sàng trong cùng giao dịch.</summary>
+public sealed record CompleteVisitRequest(int VisitId, string PerformedByUserId, byte[] RowVersion);
+
 /// <summary>DTO hiển thị Visit trong danh sách hàng đợi.</summary>
 public sealed record VisitQueueItem(
     int Id,
@@ -69,6 +72,9 @@ public interface IVisitService
 
     /// <summary>Bắt đầu khám (chỉ bác sĩ phụ trách, chuyển InProgress).</summary>
     Task StartAsync(StartVisitRequest request, CancellationToken ct = default);
+
+    /// <summary>Hoàn tất lượt khám khi bệnh án, đơn thuốc và dịch vụ đều hợp lệ.</summary>
+    Task CompleteAsync(CompleteVisitRequest request, CancellationToken ct = default);
 
     /// <summary>Lấy danh sách hàng đợi hôm nay (Waiting + InProgress), theo bác sĩ nếu có.</summary>
     Task<IReadOnlyList<VisitQueueItem>> GetQueueAsync(int? veterinarianId, CancellationToken ct = default);
