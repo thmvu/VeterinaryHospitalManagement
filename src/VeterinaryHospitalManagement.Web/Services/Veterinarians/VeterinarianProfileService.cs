@@ -14,7 +14,9 @@ public sealed class VeterinarianProfileService(ApplicationDbContext db, UserMana
 {
     public async Task<IReadOnlyList<VeterinarianListItem>> ListAsync(CancellationToken ct = default) =>
         await db.VeterinarianProfiles.AsNoTracking().OrderBy(x => x.DoctorCode)
-            .Select(x => new VeterinarianListItem(x.Id,x.DoctorCode,x.User.FullName,x.Specialty,x.IsActive)).ToListAsync(ct);
+            .Select(x => new VeterinarianListItem(x.Id,x.DoctorCode,x.User.FullName,x.Specialty,
+                x.IsActive && x.User.IsActive && db.UserRoles.Any(link => link.UserId == x.UserId &&
+                    db.Roles.Any(role => role.Id == link.RoleId && role.Name == SystemRoleNames.Veterinarian)))).ToListAsync(ct);
 
     public async Task<VeterinarianDetails?> FindAsync(int id, CancellationToken ct = default) =>
         await db.VeterinarianProfiles.AsNoTracking().Where(x => x.Id == id)
@@ -47,49 +49,6 @@ public sealed class VeterinarianProfileService(ApplicationDbContext db, UserMana
         var profile = new VeterinarianProfile { UserId=user.Id, DoctorCode=doctorCode, Specialty=VeterinarianProfileRules.NormalizeSpecialty(request.Specialty), IsActive=true };
         db.Add(profile); await db.SaveChangesAsync(ct); AddAudit(request.ActorUserId,"VeterinarianProfile.Created",profile.Id,$"Created veterinarian {profile.DoctorCode}."); await db.SaveChangesAsync(ct); return profile.Id;
     },ct);
-
-    public Task<int> CreateWithAccountAsync(CreateVeterinarianWithAccountRequest request, CancellationToken ct = default) => InTransactionAsync(async () =>
-    {
-        if (string.IsNullOrWhiteSpace(request.FullName) || request.FullName.Trim().Length > 150)
-            throw new VeterinarianManagementException("Họ tên bác sĩ là bắt buộc và tối đa 150 ký tự.");
-        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-            throw new VeterinarianManagementException("Email và mật khẩu là bắt buộc.");
-
-        var email = request.Email.Trim();
-        var specialty = VeterinarianProfileRules.NormalizeSpecialty(request.Specialty);
-        var user = new ApplicationUser
-        {
-            UserName = email,
-            Email = email,
-            EmailConfirmed = true,
-            FullName = request.FullName.Trim(),
-            IsActive = true,
-            CreatedAt = clock.GetUtcNow()
-        };
-        var created = await users.CreateAsync(user, request.Password);
-        if (!created.Succeeded)
-            throw new VeterinarianManagementException(UserManagementRules.ToSafeIdentityErrorMessage(created.Errors, "Không thể tạo tài khoản bác sĩ."));
-        var assigned = await users.AddToRoleAsync(user, SystemRoleNames.Veterinarian);
-        if (!assigned.Succeeded)
-            throw new VeterinarianManagementException("Không thể cấp vai trò bác sĩ.");
-
-        var parameter = new SqlParameter("@SequenceValue", SqlDbType.BigInt) { Direction = ParameterDirection.Output };
-        string doctorCode;
-        do
-        {
-            await db.Database.ExecuteSqlRawAsync("SELECT @SequenceValue = NEXT VALUE FOR [DoctorCodeSequence];", [parameter], ct);
-            doctorCode = VeterinarianProfileRules.FormatDoctorCode(Convert.ToInt64(parameter.Value, CultureInfo.InvariantCulture));
-        }
-        while (await db.VeterinarianProfiles.AnyAsync(x => x.DoctorCode == doctorCode, ct));
-
-        var profile = new VeterinarianProfile { UserId = user.Id, DoctorCode = doctorCode, Specialty = specialty, IsActive = true };
-        db.VeterinarianProfiles.Add(profile);
-        await db.SaveChangesAsync(ct);
-        db.AuditLogs.Add(new AuditLog { ActorType = "Internal", UserId = request.ActorUserId, Action = "Identity.UserCreated", EntityName = "ApplicationUser", EntityId = user.Id, Description = "Created user with role Veterinarian.", CreatedAt = clock.GetUtcNow() });
-        AddAudit(request.ActorUserId, "VeterinarianProfile.Created", profile.Id, $"Created veterinarian {doctorCode}.");
-        await db.SaveChangesAsync(ct);
-        return profile.Id;
-    }, ct);
 
     public Task UpdateAsync(UpdateVeterinarianRequest request, CancellationToken ct = default) => GuardAsync(() => InTransactionAsync(async () =>
     {

@@ -183,7 +183,7 @@ public sealed class VeterinarianShiftServiceSqlServerTests
             .Select(x => x.Id)
             .SingleAsync();
 
-        return await s.ServiceProvider.GetRequiredService<IVeterinarianProfileService>()
-            .CreateAsync(new(actor, userId, "General"));
+        return await s.ServiceProvider.GetRequiredService<Web.Data.ApplicationDbContext>().VeterinarianProfiles
+            .Where(x => x.UserId == userId).Select(x => x.Id).SingleAsync();
     }
 }

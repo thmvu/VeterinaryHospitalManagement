@@ -104,7 +104,7 @@ public sealed class AppointmentServiceSqlServerTests
         var actor=await db.Users.Where(x=>x.NormalizedEmail==IdentitySqlServerTestEnvironment.BootstrapAdminEmail.ToUpperInvariant()).Select(x=>x.Id).SingleAsync();
         await sp.GetRequiredService<IUserManagementService>().CreateAsync(new(actor,"Bác sĩ lịch hẹn","appointment-vet@vet.test","Integration.Vet123!",SystemRoleNames.Veterinarian));
         var user=await db.Users.Where(x=>x.Email=="appointment-vet@vet.test").Select(x=>x.Id).SingleAsync();
-        var vet=await sp.GetRequiredService<IVeterinarianProfileService>().CreateAsync(new(actor,user,"Tổng quát"));
+        var vet=await db.VeterinarianProfiles.Where(x=>x.UserId==user).Select(x=>x.Id).SingleAsync();
         var owner=new Owner{OwnerCode="OWN-000001",FullName="Nguyễn Văn A",PhoneNumber="+84901234567",IsActive=true,CreatedAt=DateTimeOffset.UtcNow}; var species=new Species{Code="DOG",Name="Chó",IsActive=true}; db.AddRange(owner,species); await db.SaveChangesAsync();
         var pet=new Pet{PetCode="PET-000001",OwnerId=owner.Id,Name="Milo",SpeciesId=species.Id,Sex=PetSex.Male,IsActive=true,CreatedAt=DateTimeOffset.UtcNow}; db.Pets.Add(pet); await db.SaveChangesAsync();
         var shiftStart=new DateTimeOffset(2026,11,1,8,0,0,TimeSpan.FromHours(7)); db.VeterinarianShifts.Add(new VeterinarianShift{VeterinarianId=vet,StartAt=shiftStart.ToUniversalTime(),EndAt=shiftStart.AddHours(9).ToUniversalTime(),IsActive=true}); await db.SaveChangesAsync(); return(actor,pet.Id,vet);

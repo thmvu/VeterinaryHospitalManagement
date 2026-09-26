@@ -89,6 +89,17 @@ if (args.Contains("--seed-demo-only"))
 
 if (args.Contains("--seed-demo-only")) return;
 
+if (args.Contains("--sync-veterinarians-only"))
+{
+    if (!app.Environment.IsDevelopment())
+        throw new InvalidOperationException("Đồng bộ bác sĩ bằng lệnh này chỉ chạy trong Development.");
+    await using var scope = app.Services.CreateAsyncScope();
+    var count = await scope.ServiceProvider.GetRequiredService<IUserManagementService>()
+        .SynchronizeVeterinarianProfilesAsync();
+    app.Logger.LogInformation("Đã bổ sung {Count} hồ sơ bác sĩ còn thiếu.", count);
+    return;
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

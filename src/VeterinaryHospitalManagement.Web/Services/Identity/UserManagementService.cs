@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore.Storage;
 using VeterinaryHospitalManagement.Web.Authorization;
 using VeterinaryHospitalManagement.Web.Data;
 using VeterinaryHospitalManagement.Web.Models.Entities;
+using VeterinaryHospitalManagement.Web.Services.Veterinarians;
+using System.Globalization;
 
 namespace VeterinaryHospitalManagement.Web.Services.Identity;
 
@@ -61,6 +63,8 @@ public sealed class UserManagementService(
             EnsureSucceeded(await userManager.CreateAsync(user, request.Password), "Không thể tạo tài khoản.");
             dbContext.UserRoles.Add(new IdentityUserRole<string> { UserId = user.Id, RoleId = role.Id });
             await dbContext.SaveChangesAsync(cancellationToken);
+            if (role.Name == SystemRoleNames.Veterinarian)
+                await EnsureVeterinarianProfileAsync(user.Id, request.ActorUserId, cancellationToken);
             AddAudit(request.ActorUserId, "Identity.UserCreated", user.Id, $"Created user with role {role.Name}.");
             await dbContext.SaveChangesAsync(cancellationToken);
             return user.Id;
@@ -114,6 +118,8 @@ public sealed class UserManagementService(
                 await dbContext.SaveChangesAsync(cancellationToken);
                 dbContext.UserRoles.Add(new IdentityUserRole<string> { UserId = user.Id, RoleId = nextRole.Id });
                 await dbContext.SaveChangesAsync(cancellationToken);
+                if (nextRole.Name == SystemRoleNames.Veterinarian)
+                    await EnsureVeterinarianProfileAsync(user.Id, request.ActorUserId, cancellationToken);
                 EnsureSucceeded(await userManager.UpdateSecurityStampAsync(user), "Không thể thu hồi phiên đăng nhập cũ.");
                 AddAudit(request.ActorUserId, "Identity.UserRoleChanged", user.Id,
                     $"Changed role from {currentRole.Name} to {nextRole.Name} and revoked sessions.");
@@ -143,6 +149,49 @@ public sealed class UserManagementService(
             await dbContext.SaveChangesAsync(cancellationToken);
             return 0;
         }, cancellationToken);
+
+    public Task<int> SynchronizeVeterinarianProfilesAsync(CancellationToken cancellationToken = default) =>
+        InSerializableTransactionAsync(async () =>
+        {
+            var adminId = await (from user in dbContext.Users
+                                 join userRole in dbContext.UserRoles on user.Id equals userRole.UserId
+                                 join role in dbContext.Roles on userRole.RoleId equals role.Id
+                                 where role.Name == SystemRoleNames.Admin && user.IsActive
+                                 select user.Id).FirstOrDefaultAsync(cancellationToken)
+                ?? throw new UserManagementException("Cần có Admin đang hoạt động để đồng bộ hồ sơ bác sĩ.");
+            var userIds = await (from user in dbContext.Users
+                                 join userRole in dbContext.UserRoles on user.Id equals userRole.UserId
+                                 join role in dbContext.Roles on userRole.RoleId equals role.Id
+                                 where role.Name == SystemRoleNames.Veterinarian &&
+                                       !dbContext.VeterinarianProfiles.Any(profile => profile.UserId == user.Id)
+                                 select user.Id).ToListAsync(cancellationToken);
+            foreach (var userId in userIds)
+                await EnsureVeterinarianProfileAsync(userId, adminId, cancellationToken);
+            return userIds.Count;
+        }, cancellationToken);
+
+    private async Task EnsureVeterinarianProfileAsync(string userId, string actorUserId, CancellationToken cancellationToken)
+    {
+        if (await dbContext.VeterinarianProfiles.AnyAsync(profile => profile.UserId == userId, cancellationToken)) return;
+        string doctorCode;
+        do
+        {
+            var sequenceValue = new SqlParameter("@SequenceValue", SqlDbType.BigInt) { Direction = ParameterDirection.Output };
+            await dbContext.Database.ExecuteSqlRawAsync("SELECT @SequenceValue = NEXT VALUE FOR [DoctorCodeSequence];", [sequenceValue], cancellationToken);
+            doctorCode = VeterinarianProfileRules.FormatDoctorCode(Convert.ToInt64(sequenceValue.Value, CultureInfo.InvariantCulture));
+        }
+        while (await dbContext.VeterinarianProfiles.AnyAsync(profile => profile.DoctorCode == doctorCode, cancellationToken));
+        var profile = new VeterinarianProfile { UserId = userId, DoctorCode = doctorCode, IsActive = true };
+        dbContext.VeterinarianProfiles.Add(profile);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        dbContext.AuditLogs.Add(new AuditLog
+        {
+            ActorType = "Internal", UserId = actorUserId, Action = "VeterinarianProfile.Created",
+            EntityName = "VeterinarianProfile", EntityId = profile.Id.ToString(CultureInfo.InvariantCulture),
+            Description = $"Created veterinarian {doctorCode} from user role.", CreatedAt = timeProvider.GetUtcNow()
+        });
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
 
     private IQueryable<ManagedUserSummary> QueryUsers() =>
         from user in dbContext.Users

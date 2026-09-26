@@ -36,7 +36,16 @@ $env:ASPNETCORE_ENVIRONMENT = "Development"
 dotnet run --project src/VeterinaryHospitalManagement.Web --no-launch-profile -- --seed-demo-only
 ```
 
-Seed tạo 2 chủ nuôi, 2 thú cưng, danh mục Chó/Mèo, 2 giống, 1 dịch vụ và 1 thuốc mẫu. Các bản ghi mẫu được nhận diện bằng mã `DEMO-` hoặc tên có “dữ liệu mẫu”; chạy lại không tạo trùng và không sửa bản ghi đã có. Nếu số điện thoại mẫu đã thuộc người khác, seed bỏ qua chủ nuôi đó. Seed không tạo tài khoản hay mật khẩu bác sĩ. Admin vào mục **Bác sĩ thú y → Thêm bác sĩ**, nhập họ tên, email đăng nhập, mật khẩu ban đầu và chuyên khoa; tài khoản Veterinarian và hồ sơ được tạo cùng lúc, mã bác sĩ tự được cấp. Lệnh seed chỉ chạy trong Development và tự thoát sau khi hoàn tất.
+Seed tạo 2 chủ nuôi, 2 thú cưng, danh mục Chó/Mèo, 2 giống, 1 dịch vụ và 1 thuốc mẫu. Các bản ghi mẫu được nhận diện bằng mã `DEMO-` hoặc tên có “dữ liệu mẫu”; chạy lại không tạo trùng và không sửa bản ghi đã có. Nếu số điện thoại mẫu đã thuộc người khác, seed bỏ qua chủ nuôi đó. Seed không tạo tài khoản hay mật khẩu bác sĩ. Admin tạo tài khoản tại **Quản lý tài khoản** với vai trò `Veterinarian`; hệ thống tự tạo hồ sơ và cấp mã bác sĩ để hiện trong **Bác sĩ thú y**. Đổi tài khoản hiện có sang vai trò `Veterinarian` cũng tự tạo hồ sơ nếu chưa có. Lệnh seed chỉ chạy trong Development và tự thoát sau khi hoàn tất.
+
+Với tài khoản Veterinarian đã tạo trước phiên bản đồng bộ này nhưng chưa có hồ sơ, chạy một lần trong Development:
+
+```powershell
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+dotnet run --project src/VeterinaryHospitalManagement.Web --no-launch-profile -- --sync-veterinarians-only
+```
+
+Lệnh có thể chạy lại; chỉ tạo hồ sơ còn thiếu. Không cần migration mới cho thay đổi đồng bộ này.
 
 ## Build và test
 

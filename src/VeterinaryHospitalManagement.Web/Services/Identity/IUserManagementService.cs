@@ -15,6 +15,8 @@ public interface IUserManagementService
     Task ChangeRoleAsync(ChangeUserRoleRequest request, CancellationToken cancellationToken = default);
 
     Task ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default);
+
+    Task<int> SynchronizeVeterinarianProfilesAsync(CancellationToken cancellationToken = default);
 }
 
 public sealed record ManagedUserSummary(

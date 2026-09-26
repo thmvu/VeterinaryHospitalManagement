@@ -17,7 +17,10 @@ public sealed class UsersController(IUserManagementService userManagementService
         View(await userManagementService.ListAsync(cancellationToken));
 
     [HttpGet]
-    public IActionResult Create() => View(new CreateUserViewModel());
+    public IActionResult Create(string? role) => View(new CreateUserViewModel
+    {
+        RoleName = role == SystemRoleNames.Veterinarian ? SystemRoleNames.Veterinarian : SystemRoleNames.Receptionist
+    });
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -32,6 +35,11 @@ public sealed class UsersController(IUserManagementService userManagementService
         {
             await userManagementService.CreateAsync(new CreateManagedUserRequest(
                 CurrentUserId(), model.FullName, model.Email, model.Password, model.RoleName), cancellationToken);
+            if (model.RoleName == SystemRoleNames.Veterinarian)
+            {
+                TempData["StatusMessage"] = "Đã tạo tài khoản và hồ sơ bác sĩ. Mã bác sĩ được cấp tự động.";
+                return RedirectToAction("Index", "Veterinarians", new { area = "BackOffice" });
+            }
             TempData["StatusMessage"] = "Đã tạo tài khoản.";
             return RedirectToAction(nameof(Index));
         }

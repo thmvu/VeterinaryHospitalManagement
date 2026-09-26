@@ -14,46 +14,8 @@ public sealed class VeterinarianProfileServiceSqlServerTests
  [IdentitySqlServerFact] public async Task Concurrent_duplicate_user_creates_only_one_profile(){await IdentitySqlServerTestEnvironment.RecreateAndMigrateAsync();using var f=new IdentitySqlServerWebApplicationFactory();var actor=await Start(f);var user=await Add(f,actor,"same-user@vet.test",SystemRoleNames.Veterinarian);var results=await Task.WhenAll(Attempt(()=>With(f,s=>s.CreateAsync(new(actor,user,null)))),Attempt(()=>With(f,s=>s.CreateAsync(new(actor,user,null)))));Assert.Equal(1,results.Count(x=>x));await using var scope=f.Services.CreateAsyncScope();Assert.Equal(1,await scope.ServiceProvider.GetRequiredService<Web.Data.ApplicationDbContext>().VeterinarianProfiles.CountAsync());}
  [IdentitySqlServerFact] public async Task Audit_failure_rolls_back_profile_creation(){await IdentitySqlServerTestEnvironment.RecreateAndMigrateAsync();using var f=new IdentitySqlServerWebApplicationFactory();var actor=await Start(f);var user=await Add(f,actor,"rollback@vet.test",SystemRoleNames.Veterinarian);await Assert.ThrowsAsync<VeterinarianManagementException>(()=>With(f,s=>s.CreateAsync(new("missing-actor",user,null))));await using var scope=f.Services.CreateAsyncScope();Assert.Equal(0,await scope.ServiceProvider.GetRequiredService<Web.Data.ApplicationDbContext>().VeterinarianProfiles.CountAsync());}
  [IdentitySqlServerFact] public async Task Update_stale_version_writes_no_false_audit_and_activation_is_audited(){await IdentitySqlServerTestEnvironment.RecreateAndMigrateAsync();using var f=new IdentitySqlServerWebApplicationFactory();var actor=await Start(f);var user=await Add(f,actor,"stale@vet.test",SystemRoleNames.Veterinarian);var id=await With(f,s=>s.CreateAsync(new(actor,user,null)));var original=(await With(f,s=>s.FindAsync(id)))!;await With(f,s=>s.UpdateAsync(new(actor,id,original.RowVersion,"Ngoại khoa")));await Assert.ThrowsAsync<VeterinarianConcurrencyException>(()=>With(f,s=>s.UpdateAsync(new(actor,id,original.RowVersion,"Sai"))));var latest=(await With(f,s=>s.FindAsync(id)))!;await With(f,s=>s.SetActiveAsync(new(actor,id,latest.RowVersion,false)));await using var scope=f.Services.CreateAsyncScope();var db=scope.ServiceProvider.GetRequiredService<Web.Data.ApplicationDbContext>();Assert.Equal(1,await db.AuditLogs.CountAsync(x=>x.Action=="VeterinarianProfile.Updated"));Assert.Equal(1,await db.AuditLogs.CountAsync(x=>x.Action=="VeterinarianProfile.Deactivated"));Assert.Equal("Ngoại khoa",(await db.VeterinarianProfiles.SingleAsync()).Specialty);}
- [IdentitySqlServerFact] public async Task Create_with_account_creates_login_role_and_profile_together()
- {
-     await IdentitySqlServerTestEnvironment.RecreateAndMigrateAsync();
-     using var factory = new IdentitySqlServerWebApplicationFactory();
-     var actor = await Start(factory);
-     var id = await With(factory, service => service.CreateWithAccountAsync(new(actor, "Bác sĩ Lan", "lan@vet.test", "Integration.Vet123!", "Nội khoa")));
-     await using var scope = factory.Services.CreateAsyncScope();
-     var db = scope.ServiceProvider.GetRequiredService<Web.Data.ApplicationDbContext>();
-     var profile = await db.VeterinarianProfiles.Include(x => x.User).SingleAsync(x => x.Id == id);
-     Assert.Equal("VET-000001", profile.DoctorCode);
-     Assert.Equal("Bác sĩ Lan", profile.User.FullName);
-     Assert.True(await db.UserRoles.AnyAsync(x => x.UserId == profile.UserId && db.Roles.Any(role => role.Id == x.RoleId && role.Name == SystemRoleNames.Veterinarian)));
- }
-
- [IdentitySqlServerFact] public async Task Invalid_password_does_not_leave_partial_doctor_account()
- {
-     await IdentitySqlServerTestEnvironment.RecreateAndMigrateAsync();
-     using var factory = new IdentitySqlServerWebApplicationFactory();
-     var actor = await Start(factory);
-     await Assert.ThrowsAsync<VeterinarianManagementException>(() => With(factory, service => service.CreateWithAccountAsync(new(actor, "Bác sĩ Lan", "lan@vet.test", "weak", null))));
-     await using var scope = factory.Services.CreateAsyncScope();
-     var db = scope.ServiceProvider.GetRequiredService<Web.Data.ApplicationDbContext>();
-     Assert.False(await db.Users.AnyAsync(x => x.Email == "lan@vet.test"));
-     Assert.False(await db.VeterinarianProfiles.AnyAsync());
- }
-
- [IdentitySqlServerFact] public async Task Profile_failure_rolls_back_new_login_and_role()
- {
-     await IdentitySqlServerTestEnvironment.RecreateAndMigrateAsync();
-     using var factory = new IdentitySqlServerWebApplicationFactory();
-     await Start(factory);
-     await Assert.ThrowsAsync<VeterinarianManagementException>(() => With(factory, service => service.CreateWithAccountAsync(new("missing-actor", "Bác sĩ Lan", "lan@vet.test", "Integration.Vet123!", null))));
-     await using var scope = factory.Services.CreateAsyncScope();
-     var db = scope.ServiceProvider.GetRequiredService<Web.Data.ApplicationDbContext>();
-     Assert.False(await db.Users.AnyAsync(x => x.Email == "lan@vet.test"));
-     Assert.False(await db.VeterinarianProfiles.AnyAsync());
- }
-
  static async Task<bool> Attempt(Func<Task> action){try{await action();return true;}catch(VeterinarianManagementException){return false;}}
  static async Task<T> With<T>(IdentitySqlServerWebApplicationFactory f,Func<IVeterinarianProfileService,Task<T>> call){await using var s=f.Services.CreateAsyncScope();return await call(s.ServiceProvider.GetRequiredService<IVeterinarianProfileService>());} static async Task With(IdentitySqlServerWebApplicationFactory f,Func<IVeterinarianProfileService,Task> call){await using var s=f.Services.CreateAsyncScope();await call(s.ServiceProvider.GetRequiredService<IVeterinarianProfileService>());}
  static async Task<string> Start(IdentitySqlServerWebApplicationFactory f){using var c=f.CreateClient();await c.GetAsync("/");await using var s=f.Services.CreateAsyncScope();return await s.ServiceProvider.GetRequiredService<Web.Data.ApplicationDbContext>().Users.Where(x=>x.NormalizedEmail==IdentitySqlServerTestEnvironment.BootstrapAdminEmail.ToUpperInvariant()).Select(x=>x.Id).SingleAsync();}
- static async Task<string> Add(IdentitySqlServerWebApplicationFactory f,string actor,string email,string role){await using var s=f.Services.CreateAsyncScope();await s.ServiceProvider.GetRequiredService<IUserManagementService>().CreateAsync(new(actor,"Doctor Test",email,"Integration.Vet123!",role));return await s.ServiceProvider.GetRequiredService<Web.Data.ApplicationDbContext>().Users.Where(x=>x.Email==email).Select(x=>x.Id).SingleAsync();}
+ static async Task<string> Add(IdentitySqlServerWebApplicationFactory f,string actor,string email,string role){await using var s=f.Services.CreateAsyncScope();var service=s.ServiceProvider.GetRequiredService<IUserManagementService>();await service.CreateAsync(new(actor,"Doctor Test",email,"Integration.Vet123!",SystemRoleNames.Receptionist));var db=s.ServiceProvider.GetRequiredService<Web.Data.ApplicationDbContext>();var userId=await db.Users.Where(x=>x.Email==email).Select(x=>x.Id).SingleAsync();if(role==SystemRoleNames.Veterinarian){var oldRole=await db.Roles.Where(x=>x.Name==SystemRoleNames.Receptionist).Select(x=>x.Id).SingleAsync();var nextRole=await db.Roles.Where(x=>x.Name==SystemRoleNames.Veterinarian).Select(x=>x.Id).SingleAsync();var link=await db.UserRoles.SingleAsync(x=>x.UserId==userId&&x.RoleId==oldRole);db.UserRoles.Remove(link);await db.SaveChangesAsync();db.UserRoles.Add(new Microsoft.AspNetCore.Identity.IdentityUserRole<string>{UserId=userId,RoleId=nextRole});await db.SaveChangesAsync();}return userId;}
 }
