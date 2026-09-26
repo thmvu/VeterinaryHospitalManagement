@@ -473,12 +473,12 @@ public sealed class VisitServiceSqlServerTests
         // Create Vet User 1
         await sp.GetRequiredService<IUserManagementService>().CreateAsync(new(actor, "Bác Sĩ Một", "vet1@vet.test", "Integration.Vet123!", SystemRoleNames.Veterinarian));
         var vetUser1 = await db.Users.Where(x => x.Email == "vet1@vet.test").Select(x => x.Id).SingleAsync();
-        var vetProfile1 = await sp.GetRequiredService<IVeterinarianProfileService>().CreateAsync(new(actor, vetUser1, "VET-001", "Tổng quát"));
+        var vetProfile1 = await sp.GetRequiredService<IVeterinarianProfileService>().CreateAsync(new(actor, vetUser1, "Tổng quát"));
 
         // Create Vet User 2
         await sp.GetRequiredService<IUserManagementService>().CreateAsync(new(actor, "Bác Sĩ Hai", "vet2@vet.test", "Integration.Vet123!", SystemRoleNames.Veterinarian));
         var vetUser2 = await db.Users.Where(x => x.Email == "vet2@vet.test").Select(x => x.Id).SingleAsync();
-        var vetProfile2 = await sp.GetRequiredService<IVeterinarianProfileService>().CreateAsync(new(actor, vetUser2, "VET-002", "Ngoại khoa"));
+        var vetProfile2 = await sp.GetRequiredService<IVeterinarianProfileService>().CreateAsync(new(actor, vetUser2, "Ngoại khoa"));
 
         // Create Owner & Pet
         var owner = new Owner

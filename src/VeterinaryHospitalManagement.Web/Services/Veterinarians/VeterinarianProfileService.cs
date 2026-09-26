@@ -35,7 +35,15 @@ public sealed class VeterinarianProfileService(ApplicationDbContext db, UserMana
         var user = await users.FindByIdAsync(request.UserId) ?? throw new VeterinarianManagementException("Không tìm thấy tài khoản bác sĩ.");
         if (!user.IsActive || !await users.IsInRoleAsync(user,SystemRoleNames.Veterinarian)) throw new VeterinarianManagementException("Tài khoản phải đang hoạt động và có vai trò Veterinarian.");
         if (await db.VeterinarianProfiles.AnyAsync(x => x.UserId == user.Id,ct)) throw new VeterinarianManagementException("Tài khoản đã có hồ sơ bác sĩ.");
-        var profile = new VeterinarianProfile { UserId=user.Id, DoctorCode=VeterinarianProfileRules.NormalizeDoctorCode(request.DoctorCode), Specialty=VeterinarianProfileRules.NormalizeSpecialty(request.Specialty), IsActive=true };
+        string doctorCode;
+        do
+        {
+            var parameter = new SqlParameter("@SequenceValue", SqlDbType.BigInt) { Direction = ParameterDirection.Output };
+            await db.Database.ExecuteSqlRawAsync("SELECT @SequenceValue = NEXT VALUE FOR [DoctorCodeSequence];", [parameter], ct);
+            doctorCode = VeterinarianProfileRules.FormatDoctorCode(Convert.ToInt64(parameter.Value, CultureInfo.InvariantCulture));
+        }
+        while (await db.VeterinarianProfiles.AnyAsync(x => x.DoctorCode == doctorCode, ct));
+        var profile = new VeterinarianProfile { UserId=user.Id, DoctorCode=doctorCode, Specialty=VeterinarianProfileRules.NormalizeSpecialty(request.Specialty), IsActive=true };
         db.Add(profile); await db.SaveChangesAsync(ct); AddAudit(request.ActorUserId,"VeterinarianProfile.Created",profile.Id,$"Created veterinarian {profile.DoctorCode}."); await db.SaveChangesAsync(ct); return profile.Id;
     },ct);
 

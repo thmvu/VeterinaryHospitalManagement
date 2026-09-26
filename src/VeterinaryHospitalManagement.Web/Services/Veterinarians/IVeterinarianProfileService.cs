@@ -12,7 +12,7 @@ public interface IVeterinarianProfileService
 public sealed record VeterinarianListItem(int Id,string DoctorCode,string FullName,string? Specialty,bool IsActive);
 public sealed record VeterinarianDetails(int Id,string UserId,string DoctorCode,string FullName,string? Specialty,bool IsActive,byte[] RowVersion);
 public sealed record EligibleVeterinarianUser(string Id,string FullName,string Email);
-public sealed record CreateVeterinarianRequest(string ActorUserId,string UserId,string DoctorCode,string? Specialty);
+public sealed record CreateVeterinarianRequest(string ActorUserId,string UserId,string? Specialty);
 public sealed record UpdateVeterinarianRequest(string ActorUserId,int Id,byte[] ExpectedRowVersion,string? Specialty);
 public sealed record VeterinarianActivationRequest(string ActorUserId,int Id,byte[] ExpectedRowVersion,bool IsActive);
 public class VeterinarianManagementException(string message) : InvalidOperationException(message);

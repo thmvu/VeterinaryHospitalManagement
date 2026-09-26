@@ -2,6 +2,11 @@ namespace VeterinaryHospitalManagement.Web.Services.Veterinarians;
 
 public static class VeterinarianProfileRules
 {
+    public static string FormatDoctorCode(long sequenceValue)
+    {
+        if (sequenceValue is < 1 or > 999999) throw new ArgumentOutOfRangeException(nameof(sequenceValue));
+        return $"VET-{sequenceValue:000000}";
+    }
     public static string NormalizeDoctorCode(string value)
     {
         var normalized = (value ?? string.Empty).Trim().ToUpperInvariant();

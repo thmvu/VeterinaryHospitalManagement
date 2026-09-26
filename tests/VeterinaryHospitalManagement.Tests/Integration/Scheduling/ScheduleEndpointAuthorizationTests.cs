@@ -92,7 +92,7 @@ public sealed class ScheduleEndpointAuthorizationTests
         await using (var s = f.Services.CreateAsyncScope())
         {
             var vetService = s.ServiceProvider.GetRequiredService<IVeterinarianProfileService>();
-            var vetId = await vetService.CreateAsync(new(actor, user, "VET-SCHED", null));
+            var vetId = await vetService.CreateAsync(new(actor, user, null));
 
             var shiftService = s.ServiceProvider.GetRequiredService<IVeterinarianShiftService>();
             var start = DateTimeOffset.UtcNow.AddDays(1);

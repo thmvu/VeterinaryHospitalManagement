@@ -62,6 +62,13 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasMax(999999)
             .IsCyclic(false);
 
+        builder.HasSequence<long>("DoctorCodeSequence")
+            .StartsAt(1)
+            .IncrementsBy(1)
+            .HasMin(1)
+            .HasMax(999999)
+            .IsCyclic(false);
+
         builder.HasSequence<long>("VisitNumberSequence")
             .StartsAt(1)
             .IncrementsBy(1)

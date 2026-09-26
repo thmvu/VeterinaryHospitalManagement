@@ -21,6 +21,23 @@
 
 Chuỗi kết nối local mặc định dùng database dự kiến `VeterinaryHospitalManagementDb`, Integrated Security và `TrustServerCertificate=True`. Không lưu mật khẩu trong file cấu hình. Nếu môi trường sau này cần bí mật, dùng .NET user-secrets hoặc biến môi trường.
 
+## Mã tự động và dữ liệu mẫu
+
+Mã chủ nuôi (`OWN-`), thú cưng (`PET-`) và bác sĩ (`VET-`) được cấp khi lưu hồ sơ; người dùng không phải nhập mã. Thay đổi mã bác sĩ cần áp migration mới một lần:
+
+```powershell
+dotnet ef database update --project src/VeterinaryHospitalManagement.Web --startup-project src/VeterinaryHospitalManagement.Web
+```
+
+Sau khi đã có tài khoản Admin, có thể chèn dữ liệu thử vào database Development đang cấu hình bằng lệnh sau tại thư mục gốc:
+
+```powershell
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+dotnet run --project src/VeterinaryHospitalManagement.Web --no-launch-profile -- --seed-demo-only
+```
+
+Seed tạo 2 chủ nuôi, 2 thú cưng, danh mục Chó/Mèo, 2 giống, 1 dịch vụ và 1 thuốc mẫu. Các bản ghi mẫu được nhận diện bằng mã `DEMO-` hoặc tên có “dữ liệu mẫu”; chạy lại không tạo trùng và không sửa bản ghi đã có. Nếu số điện thoại mẫu đã thuộc người khác, seed bỏ qua chủ nuôi đó. Seed không tạo tài khoản hay mật khẩu bác sĩ; Admin có thể tạo tài khoản Veterinarian rồi tạo hồ sơ để mã bác sĩ tự được cấp. Lệnh seed chỉ chạy trong Development và tự thoát sau khi hoàn tất.
+
 ## Build và test
 
 ```powershell

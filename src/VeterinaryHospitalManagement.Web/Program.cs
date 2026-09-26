@@ -66,6 +66,7 @@ builder.Services.AddSingleton<IValidateOptions<BootstrapAdminOptions>>(services 
 builder.Services.AddScoped<IdentitySeed>();
 builder.Services.AddScoped<PermissionSeed>();
 builder.Services.AddScoped<SeedRunner>();
+builder.Services.AddScoped<DemoDataSeed>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IVietnamTimeProvider, VietnamTimeProvider>();
 
@@ -76,6 +77,17 @@ if (builder.Configuration.GetValue<bool>("IdentitySeed:RunOnStartup"))
     await using var scope = app.Services.CreateAsyncScope();
     await scope.ServiceProvider.GetRequiredService<SeedRunner>().RunAsync();
 }
+
+if (args.Contains("--seed-demo-only") && !app.Environment.IsDevelopment())
+    throw new InvalidOperationException("Demo seed chỉ chạy trong môi trường Development.");
+
+if (args.Contains("--seed-demo-only"))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    await scope.ServiceProvider.GetRequiredService<DemoDataSeed>().RunAsync();
+}
+
+if (args.Contains("--seed-demo-only")) return;
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

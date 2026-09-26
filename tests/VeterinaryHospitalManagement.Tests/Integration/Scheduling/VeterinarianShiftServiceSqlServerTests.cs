@@ -184,6 +184,6 @@ public sealed class VeterinarianShiftServiceSqlServerTests
             .SingleAsync();
 
         return await s.ServiceProvider.GetRequiredService<IVeterinarianProfileService>()
-            .CreateAsync(new(actor, userId, doctorCode, "General"));
+            .CreateAsync(new(actor, userId, "General"));
     }
 }
