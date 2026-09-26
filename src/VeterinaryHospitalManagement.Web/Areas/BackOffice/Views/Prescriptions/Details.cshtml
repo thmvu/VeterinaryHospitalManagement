@@ -1,0 +1,66 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Prescriptions.PrescriptionPageViewModel
+@{
+    ViewData["Title"] = $"Đơn thuốc {Model.VisitNumber}";
+    var prescription = Model.Prescription;
+}
+
+<header class="record-header">
+    <div>
+        <span class="record-kicker">Lâm sàng · @Model.VisitNumber</span>
+        <h1>Đơn thuốc cho @Model.PetName</h1>
+        <p>BS. @Model.VeterinarianName · Thuốc là chỉ định điều trị, không tự cộng vào hóa đơn.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="Visits" asp-action="Details" asp-route-id="@Model.VisitId" class="btn btn-ghost">← Lượt khám</a>
+        @if (Model.CanEdit)
+        {
+            <a asp-action="Edit" asp-route-id="@Model.VisitId" class="btn btn-brand">@(prescription is null ? "Tạo đơn thuốc" : "Sửa bản nháp")</a>
+        }
+    </div>
+</header>
+
+@if (TempData["StatusMessage"] is string message)
+{
+    <div class="alert alert-success" role="status">@message</div>
+}
+
+@if (prescription is null)
+{
+    <div class="clinical-sheet p-5 text-center">
+        <span class="record-kicker">Chưa có dữ liệu</span>
+        <h2 class="h4 mt-2">Chưa lập đơn thuốc</h2>
+        <p class="text-muted mb-0">Bác sĩ phụ trách có thể lưu bản nháp khi lượt khám đang diễn ra.</p>
+    </div>
+}
+else
+{
+    <div class="clinical-sheet p-4">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+            <h2 class="h5 mb-0">Chỉ định dùng thuốc</h2>
+            <span class="badge @(prescription.Status == "Finalized" ? "bg-success" : "bg-warning text-dark")">@(prescription.Status == "Finalized" ? "Đã chốt" : "Bản nháp")</span>
+        </div>
+        <p><strong>Hướng dẫn chung:</strong> @(prescription.Instructions ?? "Chưa ghi")</p>
+        @if (prescription.Items.Count == 0)
+        {
+            <p class="text-muted mb-0">Chưa thêm thuốc vào đơn.</p>
+        }
+        else
+        {
+            <div class="table-responsive" role="region" aria-label="Danh sách thuốc trong đơn" tabindex="0">
+                <table class="vhm-table">
+                    <thead><tr><th>Thuốc</th><th>Liều dùng</th><th>Đường dùng</th><th>Tần suất</th><th>Thời gian</th><th>Số lượng</th><th>Lưu ý</th></tr></thead>
+                    <tbody>
+                    @foreach (var item in prescription.Items)
+                    {
+                        <tr>
+                            <td><strong>@item.MedicineName</strong><br /><small class="text-muted">@item.Unit</small></td>
+                            <td>@item.Dosage</td><td>@item.Route</td><td>@item.Frequency</td><td>@item.Duration</td>
+                            <td>@item.Quantity.ToString("0.##") @item.Unit</td><td>@(item.Instructions ?? "—")</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}

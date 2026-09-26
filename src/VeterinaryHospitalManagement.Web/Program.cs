@@ -52,6 +52,7 @@ builder.Services.AddScoped<IVeterinarianShiftService, VeterinarianShiftService>(
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IVisitService, VeterinaryHospitalManagement.Web.Services.Visits.VisitService>();
 builder.Services.AddScoped<IMedicalRecordService, MedicalRecordService>();
+builder.Services.AddScoped<IPrescriptionService, PrescriptionService>();
 builder.Services.AddScoped<IServiceCatalogService, ServiceCatalogService>();
 builder.Services.AddScoped<IMedicineService, MedicineService>();
 builder.Services.AddScoped<IPetService, PetService>();

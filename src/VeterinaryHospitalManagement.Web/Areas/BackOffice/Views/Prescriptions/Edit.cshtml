@@ -1,0 +1,95 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Prescriptions.EditPrescriptionViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = $"Sửa đơn thuốc {Model.VisitNumber}";
+}
+
+<header class="record-header">
+    <div>
+        <span class="record-kicker">Lâm sàng · @Model.VisitNumber</span>
+        <h1>Đơn thuốc của @Model.PetName</h1>
+        <p>Chọn thuốc từ danh mục và ghi đúng chỉ định của bác sĩ. Đơn đang ở dạng bản nháp.</p>
+    </div>
+    <a asp-action="Details" asp-route-id="@Model.VisitId" class="btn btn-secondary">Quay lại</a>
+</header>
+
+<form asp-action="Edit" method="post" class="clinical-sheet p-4" id="prescription-form">
+    <input type="hidden" asp-for="VisitId" />
+    <input type="hidden" asp-for="RowVersionBase64" />
+    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+    <div class="mb-4">
+        <label asp-for="Instructions" class="form-label fw-bold">Hướng dẫn chung</label>
+        <textarea asp-for="Instructions" class="form-control" rows="3" placeholder="Ví dụ: Theo dõi phản ứng, tái khám theo hẹn..."></textarea>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div><span class="record-kicker">Chỉ định</span><h2 class="h5 mb-0">Thuốc trong đơn</h2></div>
+        <button type="button" id="add-medicine" class="btn btn-outline-brand">+ Thêm thuốc</button>
+    </div>
+    <div id="prescription-items">
+        @for (var i = 0; i < Model.Items.Count; i++)
+        {
+            var item = Model.Items[i];
+            <div class="border rounded-3 p-3 mb-3 prescription-item" data-prescription-item>
+                <div class="d-flex justify-content-between align-items-center mb-3"><strong>Dòng thuốc</strong><button type="button" class="btn btn-sm btn-outline-danger" data-remove-item>Loại bỏ</button></div>
+                <input type="hidden" name="Items[@i].Id" value="@item.Id" data-field="Id" />
+                <div class="row g-3">
+                    <div class="col-md-6"><label class="form-label">Thuốc *</label><select name="Items[@i].MedicineId" data-field="MedicineId" class="form-select" required><option value="">Chọn thuốc</option>@foreach (var medicine in Model.Medicines){<option value="@medicine.Id" selected="@(medicine.Id == item.MedicineId ? "selected" : null)" disabled="@(!medicine.IsActive && medicine.Id != item.MedicineId ? "disabled" : null)">@medicine.Name (@medicine.Unit)@(!medicine.IsActive ? " · Ngừng dùng" : "")</option>}</select></div>
+                    <div class="col-md-6"><label class="form-label">Liều dùng *</label><input name="Items[@i].Dosage" data-field="Dosage" value="@item.Dosage" class="form-control" maxlength="200" required /></div>
+                    <div class="col-md-4"><label class="form-label">Đường dùng *</label><input name="Items[@i].Route" data-field="Route" value="@item.Route" class="form-control" maxlength="100" placeholder="Ví dụ: Uống" required /></div>
+                    <div class="col-md-4"><label class="form-label">Tần suất *</label><input name="Items[@i].Frequency" data-field="Frequency" value="@item.Frequency" class="form-control" maxlength="200" placeholder="Ví dụ: 2 lần/ngày" required /></div>
+                    <div class="col-md-4"><label class="form-label">Thời gian dùng *</label><input name="Items[@i].Duration" data-field="Duration" value="@item.Duration" class="form-control" maxlength="200" placeholder="Ví dụ: 5 ngày" required /></div>
+                    <div class="col-md-4"><label class="form-label">Số lượng *</label><input name="Items[@i].Quantity" data-field="Quantity" value="@(item.Quantity == 0 ? "" : item.Quantity.ToString(CultureInfo.InvariantCulture))" class="form-control" type="number" min="0.01" step="0.01" required /></div>
+                    <div class="col-md-8"><label class="form-label">Lưu ý riêng</label><input name="Items[@i].Instructions" data-field="Instructions" value="@item.Instructions" class="form-control" maxlength="1000" /></div>
+                </div>
+            </div>
+        }
+    </div>
+    <p class="field-guidance">Có thể bỏ hết dòng thuốc để chỉ lưu hướng dẫn chung. Thuốc không tự tính vào hóa đơn.</p>
+    <div class="form-actions"><button type="submit" class="btn btn-brand">Lưu bản nháp</button><a asp-action="Details" asp-route-id="@Model.VisitId" class="btn btn-secondary">Hủy</a></div>
+</form>
+
+<template id="medicine-item-template">
+    <div class="border rounded-3 p-3 mb-3 prescription-item" data-prescription-item>
+        <div class="d-flex justify-content-between align-items-center mb-3"><strong>Dòng thuốc mới</strong><button type="button" class="btn btn-sm btn-outline-danger" data-remove-item>Loại bỏ</button></div>
+        <input type="hidden" data-field="Id" value="" />
+        <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Thuốc *</label><select data-field="MedicineId" class="form-select" required><option value="">Chọn thuốc</option>@foreach (var medicine in Model.Medicines.Where(x => x.IsActive)){<option value="@medicine.Id">@medicine.Name (@medicine.Unit)</option>}</select></div>
+            <div class="col-md-6"><label class="form-label">Liều dùng *</label><input data-field="Dosage" class="form-control" maxlength="200" required /></div>
+            <div class="col-md-4"><label class="form-label">Đường dùng *</label><input data-field="Route" class="form-control" maxlength="100" required /></div>
+            <div class="col-md-4"><label class="form-label">Tần suất *</label><input data-field="Frequency" class="form-control" maxlength="200" required /></div>
+            <div class="col-md-4"><label class="form-label">Thời gian dùng *</label><input data-field="Duration" class="form-control" maxlength="200" required /></div>
+            <div class="col-md-4"><label class="form-label">Số lượng *</label><input data-field="Quantity" class="form-control" type="number" min="0.01" step="0.01" required /></div>
+            <div class="col-md-8"><label class="form-label">Lưu ý riêng</label><input data-field="Instructions" class="form-control" maxlength="1000" /></div>
+        </div>
+    </div>
+</template>
+
+@section Scripts {
+<script>
+(() => {
+    const form = document.getElementById('prescription-form');
+    const list = document.getElementById('prescription-items');
+    const template = document.getElementById('medicine-item-template');
+    function renumber() {
+        list.querySelectorAll('[data-prescription-item]').forEach((row, index) => {
+            row.querySelectorAll('[data-field]').forEach(field => {
+                field.name = `Items[${index}].${field.dataset.field}`;
+            });
+        });
+    }
+    document.getElementById('add-medicine').addEventListener('click', () => {
+        list.appendChild(template.content.cloneNode(true));
+        renumber();
+    });
+    list.addEventListener('click', event => {
+        if (!event.target.matches('[data-remove-item]')) return;
+        event.target.closest('[data-prescription-item]').remove();
+        renumber();
+    });
+    form.addEventListener('submit', renumber);
+    renumber();
+})();
+</script>
+}

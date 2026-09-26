@@ -94,6 +94,10 @@ Trang đăng nhập ở `/Account/Login`. User bị khóa (`IsActive = false`) k
 
 Sau khi đăng nhập bằng Admin, mở `/BackOffice/Users`. Admin có thể tạo tài khoản nội bộ, sửa họ tên/email, đổi đúng một role, khóa/mở khóa và đặt lại mật khẩu. Không có xóa cứng tài khoản vì audit cần giữ lịch sử. Mọi thay đổi role, khóa hoặc reset mật khẩu thu hồi cookie cũ; hệ thống không cho khóa hoặc hạ quyền Admin đang hoạt động cuối cùng. Các thao tác này ghi AuditLog cùng transaction.
 
+## Đơn thuốc bản nháp
+
+Bác sĩ phụ trách mở lượt khám đang `InProgress` rồi chọn **Mở đơn thuốc**. Trong bản nháp có thể chọn thuốc từ danh mục, nhập liều/đường dùng/tần suất/thời gian/số lượng, thêm hoặc bỏ dòng thuốc và lưu hướng dẫn chung. Tên và đơn vị thuốc được giữ theo thời điểm kê; thuốc đã ngừng hoạt động không thể thêm mới. Đơn thuốc là chỉ định, không tự tạo khoản thu trong hóa đơn. Giai đoạn này chưa có chốt hoặc in đơn thuốc. Schema đơn thuốc đã có từ migration `AddClinicalRecords`, nên thay đổi bản nháp này không cần migration mới.
+
 ## Bằng chứng kiểm thử Foundation
 
 - `WebApplicationFactory<Program>` khởi động ứng dụng bằng TestHost với Data Protection tạm thời, kiểm tra trang chủ trả HTTP 200, HTML dùng `lang="vi"` và có đúng tên hệ thống.
