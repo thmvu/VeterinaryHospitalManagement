@@ -100,7 +100,7 @@ Bác sĩ phụ trách mở lượt khám đang `InProgress` để ghi bệnh án
 
 ## Thu tiền và hóa đơn
 
-Sau khi lượt khám `Completed`, lễ tân vào **Thanh toán & hóa đơn** trong sidebar. Trang tạm tính chỉ hiển thị dịch vụ đã thực hiện; khi xác nhận tiền mặt hoặc chuyển khoản, server đọc lại và tính lại tổng, lưu hóa đơn và audit trong một giao dịch. Mỗi lượt khám có tối đa một hóa đơn; bấm xác nhận lặp trả hóa đơn cũ và không đổi phương thức thanh toán. Lượt không có dịch vụ vẫn có thể có hóa đơn 0 ₫. Mốc này chưa có trang in hóa đơn.
+Sau khi lượt khám `Completed`, lễ tân vào **Thanh toán & hóa đơn** trong sidebar. Trang tạm tính chỉ hiển thị dịch vụ đã thực hiện; khi xác nhận tiền mặt hoặc chuyển khoản, server đọc lại và tính lại tổng, lưu hóa đơn và audit trong một giao dịch. Mỗi lượt khám có tối đa một hóa đơn; bấm xác nhận lặp trả hóa đơn cũ và không đổi phương thức thanh toán. Lượt không có dịch vụ vẫn có thể có hóa đơn 0 ₫. Từ chi tiết hóa đơn, tài khoản có quyền `Invoice.Print` có thể mở trang in A4 của trình duyệt. Bản in này không phải hóa đơn điện tử tích hợp thuế.
 
 Trước khi dùng chức năng thu tiền trên database ứng dụng, áp dụng migration `AddInvoices` một lần trong thư mục gốc repository (kiểm tra connection string đang trỏ đúng database ứng dụng, không phải database test):
 

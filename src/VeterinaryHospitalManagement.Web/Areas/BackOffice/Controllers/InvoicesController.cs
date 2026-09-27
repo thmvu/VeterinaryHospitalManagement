@@ -65,4 +65,11 @@ public sealed class InvoicesController(ICheckoutService checkout, IAuthorization
         var invoice = await checkout.FindAsync(id, ct);
         return invoice is null ? NotFound() : View(invoice);
     }
+
+    [HttpGet, PermissionAuthorize(PermissionCodes.InvoicePrint)]
+    public async Task<IActionResult> Print(int id, CancellationToken ct)
+    {
+        var invoice = await checkout.FindAsync(id, ct);
+        return invoice is null ? NotFound() : View(invoice);
+    }
 }

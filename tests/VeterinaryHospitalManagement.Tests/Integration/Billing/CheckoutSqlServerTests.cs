@@ -117,6 +117,50 @@ public sealed class CheckoutSqlServerTests
         "<input[^>]*name=\\\"__RequestVerificationToken\\\"[^>]*value=\\\"(?<token>[^\\\"]+)\\\"").Groups["token"].Value;
 
     [IdentitySqlServerFact]
+    public async Task Paid_invoice_has_print_page_for_receptionist_but_not_veterinarian()
+    {
+        await IdentitySqlServerTestEnvironment.RecreateAndMigrateAsync();
+        using var factory = new IdentitySqlServerWebApplicationFactory();
+        var setup = await SetupAsync(factory);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            db.VisitServices.Add(Line(setup.VisitId, setup.CatalogId, "Khám tổng quát", 1, 100001,
+                VisitServiceStatus.Performed, setup.VetId));
+            await db.SaveChangesAsync();
+        }
+        int invoiceId;
+        await using (var scope = factory.Services.CreateAsyncScope())
+            invoiceId = await scope.ServiceProvider.GetRequiredService<ICheckoutService>()
+                .ConfirmAsync(new(setup.VisitId, setup.CashierUserId, PaymentMethod.Cash));
+
+        using var receptionist = factory.CreateClient(new WebApplicationFactoryClientOptions
+            { AllowAutoRedirect = false, BaseAddress = new Uri("https://localhost") });
+        await LoginAsync(receptionist, "mai@vet.test", "Integration.Rec123!");
+        var details = await receptionist.GetStringAsync($"/BackOffice/Invoices/Details/{invoiceId}");
+        Assert.Contains($"/BackOffice/Invoices/Print/{invoiceId}", details);
+        var print = WebUtility.HtmlDecode(await receptionist.GetStringAsync($"/BackOffice/Invoices/Print/{invoiceId}"));
+        Assert.Contains("Khám tổng quát", print);
+        Assert.Contains("Nguyễn An", print);
+        Assert.Contains("window.print()", print);
+        Assert.DoesNotContain("app-sidebar", print);
+
+        using var vet = factory.CreateClient(new WebApplicationFactoryClientOptions
+            { AllowAutoRedirect = false, BaseAddress = new Uri("https://localhost") });
+        await LoginAsync(vet, "lan@vet.test", "Integration.Vet123!");
+        Assert.NotEqual(HttpStatusCode.OK, (await vet.GetAsync($"/BackOffice/Invoices/Print/{invoiceId}")).StatusCode);
+    }
+
+    private static async Task LoginAsync(HttpClient client, string email, string password)
+    {
+        var loginPage = await client.GetStringAsync("/Account/Login");
+        using var login = new FormUrlEncodedContent([
+            new("Email", email), new("Password", password),
+            new("__RequestVerificationToken", Token(loginPage))]);
+        Assert.Equal(HttpStatusCode.Redirect, (await client.PostAsync("/Account/Login", login)).StatusCode);
+    }
+
+    [IdentitySqlServerFact]
     public async Task Zero_service_visit_can_be_paid_once_and_invalid_state_or_actor_is_rejected()
     {
         await IdentitySqlServerTestEnvironment.RecreateAndMigrateAsync();

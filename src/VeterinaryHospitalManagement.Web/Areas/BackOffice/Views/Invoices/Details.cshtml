@@ -1,13 +1,24 @@
 @model VeterinaryHospitalManagement.Web.Services.Billing.InvoiceDetails
 @inject VeterinaryHospitalManagement.Web.Services.Time.IVietnamTimeProvider VietnamTimeProvider
+@using Microsoft.AspNetCore.Authorization
+@using VeterinaryHospitalManagement.Web.Authorization
+@inject IAuthorizationService AuthorizationService
 @{
     ViewData["Title"] = $"Hóa đơn {Model.InvoiceNumber}";
+    var canPrint = (await AuthorizationService.AuthorizeAsync(User,
+        PermissionPolicyName.For(PermissionCodes.InvoicePrint))).Succeeded;
 }
 <header class="record-header">
     <div><span class="record-kicker">Đã thanh toán · @Model.VisitNumber</span>
         <h1>Hóa đơn @Model.InvoiceNumber</h1>
         <p>@Model.PetName · Chủ nuôi @Model.OwnerName · @Model.OwnerPhone</p></div>
-    <a asp-action="Index" class="btn btn-ghost">← Thanh toán &amp; hóa đơn</a>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-ghost">← Thanh toán &amp; hóa đơn</a>
+        @if (canPrint)
+        {
+            <a asp-action="Print" asp-route-id="@Model.Id" class="btn btn-brand">In hóa đơn</a>
+        }
+    </div>
 </header>
 @if (TempData["StatusMessage"] is string message) { <div class="alert alert-success" role="status">@message</div> }
 <div class="clinical-sheet p-4">
