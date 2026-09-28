@@ -109,6 +109,10 @@ dotnet tool restore
 dotnet ef database update --project src/VeterinaryHospitalManagement.Web --startup-project src/VeterinaryHospitalManagement.Web
 ```
 
+## Báo cáo doanh thu (M10, phần web)
+
+Tài khoản có quyền `Report.View` mở **Báo cáo → Doanh thu** trong sidebar. Chọn khoảng ngày theo giờ Việt Nam; báo cáo lấy các hóa đơn đã thanh toán theo `PaidAt` và cộng tổng từ chính các dòng hiển thị. Phần xuất Excel và báo cáo lượt khám/dịch vụ sẽ được bổ sung ở các phần M10 tiếp theo.
+
 ## Bằng chứng kiểm thử Foundation
 
 - `WebApplicationFactory<Program>` khởi động ứng dụng bằng TestHost với Data Protection tạm thời, kiểm tra trang chủ trả HTTP 200, HTML dùng `lang="vi"` và có đúng tên hệ thống.

@@ -1,0 +1,77 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Reports.RevenueReportPageViewModel
+@inject VeterinaryHospitalManagement.Web.Services.Time.IVietnamTimeProvider VietnamTimeProvider
+@using System.Globalization
+@{
+    ViewData["Title"] = "Báo cáo doanh thu";
+    var vietnamOffset = VietnamTimeProvider.LocalNow.Offset;
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+}
+
+<header class="record-header">
+    <div>
+        <span class="record-kicker">Báo cáo</span>
+        <h1>Doanh thu đã thu</h1>
+        <p>Thống kê theo ngày thanh toán tại Việt Nam, từ các hóa đơn đã xác nhận.</p>
+    </div>
+</header>
+
+<section class="clinical-sheet p-4 mb-4" aria-label="Bộ lọc doanh thu">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-12 col-sm-4">
+            <label for="report-from" class="form-label">Từ ngày</label>
+            <input id="report-from" type="date" name="from" value="@Model.From.ToString("yyyy-MM-dd")" class="form-control" required />
+        </div>
+        <div class="col-12 col-sm-4">
+            <label for="report-to" class="form-label">Đến ngày</label>
+            <input id="report-to" type="date" name="to" value="@Model.To.ToString("yyyy-MM-dd")" class="form-control" required />
+        </div>
+        <div class="col-12 col-sm-4">
+            <button type="submit" class="btn btn-brand w-100">Xem báo cáo</button>
+        </div>
+    </form>
+</section>
+
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.Error</div>
+}
+else if (Model.Report is { } report)
+{
+    <section class="clinical-sheet p-4" aria-labelledby="revenue-title">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 border-bottom pb-3 mb-3">
+            <div>
+                <h2 id="revenue-title" class="h5 mb-1">@report.From.ToString("dd/MM/yyyy") – @report.To.ToString("dd/MM/yyyy")</h2>
+                <p class="text-muted mb-0">@report.InvoiceCount hóa đơn đã thanh toán</p>
+            </div>
+            <div class="text-sm-end">
+                <div class="text-muted small">Tổng doanh thu</div>
+                <strong class="h3 mb-0">@report.TotalAmount.ToString("N0", vi) ₫</strong>
+            </div>
+        </div>
+
+        @if (report.Rows.Count == 0)
+        {
+            <p class="text-muted mb-0">Chưa có hóa đơn thanh toán trong khoảng ngày này.</p>
+        }
+        else
+        {
+            <div class="table-responsive" role="region" aria-label="Hóa đơn trong kỳ" tabindex="0">
+                <table class="vhm-table">
+                    <thead><tr><th>Ngày thanh toán</th><th>Số hóa đơn</th><th>Chủ nuôi / thú cưng</th><th>Phương thức</th><th class="text-end">Số tiền</th></tr></thead>
+                    <tbody>
+                    @foreach (var row in report.Rows)
+                    {
+                        <tr>
+                            <td>@row.PaidAt.ToOffset(vietnamOffset).ToString("dd/MM/yyyy HH:mm")</td>
+                            <td><strong>@row.InvoiceNumber</strong></td>
+                            <td>@row.OwnerName<br /><small class="text-muted">@row.PetName</small></td>
+                            <td>@(row.PaymentMethod == VeterinaryHospitalManagement.Web.Models.Enums.PaymentMethod.Cash ? "Tiền mặt" : "Chuyển khoản")</td>
+                            <td class="text-end">@row.TotalAmount.ToString("N0", vi) ₫</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+}

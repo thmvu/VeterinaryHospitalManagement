@@ -25,6 +25,8 @@
         (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.PermissionManage))).Succeeded;
     var canViewAudit = isAuthenticated &&
         (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.AuditView))).Succeeded;
+    var canViewReports = isAuthenticated &&
+        (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.ReportView))).Succeeded;
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction    = ViewContext.RouteData.Values["action"]?.ToString();
     var currentArea      = ViewContext.RouteData.Values["area"]?.ToString();
@@ -51,6 +53,7 @@
     bool isDashboardActive = string.Equals(currentController, "Dashboard", StringComparison.OrdinalIgnoreCase) && isBackOffice;
     bool isPermissionsActive = string.Equals(currentController, "Permissions", StringComparison.OrdinalIgnoreCase) && isBackOffice;
     bool isAuditActive = string.Equals(currentController, "Audit", StringComparison.OrdinalIgnoreCase) && isBackOffice;
+    bool isReportsActive = string.Equals(currentController, "Reports", StringComparison.OrdinalIgnoreCase) && isBackOffice;
 
     string ownersClass = "sidebar-nav-item" + (isOwnersActive ? " active" : "");
     string usersClass  = "sidebar-nav-item" + (isUsersActive  ? " active" : "");
@@ -65,6 +68,7 @@
     string dashboardClass = "sidebar-nav-item" + (isDashboardActive ? " active" : "");
     string permissionsClass = "sidebar-nav-item" + (isPermissionsActive ? " active" : "");
     string auditClass = "sidebar-nav-item" + (isAuditActive ? " active" : "");
+    string reportsClass = "sidebar-nav-item" + (isReportsActive ? " active" : "");
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -165,6 +169,15 @@
                     <a class="@invoicesClass" asp-area="BackOffice" asp-controller="Invoices" asp-action="Index"
                        aria-current="@(isInvoicesActive ? "page" : null)">
                         <span aria-hidden="true">₫</span><span>Thanh toán &amp; hóa đơn</span>
+                    </a>
+                }
+
+                @if (canViewReports)
+                {
+                    <span class="sidebar-section-label mt-2">Báo cáo</span>
+                    <a class="@reportsClass" asp-area="BackOffice" asp-controller="Reports" asp-action="Index"
+                       aria-current="@(isReportsActive ? "page" : null)">
+                        <span aria-hidden="true">▥</span><span>Doanh thu</span>
                     </a>
                 }
 
