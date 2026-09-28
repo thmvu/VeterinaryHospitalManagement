@@ -22,5 +22,5 @@ public sealed class ConfirmCheckoutViewModel
     public int VisitId { get; set; }
 
     [Required]
-    public PaymentMethod PaymentMethod { get; set; }
+    public PaymentMethod? PaymentMethod { get; set; }
 }

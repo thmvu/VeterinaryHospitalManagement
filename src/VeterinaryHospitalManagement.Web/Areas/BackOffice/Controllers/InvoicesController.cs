@@ -40,7 +40,7 @@ public sealed class InvoicesController(ICheckoutService checkout, IAuthorization
     [HttpPost, ValidateAntiForgeryToken, PermissionAuthorize(PermissionCodes.InvoiceCheckout)]
     public async Task<IActionResult> Confirm(ConfirmCheckoutViewModel model, CancellationToken ct)
     {
-        if (!ModelState.IsValid)
+        if (!ModelState.IsValid || model.PaymentMethod is null)
         {
             TempData["ErrorMessage"] = "Dữ liệu thanh toán không hợp lệ.";
             return RedirectToAction(nameof(Preview), new { id = model.VisitId });
@@ -48,7 +48,7 @@ public sealed class InvoicesController(ICheckoutService checkout, IAuthorization
         try
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var invoiceId = await checkout.ConfirmAsync(new(model.VisitId, userId, model.PaymentMethod), ct);
+            var invoiceId = await checkout.ConfirmAsync(new(model.VisitId, userId, model.PaymentMethod.Value), ct);
             TempData["StatusMessage"] = "Đã xác nhận thanh toán.";
             return RedirectToAction(nameof(Details), new { id = invoiceId });
         }
