@@ -1,0 +1,146 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Permissions.RolePermissionMatrixViewModel
+@{
+    ViewData["Title"] = "Ma trận phân quyền hệ thống";
+}
+
+<div class="container-fluid px-0">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Ma trận phân quyền</h1>
+            <p class="text-muted mb-0">Quản lý và tinh chỉnh quyền hạn cho từng vai trò trong hệ thống.</p>
+        </div>
+    </div>
+
+    @if (TempData["StatusMessage"] is string msg)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <span>@msg</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] is string err)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span>@err</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Tabs chọn vai trò -->
+    <ul class="nav nav-pills mb-4" id="roleTabs" role="tablist">
+        @for (int i = 0; i < Model.Roles.Count; i++)
+        {
+            var role = Model.Roles[i];
+            var activeClass = i == 0 ? "active" : "";
+            <li class="nav-item" role="presentation">
+                <button class="nav-link @activeClass fw-semibold px-4"
+                        id="tab-@role"
+                        data-bs-toggle="pill"
+                        data-bs-target="#content-@role"
+                        type="button"
+                        role="tab"
+                        aria-controls="content-@role"
+                        aria-selected="@(i == 0 ? "true" : "false")">
+                    @role
+                </button>
+            </li>
+        }
+    </ul>
+
+    <!-- Nội dung phân quyền theo Tab -->
+    <div class="tab-content" id="roleTabsContent">
+        @for (int i = 0; i < Model.Roles.Count; i++)
+        {
+            var role = Model.Roles[i];
+            var activeClass = i == 0 ? "show active" : "";
+            var grants = Model.GrantsByRole.GetValueOrDefault(role) ?? new HashSet<string>();
+            var isAdmin = string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
+
+            <div class="tab-pane fade @activeClass" id="content-@role" role="tabpanel" aria-labelledby="tab-@role">
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="fw-bold mb-0">Cấu hình quyền cho vai trò: <span class="text-primary">@role</span></h5>
+                            <small class="text-muted">
+                                @if (isAdmin)
+                                {
+                                    <span>Quản trị viên luôn có toàn quyền. Vai trò này chỉ hiển thị, không thể chỉnh sửa.</span>
+                                }
+                                else
+                                {
+                                    <span>Tích chọn các quyền mà vai trò này được phép thực thi. Quyền tối cao Admin không thể gán cho vai trò này.</span>
+                                }
+                            </small>
+                        </div>
+                    </div>
+
+                    <form asp-action="UpdateRole" method="post" class="card-body p-4">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="RoleName" value="@role" />
+
+                        <div class="row g-4 mb-4">
+                            @foreach (var group in Model.Groups)
+                            {
+                                <div class="col-12 col-md-6 col-xl-4">
+                                    <div class="border rounded-3 p-3 h-100 bg-light-subtle">
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">@group.GroupName</h6>
+                                        <div class="d-flex flex-column gap-2">
+                                            @foreach (var perm in group.Permissions)
+                                            {
+                                                var isAdminOnly = Model.AdminOnlyPermissions.Contains(perm.Code);
+                                                 var isGranted = isAdmin || grants.Contains(perm.Code);
+                                                 var isDisabled = isAdmin || isAdminOnly;
+
+                                                <div class="form-check">
+                                                    @if (isDisabled)
+                                                    {
+                                                         @if (isAdmin)
+                                                        {
+                                                            <input class="form-check-input" type="checkbox" checked disabled id="@role-@perm.Code" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <input class="form-check-input" type="checkbox" disabled id="@role-@perm.Code" />
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <input class="form-check-input" type="checkbox" name="SelectedPermissions" value="@perm.Code"
+                                                               id="@role-@perm.Code" @(isGranted ? "checked" : "") />
+                                                    }
+
+                                                    <label class="form-check-label @(isDisabled ? "text-muted" : "text-dark")" for="@role-@perm.Code">
+                                                        <span class="fw-medium">@perm.Name</span>
+                                                        <div class="small text-muted font-monospace">@perm.Code</div>
+                                                        @if (perm.RequiredCode is not null)
+                                                        {
+                                                            <span class="badge bg-secondary-subtle text-secondary small">Cần: @perm.RequiredCode</span>
+                                                        }
+                                                        @if (isAdminOnly)
+                                                        {
+                                                            <span class="badge bg-danger-subtle text-danger small">Admin Only</span>
+                                                        }
+                                                    </label>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        @if (!isAdmin)
+                        {
+                            <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                                <button type="submit" class="btn btn-primary px-4">
+                                    Lưu thay đổi cho vai trò @role
+                                </button>
+                            </div>
+                        }
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</div>

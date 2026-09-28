@@ -19,6 +19,12 @@
         (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.VisitView))).Succeeded;
     var canViewInvoices = isAuthenticated &&
         (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.InvoiceView))).Succeeded;
+    var canViewDashboard = isAuthenticated &&
+        (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.DashboardView))).Succeeded;
+    var canManagePermissions = isAuthenticated &&
+        (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.PermissionManage))).Succeeded;
+    var canViewAudit = isAuthenticated &&
+        (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.AuditView))).Succeeded;
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction    = ViewContext.RouteData.Values["action"]?.ToString();
     var currentArea      = ViewContext.RouteData.Values["area"]?.ToString();
@@ -42,6 +48,9 @@
     bool isCalendarActive = string.Equals(currentController, "Calendar", StringComparison.OrdinalIgnoreCase) && isBackOffice;
     bool isVisitsActive = string.Equals(currentController, "Visits", StringComparison.OrdinalIgnoreCase) && isBackOffice;
     bool isInvoicesActive = string.Equals(currentController, "Invoices", StringComparison.OrdinalIgnoreCase) && isBackOffice;
+    bool isDashboardActive = string.Equals(currentController, "Dashboard", StringComparison.OrdinalIgnoreCase) && isBackOffice;
+    bool isPermissionsActive = string.Equals(currentController, "Permissions", StringComparison.OrdinalIgnoreCase) && isBackOffice;
+    bool isAuditActive = string.Equals(currentController, "Audit", StringComparison.OrdinalIgnoreCase) && isBackOffice;
 
     string ownersClass = "sidebar-nav-item" + (isOwnersActive ? " active" : "");
     string usersClass  = "sidebar-nav-item" + (isUsersActive  ? " active" : "");
@@ -53,6 +62,9 @@
     string calendarClass = "sidebar-nav-item" + (isCalendarActive ? " active" : "");
     string visitsClass = "sidebar-nav-item" + (isVisitsActive ? " active" : "");
     string invoicesClass = "sidebar-nav-item" + (isInvoicesActive ? " active" : "");
+    string dashboardClass = "sidebar-nav-item" + (isDashboardActive ? " active" : "");
+    string permissionsClass = "sidebar-nav-item" + (isPermissionsActive ? " active" : "");
+    string auditClass = "sidebar-nav-item" + (isAuditActive ? " active" : "");
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -103,6 +115,13 @@
                     </svg>
                     <span>Trang chủ</span>
                 </a>
+
+                @if (canViewDashboard)
+                {
+                    <a class="@dashboardClass" asp-area="BackOffice" asp-controller="Dashboard" asp-action="Index" aria-current="@(isDashboardActive ? "page" : null)">
+                        <span aria-hidden="true">📊</span><span>Bảng điều khiển</span>
+                    </a>
+                }
 
                 @if (canViewOwners)
                 {
@@ -172,9 +191,11 @@
                     }
                 }
 
-                @if (canManageUsers)
+                @if (canManageUsers || canManagePermissions || canViewAudit)
                 {
                     <span class="sidebar-section-label mt-2">Quản trị</span>
+                    @if (canManageUsers)
+                    {
                     <a class="@usersClass"
                        asp-area="BackOffice" asp-controller="Users" asp-action="Index"
                        aria-current="@(isUsersActive ? "page" : null)">
@@ -183,6 +204,23 @@
                         </svg>
                         <span>Quản lý tài khoản</span>
                     </a>
+                    }
+                    @if (canManagePermissions)
+                    {
+                        <a class="@permissionsClass"
+                           asp-area="BackOffice" asp-controller="Permissions" asp-action="Index"
+                           aria-current="@(isPermissionsActive ? "page" : null)">
+                            <span aria-hidden="true">🛡️</span><span>Ma trận phân quyền</span>
+                        </a>
+                    }
+                    @if (canViewAudit)
+                    {
+                        <a class="@auditClass"
+                           asp-area="BackOffice" asp-controller="Audit" asp-action="Index"
+                           aria-current="@(isAuditActive ? "page" : null)">
+                            <span aria-hidden="true">📜</span><span>Nhật ký kiểm toán</span>
+                        </a>
+                    }
                 }
 
             </nav>

@@ -16,6 +16,8 @@ using VeterinaryHospitalManagement.Web.Services.Catalogs;
 using VeterinaryHospitalManagement.Web.Services.Clinical;
 using VeterinaryHospitalManagement.Web.Services.Visits;
 using VeterinaryHospitalManagement.Web.Services.Billing;
+using VeterinaryHospitalManagement.Web.Services.Dashboard;
+using VeterinaryHospitalManagement.Web.Services.Audit;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,6 +58,9 @@ builder.Services.AddScoped<IMedicalRecordService, MedicalRecordService>();
 builder.Services.AddScoped<IPrescriptionService, PrescriptionService>();
 builder.Services.AddScoped<IClinicalServiceService, ClinicalServiceService>();
 builder.Services.AddScoped<ICheckoutService, CheckoutService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IRolePermissionAdminService, RolePermissionAdminService>();
+builder.Services.AddScoped<IAuditQueryService, AuditQueryService>();
 builder.Services.AddScoped<IServiceCatalogService, ServiceCatalogService>();
 builder.Services.AddScoped<IMedicineService, MedicineService>();
 builder.Services.AddScoped<IPetService, PetService>();

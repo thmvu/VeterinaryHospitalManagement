@@ -1,0 +1,194 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Audit.AuditLogIndexViewModel
+@inject VeterinaryHospitalManagement.Web.Services.Time.IVietnamTimeProvider VietnamTimeProvider
+@{
+    ViewData["Title"] = "Nhật ký kiểm toán";
+    var vietnamOffset = VietnamTimeProvider.LocalNow.Offset;
+}
+
+<div class="container-fluid px-0">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Nhật ký kiểm toán</h1>
+            <p class="text-muted mb-0">Theo dõi toàn bộ các hoạt động, thay đổi trạng thái và tác vụ quan trọng trong hệ thống.</p>
+        </div>
+    </div>
+
+    <!-- Bộ lọc tìm kiếm -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body p-3 p-md-4">
+            <form method="get" class="row g-3">
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small fw-semibold">Từ ngày</label>
+                    <input type="date" name="DateFrom" class="form-control form-control-sm"
+                           value="@Model.DateFrom?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small fw-semibold">Đến ngày</label>
+                    <input type="date" name="DateTo" class="form-control form-control-sm"
+                           value="@Model.DateTo?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small fw-semibold">Người thao tác</label>
+                    <select name="UserId" class="form-select form-select-sm">
+                        <option value="">-- Tất cả người dùng --</option>
+                        @foreach (var user in Model.AvailableUsers)
+                        {
+                            <option value="@user.Id" selected="@(user.Id == Model.UserId)">@user.DisplayName</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small fw-semibold">Hành động</label>
+                    <select name="Action" class="form-select form-select-sm">
+                        <option value="">-- Tất cả hành động --</option>
+                        @foreach (var act in Model.AvailableActions)
+                        {
+                            <option value="@act" selected="@(act == Model.Action)">@act</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small fw-semibold">Loại thực thể</label>
+                    <select name="EntityName" class="form-select form-select-sm">
+                        <option value="">-- Tất cả thực thể --</option>
+                        @foreach (var ent in Model.AvailableEntities)
+                        {
+                            <option value="@ent" selected="@(ent == Model.EntityName)">@ent</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-6">
+                    <label class="form-label small fw-semibold">Từ khóa mô tả / ID</label>
+                    <input type="text" name="Search" class="form-control form-control-sm" placeholder="Tìm theo ID, mô tả..."
+                           value="@Model.Search" />
+                </div>
+                <div class="col-12 col-sm-6 col-md-3 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary flex-grow-1">
+                        🔍 Lọc nhật ký
+                    </button>
+                    <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                        Xóa lọc
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bảng kết quả -->
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+            <span class="fw-bold">Tổng cộng: <span class="text-primary">@Model.TotalItems.ToString("N0")</span> bản ghi nhật ký</span>
+            <small class="text-muted">Trang @Model.Page / @Math.Max(1, Model.TotalPages)</small>
+        </div>
+        <div class="card-body p-0">
+            @if (Model.Items.Count == 0)
+            {
+                <div class="p-4 text-center text-muted">
+                    <p class="mb-0">Không có nhật ký nào phù hợp với điều kiện lọc.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 170px;">Thời điểm</th>
+                                <th style="width: 180px;">Người thực hiện</th>
+                                <th style="width: 200px;">Hành động</th>
+                                <th style="width: 180px;">Đối tượng</th>
+                                <th>Chi tiết nội dung</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="small fw-semibold text-dark">@item.CreatedAt.ToOffset(vietnamOffset).ToString("dd/MM/yyyy HH:mm:ss")</div>
+                                        <small class="text-muted">UTC: @item.CreatedAt.ToString("HH:mm:ss")</small>
+                                    </td>
+                                    <td>
+                                        <div class="small fw-semibold">@item.UserDisplayName</div>
+                                        <small class="badge bg-light text-muted border">@item.ActorType</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary-subtle text-primary font-monospace small">@item.Action</span>
+                                    </td>
+                                    <td>
+                                        <div class="small fw-medium">@item.EntityName</div>
+                                        <small class="text-muted font-monospace">ID: @item.EntityId</small>
+                                    </td>
+                                    <td>
+                                        <div class="small text-dark">@item.Description</div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Phân trang -->
+                @if (Model.TotalPages > 1)
+                {
+                    <div class="d-flex justify-content-center border-top p-3">
+                        <nav aria-label="Phân trang nhật ký">
+                            <ul class="pagination pagination-sm mb-0">
+                                @if (Model.Page > 1)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" asp-action="Index"
+                                           asp-route-Page="@(Model.Page - 1)"
+                                           asp-route-PageSize="@Model.PageSize"
+                                           asp-route-DateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
+                                           asp-route-DateTo="@Model.DateTo?.ToString("yyyy-MM-dd")"
+                                           asp-route-UserId="@Model.UserId"
+                                           asp-route-Action="@Model.Action"
+                                           asp-route-EntityName="@Model.EntityName"
+                                           asp-route-Search="@Model.Search">
+                                            &laquo; Trước
+                                        </a>
+                                    </li>
+                                }
+
+                                @for (int p = Math.Max(1, Model.Page - 2); p <= Math.Min(Model.TotalPages, Model.Page + 2); p++)
+                                {
+                                    <li class="page-item @(p == Model.Page ? "active" : "")">
+                                        <a class="page-link" asp-action="Index"
+                                           asp-route-Page="@p"
+                                           asp-route-PageSize="@Model.PageSize"
+                                           asp-route-DateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
+                                           asp-route-DateTo="@Model.DateTo?.ToString("yyyy-MM-dd")"
+                                           asp-route-UserId="@Model.UserId"
+                                           asp-route-Action="@Model.Action"
+                                           asp-route-EntityName="@Model.EntityName"
+                                           asp-route-Search="@Model.Search">
+                                            @p
+                                        </a>
+                                    </li>
+                                }
+
+                                @if (Model.Page < Model.TotalPages)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" asp-action="Index"
+                                           asp-route-Page="@(Model.Page + 1)"
+                                           asp-route-PageSize="@Model.PageSize"
+                                           asp-route-DateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
+                                           asp-route-DateTo="@Model.DateTo?.ToString("yyyy-MM-dd")"
+                                           asp-route-UserId="@Model.UserId"
+                                           asp-route-Action="@Model.Action"
+                                           asp-route-EntityName="@Model.EntityName"
+                                           asp-route-Search="@Model.Search">
+                                            Sau &raquo;
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

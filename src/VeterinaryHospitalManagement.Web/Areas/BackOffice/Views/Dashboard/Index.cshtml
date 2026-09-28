@@ -1,0 +1,270 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Dashboard.DashboardViewModel
+@using Microsoft.AspNetCore.Authorization
+@using VeterinaryHospitalManagement.Web.Authorization
+@inject IAuthorizationService AuthorizationService
+@inject VeterinaryHospitalManagement.Web.Services.Time.IVietnamTimeProvider VietnamTimeProvider
+@{
+    ViewData["Title"] = "Bảng điều khiển vận hành";
+    var vietnamOffset = VietnamTimeProvider.LocalNow.Offset;
+    var canViewVisits = (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.VisitView))).Succeeded;
+    var canViewAppointments = (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.AppointmentView))).Succeeded;
+    var canViewInvoices = (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.InvoiceView))).Succeeded;
+}
+
+<div class="container-fluid px-0">
+    <!-- Header Section -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Bảng điều khiển vận hành</h1>
+            <p class="text-muted mb-0">Theo dõi hoạt động tiếp đón, phòng khám và thu ngân trong ngày.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            @if (canViewVisits)
+            {
+                <a asp-area="BackOffice" asp-controller="Visits" asp-action="Index" class="btn btn-outline-primary">🐾 Hàng đợi khám</a>
+            }
+            @if (canViewAppointments)
+            {
+                <a asp-area="BackOffice" asp-controller="Appointments" asp-action="Index" class="btn btn-outline-secondary">📋 Lịch hẹn hôm nay</a>
+            }
+            @if (canViewInvoices)
+            {
+                <a asp-area="BackOffice" asp-controller="Invoices" asp-action="Index" class="btn btn-primary">₫ Thu ngân</a>
+            }
+        </div>
+    </div>
+
+    <!-- KPI Metric Cards -->
+    <div class="row g-3 mb-4">
+        <!-- Waiting Visits -->
+        <div class="col-12 col-sm-6 col-xl">
+            <div class="card border-0 shadow-sm rounded-3 h-100 p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-uppercase text-muted fw-semibold small">Đang chờ khám</span>
+                    <span class="badge bg-warning-subtle text-warning-emphasis px-2 py-1 rounded-pill">Waiting</span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <span class="display-6 fw-bold text-warning">@Model.WaitingCount</span>
+                    <span class="text-muted small">thú cưng</span>
+                </div>
+                <div class="mt-2 text-muted small">Đang chờ bác sĩ gọi vào phòng</div>
+            </div>
+        </div>
+
+        <!-- In Progress Visits -->
+        <div class="col-12 col-sm-6 col-xl">
+            <div class="card border-0 shadow-sm rounded-3 h-100 p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-uppercase text-muted fw-semibold small">Đang khám</span>
+                    <span class="badge bg-primary-subtle text-primary-emphasis px-2 py-1 rounded-pill">In Progress</span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <span class="display-6 fw-bold text-primary">@Model.InProgressCount</span>
+                    <span class="text-muted small">ca</span>
+                </div>
+                <div class="mt-2 text-muted small">Bác sĩ đang chẩn đoán &amp; xử lý</div>
+            </div>
+        </div>
+
+        <!-- Completed Unpaid Visits -->
+        <div class="col-12 col-sm-6 col-xl">
+            <div class="card border-0 shadow-sm rounded-3 h-100 p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-uppercase text-muted fw-semibold small">Chờ thanh toán</span>
+                    <span class="badge bg-danger-subtle text-danger-emphasis px-2 py-1 rounded-pill">Chưa thu</span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <span class="display-6 fw-bold text-danger">@Model.CompletedUnpaidCount</span>
+                    <span class="text-muted small">lượt</span>
+                </div>
+                <div class="mt-2 text-muted small">Khám xong chưa lập hóa đơn</div>
+            </div>
+        </div>
+
+        <!-- Today Paid Visits -->
+        <div class="col-12 col-sm-6 col-xl">
+            <div class="card border-0 shadow-sm rounded-3 h-100 p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-uppercase text-muted fw-semibold small">Đã thu hôm nay</span>
+                    <span class="badge bg-success-subtle text-success-emphasis px-2 py-1 rounded-pill">Đã thanh toán</span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <span class="display-6 fw-bold text-success">@Model.TodayPaidCount</span>
+                    <span class="text-muted small">hóa đơn</span>
+                </div>
+                <div class="mt-2 text-muted small">Hoàn tất quy trình khám</div>
+            </div>
+        </div>
+
+        <!-- Today Revenue -->
+        <div class="col-12 col-sm-6 col-xl">
+            <div class="card border-0 shadow-sm rounded-3 h-100 p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-uppercase text-muted fw-semibold small">Doanh thu hôm nay</span>
+                    <span class="badge bg-info-subtle text-info-emphasis px-2 py-1 rounded-pill">VND</span>
+                </div>
+                <div class="d-flex align-items-baseline gap-1">
+                    <span class="h3 fw-bold text-dark mb-0">@Model.TodayRevenue.ToString("N0")</span>
+                    <span class="text-muted small fw-semibold">đ</span>
+                </div>
+                <div class="mt-2 text-muted small">Doanh thu thực thu trong ngày</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Visits & Recent Invoices Grid -->
+    <div class="row g-4">
+        <!-- Active Queue Table -->
+        <div class="col-12 col-lg-7">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <h5 class="fw-bold mb-0">Hàng đợi đang hoạt động</h5>
+                        <small class="text-muted">Các lượt khám đang chờ hoặc đang được khám</small>
+                    </div>
+                    @if (canViewVisits)
+                    {
+                        <a asp-area="BackOffice" asp-controller="Visits" asp-action="Index" class="btn btn-sm btn-outline-secondary">Xem tất cả</a>
+                    }
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.ActiveVisits.Count == 0)
+                    {
+                        <div class="p-4 text-center text-muted">
+                            <p class="mb-0">Hiện tại không có ca khám nào đang chờ hoặc đang khám.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Thú cưng</th>
+                                        <th>Chủ nuôi</th>
+                                        <th>Bác sĩ</th>
+                                        <th>Tiếp nhận</th>
+                                        <th>Trạng thái</th>
+                                        <th class="text-end">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var visit in Model.ActiveVisits)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="fw-semibold text-dark">@visit.PetName</div>
+                                                <small class="text-muted">@visit.PetSpecies</small>
+                                            </td>
+                                            <td>
+                                                <div>@visit.OwnerName</div>
+                                                <small class="text-muted">@visit.OwnerPhone</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark border">
+                                                    @(string.IsNullOrWhiteSpace(visit.VeterinarianName) ? "Chưa phân công" : visit.VeterinarianName)
+                                                </span>
+                                            </td>
+                                            <td>
+                                                 <small class="text-muted">@visit.CheckedInAt.ToOffset(vietnamOffset).ToString("HH:mm")</small>
+                                            </td>
+                                            <td>
+                                                @if (visit.Status == "Waiting")
+                                                {
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis">Đang chờ</span>
+                                                }
+                                                else if (visit.Status == "InProgress")
+                                                {
+                                                    <span class="badge bg-primary-subtle text-primary-emphasis">Đang khám</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">@visit.Status</span>
+                                                }
+                                            </td>
+                                            <td class="text-end">
+                                                @if (canViewVisits)
+                                                {
+                                                    <a asp-area="BackOffice" asp-controller="Visits" asp-action="Details" asp-route-id="@visit.VisitId"
+                                                       class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Invoices Table -->
+        <div class="col-12 col-lg-5">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <h5 class="fw-bold mb-0">Hóa đơn vừa thanh toán</h5>
+                        <small class="text-muted">Các biên nhận mới nhất trong ngày hôm nay</small>
+                    </div>
+                    @if (canViewInvoices)
+                    {
+                        <a asp-area="BackOffice" asp-controller="Invoices" asp-action="Index" class="btn btn-sm btn-outline-secondary">Xem thu ngân</a>
+                    }
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.RecentInvoices.Count == 0)
+                    {
+                        <div class="p-4 text-center text-muted">
+                            <p class="mb-0">Chưa có hóa đơn nào được thanh toán hôm nay.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Số HĐ</th>
+                                        <th>Khách / Pet</th>
+                                        <th>Số tiền</th>
+                                        <th>Giờ</th>
+                                        <th class="text-end">Xem</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var inv in Model.RecentInvoices)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <span class="fw-medium text-dark">@inv.InvoiceNumber</span>
+                                                <div class="small text-muted">@inv.PaymentMethod</div>
+                                            </td>
+                                            <td>
+                                                <div class="small fw-semibold">@inv.PetName</div>
+                                                <div class="small text-muted">@inv.OwnerName</div>
+                                            </td>
+                                            <td>
+                                                <span class="fw-bold text-success">@inv.TotalAmount.ToString("N0") đ</span>
+                                            </td>
+                                            <td>
+                                                 <small class="text-muted">@inv.PaidAt.ToOffset(vietnamOffset).ToString("HH:mm")</small>
+                                            </td>
+                                            <td class="text-end">
+                                                @if (canViewInvoices)
+                                                {
+                                                    <a asp-area="BackOffice" asp-controller="Invoices" asp-action="Details" asp-route-id="@inv.InvoiceId"
+                                                       class="btn btn-sm btn-outline-secondary">Chi tiết</a>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
