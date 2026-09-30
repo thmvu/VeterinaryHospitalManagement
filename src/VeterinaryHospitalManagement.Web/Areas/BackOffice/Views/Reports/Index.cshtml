@@ -1,10 +1,15 @@
 @model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Reports.RevenueReportPageViewModel
 @inject VeterinaryHospitalManagement.Web.Services.Time.IVietnamTimeProvider VietnamTimeProvider
+@using Microsoft.AspNetCore.Authorization
+@using VeterinaryHospitalManagement.Web.Authorization
+@inject IAuthorizationService AuthorizationService
 @using System.Globalization
 @{
     ViewData["Title"] = "Báo cáo doanh thu";
     var vietnamOffset = VietnamTimeProvider.LocalNow.Offset;
     var vi = CultureInfo.GetCultureInfo("vi-VN");
+    var canExport = (await AuthorizationService.AuthorizeAsync(User,
+        PermissionPolicyName.For(PermissionCodes.ReportExport))).Succeeded;
 }
 
 <header class="record-header">
@@ -47,6 +52,11 @@ else if (Model.Report is { } report)
                 <div class="text-muted small">Tổng doanh thu</div>
                 <strong class="h3 mb-0">@report.TotalAmount.ToString("N0", vi) ₫</strong>
             </div>
+            @if (canExport)
+            {
+                <a asp-action="Export" asp-route-from="@Model.From.ToString("yyyy-MM-dd")"
+                   asp-route-to="@Model.To.ToString("yyyy-MM-dd")" class="btn btn-brand">Tải Excel</a>
+            }
         </div>
 
         @if (report.Rows.Count == 0)
