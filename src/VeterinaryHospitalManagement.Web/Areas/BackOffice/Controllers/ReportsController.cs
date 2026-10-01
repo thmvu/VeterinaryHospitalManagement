@@ -11,6 +11,7 @@ namespace VeterinaryHospitalManagement.Web.Areas.BackOffice.Controllers;
 [Authorize]
 public sealed class ReportsController(
     IRevenueReportService revenueReportService,
+    IVisitReportService visitReportService,
     IVietnamTimeProvider vietnamTimeProvider) : Controller
 {
     [HttpGet]
@@ -39,8 +40,56 @@ public sealed class ReportsController(
             return BadRequest("Khoảng ngày không hợp lệ.");
 
         var report = await revenueReportService.GetAsync(fromDate, toDate, cancellationToken);
-        var file = RevenueWorkbookExporter.Create(report, vietnamTimeProvider.LocalNow.Offset);
+        var rows = report.Rows.Select(row => (IReadOnlyList<WorkbookCell>)new WorkbookCell[]
+        {
+            WorkbookCell.FromText(row.PaidAt.ToOffset(vietnamTimeProvider.LocalNow.Offset).ToString("yyyy-MM-dd HH:mm")),
+            WorkbookCell.FromText(row.InvoiceNumber),
+            WorkbookCell.FromText(row.OwnerName),
+            WorkbookCell.FromText(row.PetName),
+            WorkbookCell.FromText(row.PaymentMethod == VeterinaryHospitalManagement.Web.Models.Enums.PaymentMethod.Cash ? "Tiền mặt" : "Chuyển khoản"),
+            WorkbookCell.FromNumber(row.TotalAmount)
+        }).ToList();
+        var file = ReportWorkbookExporter.Create("Doanh thu", "Báo cáo doanh thu",
+            $"Từ {fromDate:dd/MM/yyyy} đến {toDate:dd/MM/yyyy} (giờ Việt Nam)",
+            ["Ngày thanh toán", "Số hóa đơn", "Chủ nuôi", "Thú cưng", "Phương thức", "Số tiền (VND)"],
+            rows, "Tổng doanh thu", report.TotalAmount);
         var fileName = $"DoanhThu_{fromDate:yyyyMMdd}_{toDate:yyyyMMdd}.xlsx";
+        return File(file, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    [HttpGet]
+    [PermissionAuthorize(PermissionCodes.ReportView)]
+    public async Task<IActionResult> Visits(DateTime? from, DateTime? to, CancellationToken cancellationToken)
+    {
+        if (!TryResolveRange(from, to, out var fromDate, out var toDate))
+            return View(new VisitReportPageViewModel
+            {
+                From = fromDate,
+                To = toDate,
+                Error = "Khoảng ngày không hợp lệ. Ngày bắt đầu phải trước hoặc bằng ngày kết thúc."
+            });
+
+        var report = await visitReportService.GetAsync(fromDate, toDate, cancellationToken);
+        return View(new VisitReportPageViewModel { From = fromDate, To = toDate, Report = report });
+    }
+
+    [HttpGet]
+    [PermissionAuthorize(PermissionCodes.ReportExport)]
+    public async Task<IActionResult> ExportVisits(DateTime? from, DateTime? to, CancellationToken cancellationToken)
+    {
+        if (!TryResolveRange(from, to, out var fromDate, out var toDate))
+            return BadRequest("Khoảng ngày không hợp lệ.");
+
+        var report = await visitReportService.GetAsync(fromDate, toDate, cancellationToken);
+        var rows = report.Statuses.Select(row => (IReadOnlyList<WorkbookCell>)new WorkbookCell[]
+        {
+            WorkbookCell.FromText(row.StatusName),
+            WorkbookCell.FromNumber(row.Count)
+        }).ToList();
+        var file = ReportWorkbookExporter.Create("Lượt khám", "Báo cáo lượt khám",
+            $"Ngày tiếp nhận từ {fromDate:dd/MM/yyyy} đến {toDate:dd/MM/yyyy} (giờ Việt Nam)",
+            ["Trạng thái", "Số lượt"], rows, "Tổng lượt khám", report.TotalCount);
+        var fileName = $"LuotKham_{fromDate:yyyyMMdd}_{toDate:yyyyMMdd}.xlsx";
         return File(file, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
     }
 

@@ -9,3 +9,11 @@ public sealed class RevenueReportPageViewModel
     public RevenueReport? Report { get; init; }
     public string? Error { get; init; }
 }
+
+public sealed class VisitReportPageViewModel
+{
+    public required DateOnly From { get; init; }
+    public required DateOnly To { get; init; }
+    public VeterinaryHospitalManagement.Web.Services.Reports.VisitReport? Report { get; init; }
+    public string? Error { get; init; }
+}

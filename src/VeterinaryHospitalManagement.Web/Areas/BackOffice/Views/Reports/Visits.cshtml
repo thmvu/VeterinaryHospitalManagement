@@ -1,0 +1,67 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Reports.VisitReportPageViewModel
+@using Microsoft.AspNetCore.Authorization
+@using VeterinaryHospitalManagement.Web.Authorization
+@inject IAuthorizationService AuthorizationService
+@{
+    ViewData["Title"] = "Báo cáo lượt khám";
+    var canExport = (await AuthorizationService.AuthorizeAsync(User,
+        PermissionPolicyName.For(PermissionCodes.ReportExport))).Succeeded;
+}
+
+<header class="record-header">
+    <div>
+        <span class="record-kicker">Báo cáo</span>
+        <h1>Lượt khám theo trạng thái</h1>
+        <p>Thống kê theo ngày tiếp nhận của lượt khám, theo giờ Việt Nam.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-ghost">Báo cáo doanh thu</a>
+</header>
+
+<section class="clinical-sheet p-4 mb-4" aria-label="Bộ lọc lượt khám">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-12 col-sm-4">
+            <label for="report-from" class="form-label">Từ ngày</label>
+            <input id="report-from" type="date" name="from" value="@Model.From.ToString("yyyy-MM-dd")" class="form-control" required />
+        </div>
+        <div class="col-12 col-sm-4">
+            <label for="report-to" class="form-label">Đến ngày</label>
+            <input id="report-to" type="date" name="to" value="@Model.To.ToString("yyyy-MM-dd")" class="form-control" required />
+        </div>
+        <div class="col-12 col-sm-4">
+            <button type="submit" class="btn btn-brand w-100">Xem báo cáo</button>
+        </div>
+    </form>
+</section>
+
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.Error</div>
+}
+else if (Model.Report is { } report)
+{
+    <section class="clinical-sheet p-4" aria-labelledby="visits-title">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 border-bottom pb-3 mb-3">
+            <div>
+                <h2 id="visits-title" class="h5 mb-1">@report.From.ToString("dd/MM/yyyy") – @report.To.ToString("dd/MM/yyyy")</h2>
+                <p class="text-muted mb-0">Tổng cộng @report.TotalCount lượt khám đã tiếp nhận</p>
+            </div>
+            @if (canExport)
+            {
+                <a asp-action="ExportVisits" asp-route-from="@Model.From.ToString("yyyy-MM-dd")"
+                   asp-route-to="@Model.To.ToString("yyyy-MM-dd")" class="btn btn-brand">Tải Excel</a>
+            }
+        </div>
+        <div class="table-responsive" role="region" aria-label="Lượt khám theo trạng thái" tabindex="0">
+            <table class="vhm-table">
+                <thead><tr><th>Trạng thái</th><th class="text-end">Số lượt</th></tr></thead>
+                <tbody>
+                @foreach (var row in report.Statuses)
+                {
+                    <tr><td>@row.StatusName</td><td class="text-end">@row.Count.ToString("N0")</td></tr>
+                }
+                </tbody>
+                <tfoot><tr><th>Tổng số lượt</th><th class="text-end">@report.TotalCount.ToString("N0")</th></tr></tfoot>
+            </table>
+        </div>
+    </section>
+}
