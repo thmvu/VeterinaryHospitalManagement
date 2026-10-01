@@ -1347,3 +1347,486 @@ h1, h2, .section-title, .page-title, .record-header h1 {
     transition-duration: .01ms !important;
   }
 }
+
+/* ==========================================================================
+   Modern Botanical Landing Page Styles
+   Human-crafted aesthetics, medical grade clarity & responsive layouts
+   ========================================================================== */
+.botanical-hero {
+  position: relative;
+  background: linear-gradient(175deg, #F9F8F4 0%, #F0EDE4 100%);
+  padding: 4.5rem 0 5rem;
+  border-bottom: 1px solid var(--stone);
+  overflow: hidden;
+}
+
+.botanical-hero::before {
+  content: "";
+  position: absolute;
+  top: -120px;
+  right: -80px;
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, rgba(140, 154, 132, 0.18) 0%, rgba(249, 248, 244, 0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.botanical-hero__grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  align-items: center;
+  gap: 3.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.botanical-overline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #3b523e;
+  background: rgba(140, 154, 132, 0.2);
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--r-full);
+  margin-bottom: 1.25rem;
+}
+
+.botanical-overline .live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--success);
+  display: inline-block;
+  box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7);
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(5, 150, 105, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
+}
+
+.landing-title {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(2.35rem, 4.5vw, 3.4rem);
+  font-weight: 700;
+  line-height: 1.18;
+  color: var(--forest);
+  margin-bottom: 1.25rem;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.landing-lead {
+  font-size: 1.15rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  max-width: 580px;
+}
+
+.botanical-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.botanical-hero__actions .btn {
+  font-size: 1rem;
+  padding: 0.85rem 1.75rem;
+  font-weight: 600;
+  border-radius: var(--r-md);
+  transition: all var(--dur) var(--ease);
+}
+
+.botanical-hero__actions .btn-brand {
+  background-color: var(--forest);
+  color: #fff;
+  border: 1px solid var(--forest);
+  box-shadow: 0 4px 12px rgba(45, 58, 49, 0.22);
+}
+
+.botanical-hero__actions .btn-brand:hover {
+  background-color: #202b23;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(45, 58, 49, 0.3);
+}
+
+.botanical-hero__actions .btn-outline-brand {
+  color: var(--forest);
+  border: 1.5px solid var(--forest);
+  background: transparent;
+}
+
+.botanical-hero__actions .btn-outline-brand:hover {
+  background-color: var(--forest);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.botanical-hero__note {
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+/* ── Hero Mock Card (Live Clinic Preview) ── */
+.clinic-preview-card {
+  background: #ffffff;
+  border: 1px solid var(--stone);
+  border-radius: var(--r-xl);
+  box-shadow: 0 20px 35px -8px rgba(45, 58, 49, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  padding: 1.85rem;
+  position: relative;
+  transition: transform var(--dur) var(--ease);
+}
+
+.clinic-preview-card:hover {
+  transform: translateY(-3px);
+}
+
+.clinic-preview-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--stone);
+  padding-bottom: 1.15rem;
+  margin-bottom: 1.25rem;
+}
+
+.clinic-preview-card__title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--forest);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.clinic-badge-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--success);
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--r-full);
+}
+
+.preview-visit-box {
+  background: var(--paper);
+  border: 1px solid var(--stone);
+  border-radius: var(--r-lg);
+  padding: 1.15rem;
+  margin-bottom: 1.25rem;
+}
+
+.preview-visit-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+
+.preview-visit-id {
+  font-family: ui-monospace, monospace;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--forest);
+}
+
+.preview-visit-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #eef2ff;
+  color: #3730a3;
+  border-radius: var(--r-full);
+  padding: 0.2rem 0.6rem;
+}
+
+.preview-pet-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.preview-owner-meta {
+  font-size: 0.825rem;
+  color: var(--text-secondary);
+}
+
+.preview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.preview-tag {
+  font-size: 0.75rem;
+  background: #fff;
+  border: 1px solid var(--stone);
+  color: var(--text-secondary);
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+}
+
+.preview-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.85rem;
+}
+
+.preview-stat {
+  background: #ffffff;
+  border: 1px solid var(--stone);
+  border-radius: var(--r-md);
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+}
+
+.preview-stat__number {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--forest);
+  display: block;
+  font-family: "Playfair Display", Georgia, serif;
+}
+
+.preview-stat__label {
+  font-size: 0.725rem;
+  color: var(--text-tertiary);
+  margin-top: 0.15rem;
+  display: block;
+}
+
+/* ── Section Structure ── */
+.landing-section {
+  padding: 5rem 0;
+  position: relative;
+}
+
+.landing-section--soft {
+  background-color: #F5F3EC;
+}
+
+.section-heading {
+  max-width: 680px;
+  margin: 0 auto 3.5rem;
+  text-align: center;
+}
+
+.section-eyebrow {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #4a634e;
+  margin-bottom: 0.65rem;
+}
+
+.section-title {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(2rem, 3.2vw, 2.6rem);
+  font-weight: 700;
+  color: var(--forest);
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.section-description {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* ── Feature Cards Grid ── */
+.modern-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.75rem;
+}
+
+.landing-feature-card {
+  background: #ffffff;
+  border: 1px solid var(--stone);
+  border-radius: var(--r-xl);
+  padding: 2.25rem 2rem;
+  transition: all var(--dur) var(--ease);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.landing-feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 28px -6px rgba(45, 58, 49, 0.08), 0 0 0 1px var(--sage);
+  border-color: var(--sage);
+}
+
+.landing-feature-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--r-lg);
+  background: rgba(140, 154, 132, 0.16);
+  color: var(--forest);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 1.35rem;
+}
+
+.landing-feature-card h3 {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--forest);
+  margin-bottom: 0.75rem;
+}
+
+.landing-feature-card p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.landing-feature-tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #3b523e;
+  background: var(--paper);
+  border: 1px solid var(--stone);
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--r-full);
+  margin-top: 1.25rem;
+  align-self: flex-start;
+}
+
+/* ── 4-Step Workflow Sequence ── */
+.workflow-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.75rem;
+  position: relative;
+}
+
+.workflow-step-card {
+  background: #ffffff;
+  border: 1px solid var(--stone);
+  border-radius: var(--r-xl);
+  padding: 2rem 1.65rem;
+  position: relative;
+  transition: all var(--dur) var(--ease);
+}
+
+.workflow-step-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px -4px rgba(45, 58, 49, 0.08);
+}
+
+.workflow-step-badge {
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #ffffff;
+  background: var(--forest);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 4px 8px rgba(45, 58, 49, 0.2);
+}
+
+.workflow-step-card h3 {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--forest);
+  margin-bottom: 0.65rem;
+}
+
+.workflow-step-card p {
+  color: var(--text-secondary);
+  font-size: 0.925rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ── Standard Trust Banner ── */
+.trust-callout {
+  background: var(--forest);
+  color: #ffffff;
+  border-radius: var(--r-xl);
+  padding: 3.5rem 2.5rem;
+  text-align: center;
+  margin-top: 2rem;
+  box-shadow: 0 20px 35px -10px rgba(45, 58, 49, 0.25);
+}
+
+.trust-callout h3 {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.trust-callout p {
+  color: #d1dcce;
+  font-size: 1.05rem;
+  max-width: 680px;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
+}
+
+.trust-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.trust-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #f1eee8;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0.45rem 1rem;
+  border-radius: var(--r-full);
+}
+
+@media (max-width: 991.98px) {
+  .botanical-hero__grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  .clinic-preview-card {
+    max-width: 520px;
+    margin: 0 auto;
+  }
+}
+

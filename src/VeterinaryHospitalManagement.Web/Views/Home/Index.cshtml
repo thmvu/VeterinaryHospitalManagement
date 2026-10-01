@@ -13,9 +13,15 @@
 <section class="landing-hero botanical-hero" aria-labelledby="landing-title">
     <div class="container-xxl botanical-hero__grid">
         <div class="botanical-hero__content">
-            <p class="botanical-overline">Một không gian chăm sóc rõ ràng hơn</p>
+            <div class="botanical-overline">
+                <span class="live-dot" aria-hidden="true"></span>
+                <span>Hệ thống quản lý ngoại trú chuẩn y khoa</span>
+            </div>
             <h1 id="landing-title" class="landing-title">Quản lý bệnh viện thú y ngoại trú</h1>
-            <p class="landing-lead">Hồ sơ chủ nuôi, thú cưng và đội ngũ điều trị được sắp xếp trong một nơi làm việc dịu mắt, dễ tra cứu.</p>
+            <p class="landing-lead">
+                Nền tảng vận hành tập trung dành cho đội ngũ y bác sĩ và nhân sự y tế: từ điều phối lịch hẹn,
+                tiếp nhận hàng đợi, ghi chép bệnh án điện tử, chỉ định điều trị đến xuất viện phí minh bạch.
+            </p>
             <div class="botanical-hero__actions">
                 @if (isAuthenticated)
                 {
@@ -27,49 +33,168 @@
                 }
                 else
                 {
-                    <a class="btn btn-brand btn-lg" asp-area="" asp-controller="Account" asp-action="Login">Đăng nhập hệ thống</a>
-                    <a class="btn btn-outline-brand btn-lg" href="#quy-trinh">Xem cách sử dụng</a>
+                    <a class="btn btn-brand btn-lg" asp-area="" asp-controller="Account" asp-action="Login">
+                        <span>Đăng nhập hệ thống</span>
+                        <span class="ms-1" aria-hidden="true">&rarr;</span>
+                    </a>
+                    <a class="btn btn-outline-brand btn-lg" href="#quy-trinh">Tìm hiểu quy trình khám</a>
                 }
             </div>
-            <p class="botanical-hero__note">Dành cho nhân viên và quản trị viên bệnh viện thú y.</p>
+            <p class="botanical-hero__note">
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clip-rule="evenodd"/></svg>
+                <span>Hệ thống nội bộ được phân quyền nghiêm ngặt dành cho nhân viên bệnh viện thú y.</span>
+            </p>
         </div>
-        <div class="botanical-illustration" role="img" aria-label="Minh họa vòm cây và nắng ấm">
-            <div class="botanical-illustration__arch">
-                <div class="botanical-illustration__sun"></div>
-                <div class="botanical-illustration__leaf botanical-illustration__leaf--left"></div>
-                <div class="botanical-illustration__leaf botanical-illustration__leaf--right"></div>
-                <div class="botanical-illustration__pet" aria-hidden="true">✦</div>
+
+        <div class="clinic-preview-card" role="region" aria-label="Bảng theo dõi ca khám thực tế">
+            <div class="clinic-preview-card__header">
+                <h2 class="clinic-preview-card__title">
+                    <span aria-hidden="true">🩺</span>
+                    <span>Phòng khám Ngoại trú</span>
+                </h2>
+                <span class="clinic-badge-status">
+                    <span class="badge-dot" aria-hidden="true"></span>
+                    Đang hoạt động
+                </span>
             </div>
-            <span class="botanical-illustration__caption">Hồ sơ rõ ràng · Chăm sóc tận tâm</span>
+
+            <div class="preview-visit-box">
+                <div class="preview-visit-row">
+                    <span class="preview-visit-id">CA-2609 · NGOẠI TRÚ</span>
+                    <span class="preview-visit-status">Đang khám</span>
+                </div>
+                <div class="preview-pet-name">Bé Bơ (Corgi Pembroke · 2 tuổi)</div>
+                <div class="preview-owner-meta">Chủ nuôi: Trần Thanh Thảo · 0918 ••• 345</div>
+                <div class="preview-tags">
+                    <span class="preview-tag">Bác sĩ: Lê Hoàng Quân</span>
+                    <span class="preview-tag">Khám tổng quát</span>
+                    <span class="preview-tag">Siêu âm bụng</span>
+                </div>
+            </div>
+
+            <div class="preview-stats-row">
+                <div class="preview-stat">
+                    <span class="preview-stat__number">08</span>
+                    <span class="preview-stat__label">Phòng khám</span>
+                </div>
+                <div class="preview-stat">
+                    <span class="preview-stat__number">&lt; 5p</span>
+                    <span class="preview-stat__label">Tiếp nhận nhanh</span>
+                </div>
+                <div class="preview-stat">
+                    <span class="preview-stat__number">Chuẩn</span>
+                    <span class="preview-stat__label">Bệnh án điện tử</span>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
-<section id="dich-vu" class="landing-section" aria-labelledby="modules-title">
+<section id="chuc-nang" class="landing-section" aria-labelledby="modules-title">
     <div class="container-xxl">
         <div class="section-heading">
-            <p class="section-eyebrow">Các chức năng hiện có</p>
-            <h2 id="modules-title" class="section-title">Nền tảng cho một ngày làm việc mạch lạc</h2>
-            <p class="section-description">Bắt đầu từ các hồ sơ và quyền truy cập cần thiết. Các bước khám, kê đơn và thanh toán sẽ được bổ sung theo từng module.</p>
+            <p class="section-eyebrow">Hệ thống phân hệ chuyên sâu</p>
+            <h2 id="modules-title" class="section-title">Chuẩn hóa cho từng vị trí nghiệp vụ</h2>
+            <p class="section-description">
+                Được xây dựng theo quy trình khép kín của bệnh viện thú y hiện đại, đảm bảo tính liên tục giữa bàn tiếp tân,
+                phòng khám lâm sàng và quầy thu ngân.
+            </p>
         </div>
-        <div class="botanical-feature-grid">
-            <article class="feature-card"><span class="botanical-feature-number">01</span><h3>Chủ nuôi &amp; thú cưng</h3><p>Tra cứu, tạo và cập nhật hồ sơ định danh; liên kết thú cưng với chủ nuôi.</p></article>
-            <article class="feature-card"><span class="botanical-feature-number">02</span><h3>Đội ngũ bác sĩ</h3><p>Quản lý hồ sơ bác sĩ thú y và các ca làm việc đã được phân công.</p></article>
-            <article class="feature-card"><span class="botanical-feature-number">03</span><h3>Tài khoản &amp; quyền</h3><p>Phân quyền truy cập theo vai trò nhân viên, phù hợp từng công việc.</p></article>
+
+        <div class="modern-features-grid">
+            <article class="landing-feature-card">
+                <div class="landing-feature-icon-wrap" aria-hidden="true">🐾</div>
+                <h3>Chủ nuôi &amp; Thú cưng</h3>
+                <p>Hồ sơ định danh duy nhất, tra cứu lịch sử khám trọn đời, lưu giữ đặc tính giống loài và tiền sử dị ứng.</p>
+                <span class="landing-feature-tag">Hồ sơ trọn đời</span>
+            </article>
+
+            <article class="landing-feature-card">
+                <div class="landing-feature-icon-wrap" aria-hidden="true">📅</div>
+                <h3>Lịch hẹn &amp; Ca trực</h3>
+                <p>Điều phối ca khám theo khung giờ bác sĩ, hạn chế trùng lặp lịch khám và phân luồng tiếp đón thông minh.</p>
+                <span class="landing-feature-tag">Chống chồng chéo</span>
+            </article>
+
+            <article class="landing-feature-card">
+                <div class="landing-feature-icon-wrap" aria-hidden="true">🩺</div>
+                <h3>Tiếp nhận &amp; Hàng đợi</h3>
+                <p>Tiếp nhận bệnh nhân hẹn trước hoặc walk-in, chuyển trạng thái linh hoạt và cấp số thứ tự vào phòng khám.</p>
+                <span class="landing-feature-tag">Thời gian thực</span>
+            </article>
+
+            <article class="landing-feature-card">
+                <div class="landing-feature-icon-wrap" aria-hidden="true">📋</div>
+                <h3>Bệnh án lâm sàng</h3>
+                <p>Ghi nhận triệu chứng, chẩn đoán, cân nặng và chỉ số sinh tồn với cơ chế lưu nháp an toàn trước khi khóa sổ.</p>
+                <span class="landing-feature-tag">Bảo mật bệnh án</span>
+            </article>
+
+            <article class="landing-feature-card">
+                <div class="landing-feature-icon-wrap" aria-hidden="true">💊</div>
+                <h3>Chỉ định &amp; Đơn thuốc</h3>
+                <p>Chỉ định dịch vụ xét nghiệm, kê đơn thuốc ngoại trú kèm hướng dẫn liều dùng chi tiết cho chủ nuôi mang về.</p>
+                <span class="landing-feature-tag">Minh bạch điều trị</span>
+            </article>
+
+            <article class="landing-feature-card">
+                <div class="landing-feature-icon-wrap" aria-hidden="true">🧾</div>
+                <h3>Viện phí &amp; Báo cáo</h3>
+                <p>Tính toán viện phí tự động từ dịch vụ thực tế, xuất hóa đơn một lần và kết xuất báo cáo doanh thu Excel.</p>
+                <span class="landing-feature-tag">Định dạng ClosedXML</span>
+            </article>
         </div>
     </div>
 </section>
 
 <section id="quy-trinh" class="landing-section landing-section--soft" aria-labelledby="workflow-title">
-    <div class="container-xxl botanical-workflow">
-        <div class="section-heading mb-0">
-            <p class="section-eyebrow">Bắt đầu tại đây</p>
-            <h2 id="workflow-title" class="section-title">Từ thông tin đến chăm sóc</h2>
+    <div class="container-xxl">
+        <div class="section-heading">
+            <p class="section-eyebrow">Quy trình vận hành</p>
+            <h2 id="workflow-title" class="section-title">4 Bước khám chữa bệnh ngoại trú</h2>
+            <p class="section-description">
+                Đơn giản hóa tương tác, giảm thiểu thời gian chờ đợi của thú cưng và đảm bảo dữ liệu luôn toàn vẹn.
+            </p>
         </div>
-        <ol class="botanical-steps">
-            <li><strong>Tìm chủ nuôi</strong><span>Tra cứu hồ sơ bằng thông tin liên hệ hoặc mã.</span></li>
-            <li><strong>Xem thú cưng</strong><span>Kiểm tra danh sách thú cưng và cập nhật chi tiết cần thiết.</span></li>
-            <li><strong>Phân công đội ngũ</strong><span>Quản lý hồ sơ bác sĩ và ca làm việc theo quyền được cấp.</span></li>
-        </ol>
+
+        <div class="workflow-steps-grid">
+            <div class="workflow-step-card">
+                <div class="workflow-step-badge">01</div>
+                <h3>Tiếp đón &amp; Phân luồng</h3>
+                <p>Lễ tân kiểm tra thông tin chủ nuôi qua số điện thoại, tiếp nhận ca hẹn hoặc khách vãng lai vào hàng đợi.</p>
+            </div>
+
+            <div class="workflow-step-card">
+                <div class="workflow-step-badge">02</div>
+                <h3>Khám bệnh &amp; Chẩn đoán</h3>
+                <p>Bác sĩ mở ca khám được chỉ định, kiểm tra lâm sàng và tạo bệnh án điện tử với quyền riêng tư được kiểm soát.</p>
+            </div>
+
+            <div class="workflow-step-card">
+                <div class="workflow-step-badge">03</div>
+                <h3>Kê đơn &amp; Dịch vụ</h3>
+                <p>Bác sĩ thực hiện kỹ thuật điều trị, kê toa thuốc và hoàn tất hồ sơ lượt khám trong phiên làm việc an toàn.</p>
+            </div>
+
+            <div class="workflow-step-card">
+                <div class="workflow-step-badge">04</div>
+                <h3>Thanh toán &amp; Hóa đơn</h3>
+                <p>Thu ngân đối soát viện phí đúng các dịch vụ đã thực hiện, thu tiền một lần và in hóa đơn trao tay chủ nuôi.</p>
+            </div>
+        </div>
+
+        <div class="trust-callout">
+            <h3>Bảo mật &amp; Truy vết Kiểm toán Toàn trình</h3>
+            <p>
+                Mọi tác vụ từ đăng nhập, đổi phân quyền, cập nhật bệnh án đến lập hóa đơn đều được lưu vết kiểm toán (Audit Log)
+                tự động với cơ chế kiểm soát giao dịch Serializable ngắn hạn, chống xung đột dữ liệu đồng thời.
+            </p>
+            <div class="trust-pills">
+                <span class="trust-pill">🛡️ Phân quyền 4 vai trò</span>
+                <span class="trust-pill">🔒 Kiểm soát chống xung đột RowVersion</span>
+                <span class="trust-pill">📜 Nhật ký kiểm toán bất biến</span>
+                <span class="trust-pill">⏰ Chuẩn thời gian Asia/Ho_Chi_Minh</span>
+            </div>
+        </div>
     </div>
 </section>

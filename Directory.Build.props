@@ -1,0 +1,15 @@
+<Project>
+  <!-- Disable the .NET 10 SDK UseArtifactsOutput feature that creates an 'artifacts'
+       folder at the repo root, which caused recursive copy loops when the web project
+       output path resolved back inside the artifacts folder. -->
+  <PropertyGroup>
+    <UseArtifactsOutput>false</UseArtifactsOutput>
+    <DefaultItemExcludes>$(DefaultItemExcludes);artifacts\**;verify\**</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="artifacts\**;verify\**" />
+    <Content Remove="artifacts\**;verify\**" />
+    <EmbeddedResource Remove="artifacts\**;verify\**" />
+    <None Remove="artifacts\**;verify\**" />
+  </ItemGroup>
+</Project>
