@@ -1,0 +1,98 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Reports.ServiceReportPageViewModel
+@using Microsoft.AspNetCore.Authorization
+@using VeterinaryHospitalManagement.Web.Authorization
+@using System.Globalization
+@inject IAuthorizationService AuthorizationService
+@{
+    ViewData["Title"] = "Báo cáo doanh thu dịch vụ";
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+    var canExport = (await AuthorizationService.AuthorizeAsync(User,
+        PermissionPolicyName.For(PermissionCodes.ReportExport))).Succeeded;
+}
+
+<header class="record-header">
+    <div>
+        <span class="record-kicker">Báo cáo</span>
+        <h1>Doanh thu theo dịch vụ</h1>
+        <p>Doanh thu lấy từ từng dòng hóa đơn đã thanh toán, theo tên và giá tại thời điểm thu tiền.</p>
+    </div>
+    <nav class="d-flex flex-wrap gap-2" aria-label="Các báo cáo">
+        <a asp-action="Index" class="btn btn-ghost">Doanh thu</a>
+        <a asp-action="Visits" class="btn btn-ghost">Lượt khám</a>
+    </nav>
+</header>
+
+<section class="clinical-sheet p-4 mb-4" aria-label="Bộ lọc doanh thu dịch vụ">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-12 col-sm-4">
+            <label for="report-from" class="form-label">Từ ngày thanh toán</label>
+            <input id="report-from" type="date" name="from" value="@Model.From.ToString("yyyy-MM-dd")" class="form-control" required />
+        </div>
+        <div class="col-12 col-sm-4">
+            <label for="report-to" class="form-label">Đến ngày thanh toán</label>
+            <input id="report-to" type="date" name="to" value="@Model.To.ToString("yyyy-MM-dd")" class="form-control" required />
+        </div>
+        <div class="col-12 col-sm-4">
+            <button type="submit" class="btn btn-brand w-100">Xem báo cáo</button>
+        </div>
+    </form>
+</section>
+
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.Error</div>
+}
+else if (Model.Report is { } report)
+{
+    <section class="clinical-sheet p-4" aria-labelledby="services-title">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 border-bottom pb-3 mb-3">
+            <div>
+                <h2 id="services-title" class="h5 mb-1">@report.From.ToString("dd/MM/yyyy") – @report.To.ToString("dd/MM/yyyy")</h2>
+                <p class="text-muted mb-0">@report.TotalLineCount lần thực hiện · @report.TotalQuantity.ToString("0.##", vi) đơn vị</p>
+            </div>
+            <div class="d-flex align-items-end gap-3">
+                <div class="text-end">
+                    <div class="text-muted small">Tổng doanh thu</div>
+                    <strong class="h3 mb-0">@report.TotalRevenue.ToString("N0", vi) ₫</strong>
+                </div>
+                @if (canExport)
+                {
+                    <a asp-action="ExportServices" asp-route-from="@Model.From.ToString("yyyy-MM-dd")"
+                       asp-route-to="@Model.To.ToString("yyyy-MM-dd")" class="btn btn-brand">Tải Excel</a>
+                }
+            </div>
+        </div>
+
+        @if (report.Rows.Count == 0)
+        {
+            <p class="text-muted mb-0">Chưa có dịch vụ nào được thanh toán trong khoảng ngày này.</p>
+        }
+        else
+        {
+            <div class="table-responsive" role="region" aria-label="Doanh thu theo dịch vụ" tabindex="0">
+                <table class="vhm-table">
+                    <thead><tr><th>Dịch vụ</th><th class="text-end">Số lượng</th><th class="text-end">Số lần thực hiện</th><th class="text-end">Doanh thu</th></tr></thead>
+                    <tbody>
+                    @foreach (var row in report.Rows)
+                    {
+                        <tr>
+                            <td>@row.ServiceName</td>
+                            <td class="text-end">@row.Quantity.ToString("0.##", vi)</td>
+                            <td class="text-end">@row.LineCount.ToString("N0", vi)</td>
+                            <td class="text-end">@row.Revenue.ToString("N0", vi) ₫</td>
+                        </tr>
+                    }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Tổng cộng</th>
+                            <th class="text-end">@report.TotalQuantity.ToString("0.##", vi)</th>
+                            <th class="text-end">@report.TotalLineCount.ToString("N0", vi)</th>
+                            <th class="text-end">@report.TotalRevenue.ToString("N0", vi) ₫</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        }
+    </section>
+}

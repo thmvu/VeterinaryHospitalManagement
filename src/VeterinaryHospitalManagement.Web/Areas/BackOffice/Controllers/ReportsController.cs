@@ -12,6 +12,7 @@ namespace VeterinaryHospitalManagement.Web.Areas.BackOffice.Controllers;
 public sealed class ReportsController(
     IRevenueReportService revenueReportService,
     IVisitReportService visitReportService,
+    IServiceRevenueReportService serviceRevenueReportService,
     IVietnamTimeProvider vietnamTimeProvider) : Controller
 {
     [HttpGet]
@@ -90,6 +91,45 @@ public sealed class ReportsController(
             $"Ngày tiếp nhận từ {fromDate:dd/MM/yyyy} đến {toDate:dd/MM/yyyy} (giờ Việt Nam)",
             ["Trạng thái", "Số lượt"], rows, "Tổng lượt khám", report.TotalCount);
         var fileName = $"LuotKham_{fromDate:yyyyMMdd}_{toDate:yyyyMMdd}.xlsx";
+        return File(file, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    [HttpGet]
+    [PermissionAuthorize(PermissionCodes.ReportView)]
+    public async Task<IActionResult> Services(DateTime? from, DateTime? to, CancellationToken cancellationToken)
+    {
+        if (!TryResolveRange(from, to, out var fromDate, out var toDate))
+            return View(new ServiceReportPageViewModel
+            {
+                From = fromDate,
+                To = toDate,
+                Error = "Khoảng ngày không hợp lệ. Ngày bắt đầu phải trước hoặc bằng ngày kết thúc."
+            });
+
+        var report = await serviceRevenueReportService.GetAsync(fromDate, toDate, cancellationToken);
+        return View(new ServiceReportPageViewModel { From = fromDate, To = toDate, Report = report });
+    }
+
+    [HttpGet]
+    [PermissionAuthorize(PermissionCodes.ReportExport)]
+    public async Task<IActionResult> ExportServices(DateTime? from, DateTime? to, CancellationToken cancellationToken)
+    {
+        if (!TryResolveRange(from, to, out var fromDate, out var toDate))
+            return BadRequest("Khoảng ngày không hợp lệ.");
+
+        var report = await serviceRevenueReportService.GetAsync(fromDate, toDate, cancellationToken);
+        var rows = report.Rows.Select(row => (IReadOnlyList<WorkbookCell>)new WorkbookCell[]
+        {
+            WorkbookCell.FromText(row.ServiceName),
+            WorkbookCell.FromNumber(row.Quantity),
+            WorkbookCell.FromNumber(row.LineCount),
+            WorkbookCell.FromNumber(row.Revenue)
+        }).ToList();
+        var file = ReportWorkbookExporter.Create("Dịch vụ", "Báo cáo doanh thu dịch vụ",
+            $"Ngày thanh toán từ {fromDate:dd/MM/yyyy} đến {toDate:dd/MM/yyyy} (giờ Việt Nam)",
+            ["Dịch vụ", "Số lượng", "Số lần thực hiện", "Doanh thu (VND)"],
+            rows, "Tổng doanh thu", report.TotalRevenue);
+        var fileName = $"DoanhThuDichVu_{fromDate:yyyyMMdd}_{toDate:yyyyMMdd}.xlsx";
         return File(file, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
     }
 

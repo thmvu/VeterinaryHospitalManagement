@@ -14,7 +14,10 @@
         <h1>Lượt khám theo trạng thái</h1>
         <p>Thống kê theo ngày tiếp nhận của lượt khám, theo giờ Việt Nam.</p>
     </div>
-    <a asp-action="Index" class="btn btn-ghost">Báo cáo doanh thu</a>
+    <nav class="d-flex flex-wrap gap-2" aria-label="Các báo cáo">
+        <a asp-action="Index" class="btn btn-ghost">Doanh thu</a>
+        <a asp-action="Services" class="btn btn-brand">Doanh thu dịch vụ</a>
+    </nav>
 </header>
 
 <section class="clinical-sheet p-4 mb-4" aria-label="Bộ lọc lượt khám">

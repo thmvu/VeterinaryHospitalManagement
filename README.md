@@ -111,7 +111,7 @@ dotnet ef database update --project src/VeterinaryHospitalManagement.Web --start
 
 ## Báo cáo doanh thu (M10, phần web)
 
-Tài khoản có quyền `Report.View` mở **Báo cáo → Doanh thu** trong sidebar. Chọn khoảng ngày theo giờ Việt Nam; báo cáo lấy hóa đơn đã thanh toán theo `PaidAt`. Báo cáo lượt khám lọc theo `CheckedInAt` và chia theo trạng thái. Người có quyền `Report.Export` có thể tải Excel cho cùng khoảng ngày và số liệu đang xem. Báo cáo dịch vụ sẽ được bổ sung ở phần tiếp theo của M10.
+Tài khoản có quyền `Report.View` mở **Báo cáo → Doanh thu** trong sidebar. Chọn khoảng ngày theo giờ Việt Nam; doanh thu lấy hóa đơn đã thanh toán theo `PaidAt`, còn báo cáo dịch vụ lấy snapshot tên, số lượng và thành tiền từ `InvoiceItems`. Báo cáo lượt khám lọc theo `CheckedInAt` và chia theo trạng thái. Người có quyền `Report.Export` có thể tải Excel cho cùng khoảng ngày và số liệu đang xem.
 
 ## Bằng chứng kiểm thử Foundation
 

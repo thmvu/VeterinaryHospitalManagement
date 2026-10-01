@@ -64,6 +64,7 @@ builder.Services.AddScoped<IRolePermissionAdminService, RolePermissionAdminServi
 builder.Services.AddScoped<IAuditQueryService, AuditQueryService>();
 builder.Services.AddScoped<IRevenueReportService, RevenueReportService>();
 builder.Services.AddScoped<IVisitReportService, VisitReportService>();
+builder.Services.AddScoped<IServiceRevenueReportService, ServiceRevenueReportService>();
 builder.Services.AddScoped<IServiceCatalogService, ServiceCatalogService>();
 builder.Services.AddScoped<IMedicineService, MedicineService>();
 builder.Services.AddScoped<IPetService, PetService>();
