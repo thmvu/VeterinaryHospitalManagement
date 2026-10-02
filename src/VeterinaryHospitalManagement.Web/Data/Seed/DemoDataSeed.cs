@@ -112,7 +112,11 @@ public sealed class DemoDataSeed(
                 }
 
                 // 6. Sample Appointment
-                var miluPet = await db.Pets.FirstOrDefaultAsync(p => p.Name == "Milu", ct);
+                var demoOwnerPhone = "+84900000101";
+                var miluPet = await db.Pets.FirstOrDefaultAsync(p =>
+                    p.Name == "Milu"
+                    && p.Owner.PhoneNumber == demoOwnerPhone
+                    && p.Owner.FullName == "Nguyễn An (dữ liệu mẫu)", ct);
                 if (miluPet != null)
                 {
                     var apptStartLocal = new DateTimeOffset(todayDate.Year, todayDate.Month, todayDate.Day, 9, 0, 0, localNow.Offset);
