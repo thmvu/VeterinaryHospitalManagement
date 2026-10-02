@@ -1,6 +1,6 @@
 # Veterinary Hospital Management
 
-Ứng dụng ASP.NET Core MVC quản lý bệnh viện thú y ngoại trú. Repository đã có Foundation và phần lõi Identity/RBAC: đăng nhập nội bộ, policy theo permission, schema Identity và seed có kiểm soát.
+Ứng dụng ASP.NET Core MVC quản lý bệnh viện thú y ngoại trú: tài khoản nội bộ, chủ nuôi/thú cưng, lịch bác sĩ/lịch hẹn, tiếp nhận, khám và đơn thuốc, dịch vụ, hóa đơn, dashboard, nhật ký kiểm toán và báo cáo Excel.
 
 ## Yêu cầu
 
@@ -16,7 +16,7 @@
 4. Chạy bằng HTTPS trong Visual Studio, hoặc tại thư mục gốc dùng:
 
    ```powershell
-   dotnet run --project src/VeterinaryHospitalManagement.Web
+   dotnet run --project src/VeterinaryHospitalManagement.Web --launch-profile https
    ```
 
 Chuỗi kết nối local mặc định dùng database dự kiến `VeterinaryHospitalManagementDb`, Integrated Security và `TrustServerCertificate=True`. Không lưu mật khẩu trong file cấu hình. Nếu môi trường sau này cần bí mật, dùng .NET user-secrets hoặc biến môi trường.
@@ -36,7 +36,17 @@ $env:ASPNETCORE_ENVIRONMENT = "Development"
 dotnet run --project src/VeterinaryHospitalManagement.Web --no-launch-profile -- --seed-demo-only
 ```
 
-Seed tạo 2 chủ nuôi, 2 thú cưng, danh mục Chó/Mèo, 2 giống, 1 dịch vụ và 1 thuốc mẫu. Các bản ghi mẫu được nhận diện bằng mã `DEMO-` hoặc tên có “dữ liệu mẫu”; chạy lại không tạo trùng và không sửa bản ghi đã có. Nếu số điện thoại mẫu đã thuộc người khác, seed bỏ qua chủ nuôi đó. Seed không tạo tài khoản hay mật khẩu bác sĩ. Admin tạo tài khoản tại **Quản lý tài khoản** với vai trò `Veterinarian`; hệ thống tự tạo hồ sơ và cấp mã bác sĩ để hiện trong **Bác sĩ thú y**. Đổi tài khoản hiện có sang vai trò `Veterinarian` cũng tự tạo hồ sơ nếu chưa có. Lệnh seed chỉ chạy trong Development và tự thoát sau khi hoàn tất.
+Seed chỉ chạy trong Development và tự thoát sau khi hoàn tất. Với database đã có Admin, role và permissions, seed bổ sung 3 tài khoản nhân viên, 2 chủ nuôi, 2 thú cưng, danh mục Chó/Mèo, 2 giống, 2 dịch vụ và 1 thuốc mẫu. Nếu có hồ sơ bác sĩ mẫu, seed thử tạo ca 08:00–17:00; nếu có thêm thú cưng Milu của đúng chủ nuôi mẫu, seed thử tạo lịch hẹn 09:00–09:30. Các mốc giờ thuộc **ngày chạy seed theo giờ Việt Nam** và phải thỏa điều kiện hoạt động/không trùng lịch ở service.
+
+| Vai trò mẫu | Email đăng nhập | Mật khẩu ban đầu |
+| --- | --- | --- |
+| Receptionist | `receptionist@hospital.local` | `Receptionist123!` |
+| Veterinarian | `doctor.tam@hospital.local` | `Doctor123!` |
+| Manager | `manager@hospital.local` | `Manager123!` |
+
+Đây là thông tin tài khoản demo có sẵn trong `DemoDataSeed`, chỉ dùng khi thử trên máy Development. Nếu email đã tồn tại, seed giữ nguyên tài khoản, role và mật khẩu hiện có; bảng trên chỉ áp dụng cho tài khoản mới do seed tạo. Nếu số điện thoại mẫu đã thuộc chủ nuôi khác, seed bỏ qua chủ nuôi đó. Dữ liệu có sẵn không được sửa; nếu có xung đột ca/lịch, service có thể từ chối và lệnh seed dừng. Chạy lại cùng ngày bổ sung phần còn thiếu; chạy vào ngày khác có thể tạo ca và lịch của ngày mới.
+
+Admin cũng có thể tạo tài khoản tại **Quản lý tài khoản** với vai trò `Veterinarian`; hệ thống tự tạo hồ sơ và cấp mã bác sĩ để hiện trong **Bác sĩ thú y**. Đổi tài khoản hiện có sang vai trò `Veterinarian` cũng tự tạo hồ sơ nếu chưa có.
 
 Với tài khoản Veterinarian đã tạo trước phiên bản đồng bộ này nhưng chưa có hồ sơ, chạy một lần trong Development:
 
@@ -57,9 +67,21 @@ dotnet test VeterinaryHospitalManagement.slnx --no-build
 
 ## Phạm vi hiện tại
 
-Foundation chuẩn bị luồng Controller → Service → `ApplicationDbContext`, contract thời gian Việt Nam và trang Access Denied. Mốc Identity/RBAC bổ sung tài khoản nội bộ, đăng nhập/đổi mật khẩu, role, permission động, audit schema và quản trị tài khoản lõi. Không có đăng ký tài khoản công khai.
+Code hiện có các module M1–M10: Identity/RBAC, hồ sơ, danh mục/bác sĩ, lịch hẹn, tiếp nhận, lâm sàng, thanh toán/in hóa đơn, dashboard/kiểm toán/ma trận quyền và báo cáo web/Excel. M11 đang hoàn thiện tài liệu và nghiệm thu toàn luồng. Đăng nhập dành cho tài khoản nội bộ; không có đăng ký công khai.
 
-Migration Identity đã được sinh để review nhưng không tự động áp vào SQL Server. Trước khi chạy `database update` phải kiểm tra đúng server, đúng `VeterinaryHospitalManagementDb` và chắc chắn không ghi đè database có sẵn.
+Schema hiện tại có 26 bảng entity; xem [ERD theo EF model hiện tại](docs/DatabaseSchema_Current.md). Ứng dụng không tự áp migrations khi khởi động. Trước khi chạy `database update`, kiểm tra đúng server và database `VeterinaryHospitalManagementDb`.
+
+## Demo toàn luồng
+
+1. Áp dụng migrations, khởi tạo Admin/role/quyền theo mục bên dưới, rồi chạy `--seed-demo-only`.
+2. Khởi động bằng `dotnet run --project src/VeterinaryHospitalManagement.Web --launch-profile https`, mở `https://localhost:7164/Account/Login`. Ứng dụng cấu hình cookie đăng nhập chỉ gửi qua HTTPS.
+3. Đăng nhập lễ tân mẫu, chọn lịch hẹn Milu ngày chạy seed và check-in để tạo lượt khám `Waiting`.
+4. Đăng nhập bác sĩ mẫu, mở lượt khám được phân công và **Bắt đầu khám**. Ghi bệnh án có chẩn đoán, thêm dịch vụ **Khám tổng quát (mẫu)** rồi xác nhận **Đã thực hiện**. Có thể lập đơn thuốc mẫu để thử giao diện; chỉ dùng dữ liệu giả.
+5. **Hoàn tất khám** khi không còn dịch vụ Pending và các hồ sơ hợp lệ; trạng thái lượt khám chuyển `Completed`.
+6. Đăng nhập lễ tân mẫu, vào **Thanh toán & hóa đơn**, xem tạm tính, chọn tiền mặt/chuyển khoản và xác nhận. Với một lần khám tổng quát có số lượng 1 và giá seed ban đầu chưa đổi, tổng là **150.000 ₫**. Mở chi tiết để in hóa đơn.
+7. Đăng nhập quản lý mẫu, vào báo cáo doanh thu/dịch vụ theo **ngày thanh toán**, báo cáo lượt khám theo **ngày tiếp nhận**; đối chiếu dữ liệu web và file Excel.
+
+Quyền trong demo phụ thuộc ma trận đang cấu hình. Seed không khôi phục các quyền đã bị Admin gỡ. Seed tạo lịch hẹn, không tự check-in, ghi bệnh án hay thanh toán; dữ liệu báo cáo xuất hiện sau khi bạn thực hiện các bước tương ứng. Kịch bản trên là hướng dẫn nghiệm thu, chưa phải bằng chứng đã chạy toàn luồng trên SQL Server.
 
 ## Khởi tạo Identity và Admin lần đầu
 
@@ -109,7 +131,7 @@ dotnet tool restore
 dotnet ef database update --project src/VeterinaryHospitalManagement.Web --startup-project src/VeterinaryHospitalManagement.Web
 ```
 
-## Báo cáo doanh thu (M10, phần web)
+## Báo cáo và Excel (M10)
 
 Tài khoản có quyền `Report.View` mở **Báo cáo → Doanh thu** trong sidebar. Chọn khoảng ngày theo giờ Việt Nam; doanh thu lấy hóa đơn đã thanh toán theo `PaidAt`, còn báo cáo dịch vụ lấy snapshot tên, số lượng và thành tiền từ `InvoiceItems`. Báo cáo lượt khám lọc theo `CheckedInAt` và chia theo trạng thái. Người có quyền `Report.Export` có thể tải Excel cho cùng khoảng ngày và số liệu đang xem.
 

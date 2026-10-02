@@ -2,6 +2,8 @@
 
 Ngày 14/09/2026. Bản schema đề xuất cho phạm vi ngoại trú trong ProjectPlan v1.0; chưa phải migration hoặc database đã triển khai.
 
+ERD đối chiếu EF model/migration hiện tại ngày 02/10/2026 nằm tại [DatabaseSchema_Current.md](DatabaseSchema_Current.md). Các phần dưới giữ bản thiết kế nghiệp vụ ban đầu.
+
 ## 1. Kết nối và nguồn schema
 
 - SQL Server có sẵn: `localhost` hoặc `LAPTOP-31465OCJ`, default instance.
