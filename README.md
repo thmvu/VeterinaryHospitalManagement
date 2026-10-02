@@ -67,7 +67,7 @@ dotnet test VeterinaryHospitalManagement.slnx --no-build
 
 ## Phạm vi hiện tại
 
-Code hiện có các module M1–M10: Identity/RBAC, hồ sơ, danh mục/bác sĩ, lịch hẹn, tiếp nhận, lâm sàng, thanh toán/in hóa đơn, dashboard/kiểm toán/ma trận quyền và báo cáo web/Excel. M11 đang hoàn thiện tài liệu và nghiệm thu toàn luồng. Đăng nhập dành cho tài khoản nội bộ; không có đăng ký công khai.
+Code đã triển khai M1–M11 của plan ngoại trú: Identity/RBAC, hồ sơ, danh mục/bác sĩ, lịch hẹn, tiếp nhận, lâm sàng, thanh toán/in hóa đơn, dashboard/kiểm toán/ma trận quyền, báo cáo web/Excel, seed demo, ERD và nghiệm thu trên SQL Server. Bằng chứng và giới hạn kiểm chứng nằm trong [M11_Acceptance.md](docs/M11_Acceptance.md). Đăng nhập dành cho tài khoản nội bộ; không có đăng ký công khai.
 
 Schema hiện tại có 26 bảng entity; xem [ERD theo EF model hiện tại](docs/DatabaseSchema_Current.md). Ứng dụng không tự áp migrations khi khởi động. Trước khi chạy `database update`, kiểm tra đúng server và database `VeterinaryHospitalManagementDb`.
 
@@ -150,7 +150,9 @@ $env:VETERINARY_SQL_ALLOW_DESTRUCTIVE_TESTS = "YES_I_UNDERSTAND"
 dotnet test VeterinaryHospitalManagement.slnx --no-restore --filter FullyQualifiedName~EndToEndSqlServerTests
 ```
 
-Kết quả trên xác nhận luồng service và lưu trữ SQL; chưa bao gồm thao tác qua trình duyệt, in thực tế, mở file Excel hoặc toàn bộ suite SQL/concurrency. M11 còn các bước nghiệm thu này.
+Nghiệm thu bổ sung ngày 02–03/10/2026: toàn bộ suite SQL trước các sửa UI/lịch sử cuối đạt **337/337**, không fail/skip, gồm 9 kiểm thử có tên concurrency. E2E đã kiểm tra thêm endpoint báo cáo/bản in, nội dung ba file Excel, ngày thanh toán khác ngày tiếp nhận, HTTP 400 cho bộ lọc sai và HTTP 403 khi thiếu quyền. Hồ sơ thú cưng hiển thị tối đa 50 lượt khám gần nhất nếu có `Visit.View`; chỉ có `Pet.View` không được thấy lịch sử.
+
+Smoke test bằng trình duyệt đã kiểm tra đăng nhập/đăng xuất, navigation Admin, hóa đơn/bản in A4, báo cáo và tải ba file `.xlsx`. File tải xuống được mở bằng bộ đọc OpenXML độc lập để đối chiếu tổng và kiểu số. Chưa nghiệm thu máy in vật lý, Microsoft Excel desktop, hoặc triển khai production. Chi tiết các lượt kiểm tra và thay đổi cuối ở [M11_Acceptance.md](docs/M11_Acceptance.md).
 
 ## Bằng chứng kiểm thử Foundation
 

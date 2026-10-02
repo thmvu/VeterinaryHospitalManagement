@@ -1,4 +1,8 @@
 using System.Globalization;
+using System.IO.Compression;
+using System.Net;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -76,7 +80,7 @@ public sealed class EndToEndSqlServerTests
 
         // 5. Create Owner & Pet
         var ownerCode = await ownerService.CreateAsync(new CreateOwnerRequest(
-            cashierUserId, "Pham Van E2E", "0912345678", "123 Pho Hue", "Chu nuoi E2E"));
+            cashierUserId, "Pham Van E2E", "0912345678", "owner.e2e@example.test", "123 Pho Hue"));
         var owner = await db.Owners.SingleAsync(o => o.OwnerCode == ownerCode);
 
         var petCode = await petService.CreateAsync(new CreatePetRequest(
@@ -188,6 +192,66 @@ public sealed class EndToEndSqlServerTests
         Assert.Equal(1, visitsReport.TotalCount);
         Assert.Equal(1, visitsReport.Statuses.Single(x => x.Status == VisitStatus.Completed).Count);
         Assert.Equal(0, (await visitReport.GetAsync(paidDay, paidDay)).TotalCount);
+
+        // Exercise MVC authorization and actual exported files against the same SQL-backed scenario.
+        using var adminClient = factory.CreateClient(new WebApplicationFactoryClientOptions
+            { AllowAutoRedirect = false, BaseAddress = new Uri("https://localhost") });
+        await LoginAsync(adminClient, IdentitySqlServerTestEnvironment.BootstrapAdminEmail,
+            IdentitySqlServerTestEnvironment.BootstrapAdminPassword);
+        var petHistory = Assert.Single(await petService.GetVisitHistoryAsync(pet.Id));
+        Assert.Equal(visit.VisitNumber, petHistory.VisitNumber);
+        Assert.Equal(VisitStatus.Completed, petHistory.Status);
+        Assert.Equal(visit.VeterinarianNameSnapshot, petHistory.VeterinarianName);
+        Assert.Empty(await petService.GetVisitHistoryAsync(int.MaxValue));
+        var petPage = WebUtility.HtmlDecode(await adminClient.GetStringAsync($"/BackOffice/Pets/Details/{pet.Id}"));
+        Assert.Contains($"/BackOffice/Visits/Details/{visitId}", petPage);
+        Assert.Contains(visit.VisitNumber, petPage);
+        Assert.DoesNotContain("Chưa có lượt khám nào", petPage);
+        Assert.Contains(invoice.InvoiceNumber, await adminClient.GetStringAsync(
+            "/BackOffice/Reports?from=2026-10-03&to=2026-10-03"));
+        var print = WebUtility.HtmlDecode(await adminClient.GetStringAsync($"/BackOffice/Invoices/Print/{invoiceId}"));
+        Assert.Contains(invoice.InvoiceNumber, print);
+        Assert.Contains("Kham lam sang E2E", print);
+        Assert.Contains("size: A4", print);
+        Assert.DoesNotContain("app-sidebar", print);
+
+        var revenueCells = await ExportCellsAsync(adminClient, "Export", "2026-10-03");
+        Assert.Equal(invoice.InvoiceNumber, revenueCells["B5"]);
+        Assert.Equal("2026-10-03 10:00", revenueCells["A5"]);
+        Assert.Equal(120000m, Amount(revenueCells, "F5"));
+        Assert.Equal(120000m, Amount(revenueCells, "F6"));
+        var intakeRevenueCells = await ExportCellsAsync(adminClient, "Export", "2026-10-02");
+        Assert.Equal(0m, Amount(intakeRevenueCells, "F5"));
+
+        var visitCells = await ExportCellsAsync(adminClient, "ExportVisits", "2026-10-02");
+        Assert.Equal(1m, Amount(visitCells, "B9"));
+        var serviceCells = await ExportCellsAsync(adminClient, "ExportServices", "2026-10-03");
+        Assert.Equal("Kham lam sang E2E", serviceCells["A5"]);
+        Assert.Equal(1m, Amount(serviceCells, "B5"));
+        Assert.Equal(120000m, Amount(serviceCells, "D5"));
+        Assert.Equal(120000m, Amount(serviceCells, "D6"));
+        Assert.Equal(HttpStatusCode.BadRequest, (await adminClient.GetAsync(
+            "/BackOffice/Reports/Export?from=2026-10-03&to=2026-10-02")).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await adminClient.GetAsync(
+            "/BackOffice/Reports/Export?from=invalid&to=2026-10-03")).StatusCode);
+
+        using var vetClient = factory.CreateClient(new WebApplicationFactoryClientOptions
+            { AllowAutoRedirect = false, BaseAddress = new Uri("https://localhost") });
+        await LoginAsync(vetClient, "vet.e2e@example.test", "VetPassword123!");
+        // Pet.View alone must not reveal visit history, even when the pet has a completed visit.
+        var vetVisitPermission = await db.RolePermissions.Include(r => r.Permission).Include(r => r.Role)
+            .SingleAsync(r => r.Role.Name == SystemRoleNames.Veterinarian && r.Permission.Code == PermissionCodes.VisitView);
+        db.RolePermissions.Remove(vetVisitPermission);
+        await db.SaveChangesAsync();
+        var limitedPetPage = WebUtility.HtmlDecode(await vetClient.GetStringAsync($"/BackOffice/Pets/Details/{pet.Id}"));
+        Assert.Contains("Bạn cần quyền xem lượt khám", limitedPetPage);
+        Assert.DoesNotContain(visit.VisitNumber, limitedPetPage);
+        db.RolePermissions.Add(vetVisitPermission);
+        await db.SaveChangesAsync();
+        foreach (var route in new[] { "/BackOffice/Reports", "/BackOffice/Reports/Export",
+                     "/BackOffice/Reports/ExportVisits", "/BackOffice/Reports/ExportServices",
+                     $"/BackOffice/Invoices/Print/{invoiceId}" })
+            Assert.Equal(HttpStatusCode.Forbidden, (await vetClient.GetAsync(route)).StatusCode);
     }
 
     [IdentitySqlServerFact]
@@ -278,6 +342,40 @@ public sealed class EndToEndSqlServerTests
         Assert.Equal(1, visitsReport.TotalCount);
         Assert.Equal(1, visitsReport.Statuses.Single(x => x.Status == VisitStatus.Cancelled).Count);
     }
+
+    private static async Task LoginAsync(HttpClient client, string email, string password)
+    {
+        var page = await client.GetStringAsync("/Account/Login");
+        var token = Regex.Match(page, "name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"").Groups[1].Value;
+        Assert.NotEmpty(token);
+        using var form = new FormUrlEncodedContent([
+            new("Email", email), new("Password", password), new("__RequestVerificationToken", token)]);
+        using var response = await client.PostAsync("/Account/Login", form);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+    }
+
+    private static async Task<Dictionary<string, string>> ExportCellsAsync(HttpClient client, string action, string day)
+    {
+        using var response = await client.GetAsync($"/BackOffice/Reports/{action}?from={day}&to={day}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            response.Content.Headers.ContentType?.MediaType);
+        using var stream = new MemoryStream(await response.Content.ReadAsByteArrayAsync());
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
+        var sheet = archive.GetEntry("xl/worksheets/sheet1.xml");
+        Assert.NotNull(sheet);
+        using var sheetStream = sheet.Open();
+        var xml = XDocument.Load(sheetStream);
+        XNamespace ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+        return xml.Descendants(ns + "c").ToDictionary(
+            cell => cell.Attribute("r")!.Value,
+            cell => cell.Attribute("t")?.Value == "inlineStr"
+                ? string.Concat(cell.Descendants(ns + "t").Select(text => text.Value))
+                : cell.Element(ns + "v")!.Value);
+    }
+
+    private static decimal Amount(IReadOnlyDictionary<string, string> cells, string reference) =>
+        decimal.Parse(cells[reference], CultureInfo.InvariantCulture);
 
     private static WebApplicationFactory<Program> WithClock(
         IdentitySqlServerWebApplicationFactory factory, TimeProvider clock) =>

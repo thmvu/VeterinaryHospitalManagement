@@ -50,6 +50,14 @@ public sealed class PetService(
             pet.RowVersion.ToArray());
     }
 
+    public async Task<IReadOnlyList<PetVisitHistoryRow>> GetVisitHistoryAsync(int petId, CancellationToken cancellationToken = default) =>
+        await dbContext.Visits.AsNoTracking().Where(visit => visit.PetId == petId)
+            .OrderByDescending(visit => visit.CheckedInAt).ThenByDescending(visit => visit.Id)
+            .Take(50)
+            .Select(visit => new PetVisitHistoryRow(visit.Id, visit.VisitNumber, visit.CheckedInAt,
+                visit.VeterinarianNameSnapshot, visit.Status))
+            .ToListAsync(cancellationToken);
+
     public Task<string> CreateAsync(CreatePetRequest request, CancellationToken cancellationToken = default) =>
         InSerializableTransactionAsync(async () =>
         {

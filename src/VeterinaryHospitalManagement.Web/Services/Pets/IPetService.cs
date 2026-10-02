@@ -6,6 +6,8 @@ public interface IPetService
 {
     Task<PetDetails?> FindAsync(int petId, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<PetVisitHistoryRow>> GetVisitHistoryAsync(int petId, CancellationToken cancellationToken = default);
+
     Task<string> CreateAsync(CreatePetRequest request, CancellationToken cancellationToken = default);
 
     Task UpdateAsync(UpdatePetRequest request, CancellationToken cancellationToken = default);
@@ -43,7 +45,13 @@ public sealed record PetDetails(
     string? Notes,
     bool IsActive,
     DateTimeOffset CreatedAt,
-    byte[] RowVersion);
+    byte[] RowVersion)
+{
+    public IReadOnlyList<PetVisitHistoryRow>? VisitHistory { get; init; }
+}
+
+public sealed record PetVisitHistoryRow(int Id, string VisitNumber, DateTimeOffset CheckedInAt,
+    string VeterinarianName, VisitStatus Status);
 
 public sealed record CreatePetRequest(
     string ActorUserId,

@@ -122,9 +122,42 @@
     <div class="col-lg-6">
         <section class="clinical-sheet h-100">
             <div class="sheet-heading"><div><span class="sheet-index">02</span><h2>Lịch sử khám bệnh</h2></div></div>
-            <div class="empty-ledger">
-                <p class="mb-0">Chưa có lượt khám nào. Phân hệ Khám bệnh & Điều trị sẽ hiển thị tại đây khi triển khai.</p>
-            </div>
+            @if (Model.VisitHistory is null)
+            {
+                <p class="sheet-note">Bạn cần quyền xem lượt khám để tra cứu lịch sử.</p>
+            }
+            else if (Model.VisitHistory.Count == 0)
+            {
+                <div class="empty-ledger"><p>Chưa có lượt khám nào được ghi nhận.</p></div>
+            }
+            else
+            {
+                <p class="sheet-note">Hiển thị tối đa 50 lượt khám gần nhất.</p>
+                <div class="table-responsive" role="region" aria-label="Lịch sử khám bệnh">
+                    <table class="table">
+                        <thead><tr><th>Lượt khám</th><th>Tiếp nhận</th><th>Bác sĩ</th><th>Trạng thái</th></tr></thead>
+                        <tbody>
+                        @foreach (var visit in Model.VisitHistory)
+                        {
+                            var status = visit.Status switch
+                            {
+                                VisitStatus.Waiting => "Đang chờ",
+                                VisitStatus.InProgress => "Đang khám",
+                                VisitStatus.Completed => "Đã hoàn tất",
+                                VisitStatus.Cancelled => "Đã hủy",
+                                _ => visit.Status.ToString()
+                            };
+                            <tr>
+                                <td><a class="d-inline-block text-nowrap" asp-controller="Visits" asp-action="Details" asp-route-id="@visit.Id">@visit.VisitNumber</a></td>
+                                <td>@visit.CheckedInAt.ToOffset(TimeSpan.FromHours(7)).ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@visit.VeterinarianName</td>
+                                <td>@status</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
         </section>
     </div>
 </div>

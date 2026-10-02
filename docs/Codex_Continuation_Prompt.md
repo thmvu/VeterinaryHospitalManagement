@@ -36,66 +36,27 @@ Không tin hoàn toàn vào bản tóm tắt này nếu code hiện tại cho th
 
 ### 3. Trạng thái đã hoàn thành và đã xác minh
 
-Mốc hiện tại trên `main`:
+Mốc cập nhật: M11 — nghiệm thu hệ thống ngoại trú, ngày 02–03/10/2026. Đọc [M11_Acceptance.md](M11_Acceptance.md) và README để lấy bằng chứng mới nhất; kiểm tra Git trước khi kết luận trạng thái hiện tại.
 
-- Merge commit: `fa01593` — `merge: complete identity and rbac milestone`
-- Feature commit: `b175e8b` — `feat: add identity and permission management`
-- Foundation commit: `5c1de34`
-- Lần xác minh gần nhất: build sạch, **0 warning, 0 error**; bộ test SQL opt-in **100 passed, 0 failed, 0 skipped**.
+Hệ thống đã triển khai:
 
-Hệ thống hiện đã có:
+- ASP.NET Core MVC .NET 10, EF Core SQL Server; kiến trúc controller → service → một ApplicationDbContext.
+- Identity/RBAC với Admin, Manager, Receptionist, Veterinarian; login/logout, đổi mật khẩu, quản lý tài khoản, ma trận quyền và audit. Bảo vệ Admin cuối cùng, thu hồi phiên khi khóa/đổi role/reset mật khẩu.
+- Chủ nuôi, loài/giống và thú cưng; mã chủ/thú/bác sĩ tự sinh. Tạo tài khoản Veterinarian đồng bộ hồ sơ bác sĩ.
+- Danh mục bác sĩ, ca làm, dịch vụ và thuốc.
+- Lịch hẹn, availability, lịch ngày/tuần, hủy và vắng; chống trùng bác sĩ/thú cưng trên SQL Server.
+- Tiếp nhận từ lịch hẹn, walk-in, hàng đợi, phân công, bắt đầu/hủy lượt khám.
+- Bệnh án, đơn thuốc, dịch vụ Pending/Performed/Cancelled, hoàn tất khám với kiểm tra nghiệp vụ và snapshot.
+- Thanh toán tiền mặt/chuyển khoản, một hóa đơn mỗi lượt khám, trang in A4.
+- Dashboard, giao diện Botanical, navigation theo quyền.
+- Báo cáo doanh thu/lượt khám/dịch vụ, xuất .xlsx theo cùng khoảng ngày Việt Nam.
+- Seed demo opt-in, hướng dẫn chạy/migration/demo trong README; ERD hiện tại ở DatabaseSchema_Current.md.
 
-- ASP.NET Core MVC trên .NET 10.
-- EF Core 10 với SQL Server và Code First migrations.
-- Database ứng dụng `VeterinaryHospitalManagementDb`.
-- Identity schema, `ApplicationUser`, `Permission`, `RolePermission`, `AuditLog`.
-- 4 role: `Receptionist`, `Veterinarian`, `Manager`, `Admin`.
-- 33 permission codes và dynamic permission policies.
-- Đăng nhập, đăng xuất, đổi mật khẩu; không có public registration.
-- BackOffice quản lý user: tạo/sửa, đổi role, khóa/mở, reset mật khẩu.
-- Mỗi user đúng một role.
-- User bị khóa sẽ bị từ chối ở request kế tiếp.
-- Security stamp bị thu hồi khi reset mật khẩu hoặc đổi role.
-- Bảo vệ Admin cuối cùng khi thao tác đồng thời bằng SQL application lock phạm vi hẹp.
-- Seed role/permission idempotent và có khóa khi nhiều instance seed đồng thời.
-- Cookie có `Secure`, `HttpOnly`, `SameSite`.
-- Permission không tồn tại trả deny thay vì lỗi 500.
-- Authorization endpoint đã được test: anonymous bị chuyển tới login; Receptionist/Manager nhận 403 tại trang quản lý user; Admin được phép.
-- Test coordinator ngăn các tiến trình integration test phá database của nhau.
-- Local `dotnet-ef` tool manifest.
-- Migration đầu tiên `InitialIdentityAndPermissions` và model snapshot.
+Database ứng dụng là `VeterinaryHospitalManagementDb`; database kiểm thử riêng là `localhost/VeterinaryHospitalManagement_Test`. Không coi dữ liệu test là dữ liệu ứng dụng. Không đọc hoặc in user-secrets để kiểm tra trạng thái.
 
-Database đã từng được kiểm tra có:
+### 4. Phạm vi hoàn tất và giới hạn
 
-- `Users = 1`
-- `Roles = 4`
-- `Permissions = 33`
-
-Admin bootstrap đã bị tắt sau khi tạo tài khoản và mật khẩu bootstrap đã được xóa khỏi user-secrets. Không hiển thị, tìm lại hoặc commit secret.
-
-Ứng dụng đã chạy tại `http://localhost:5133`. Các route từng được xác minh:
-
-- `/` trả 200.
-- `/Account/Login` trả 200.
-- `/BackOffice/Users` chuyển tới login khi chưa đăng nhập.
-
-Trang chủ vẫn còn dòng chữ “Foundation” và layout chưa có liên kết login/admin. Đây là UI cũ, không phải migration lỗi.
-
-### 4. Phần chưa làm
-
-Chưa coi các phần sau là đã triển khai:
-
-- Owner, Pet, Species, Breed.
-- Veterinarian profile và shifts.
-- Appointment và Availability.
-- Visit, check-in, walk-in và tiếp nhận.
-- MedicalRecord, Prescription, Medicine và clinical workflow.
-- Service catalog và VisitService.
-- Checkout, Invoice và in hóa đơn.
-- Dashboard, Calendar.
-- Reports và Excel.
-- Cập nhật trang chủ/menu cho các module mới.
-- ERD nghiệp vụ ngoài các bảng Identity/RBAC hiện tại.
+Plan v1.0 gồm M1–M11; không tự dựng M12 hoặc đổi sang Music Box. Kết quả nghiệm thu và những phần chưa kiểm chứng phải được ghi rõ trong M11_Acceptance.md. Không tự tuyên bố đã triển khai production, gửi hóa đơn điện tử thuế hoặc in bằng máy in vật lý.
 
 ### 5. Quy tắc kỹ thuật không được vi phạm
 
@@ -138,9 +99,9 @@ Mặc định chỉ dùng **1 tác nhân triển khai + 1 tác nhân review** đ
 
 Báo cáo lỗi phải nêu: mã lỗi, tác nhân gây ra/phần chịu trách nhiệm, reviewer phát hiện, bằng chứng, cách sửa và kết quả retest. Sáu tác nhân vẫn chỉ xử lý **một lát nhỏ**, không mở rộng thành cả milestone.
 
-### 7. Lát tiếp theo được khuyến nghị
+### 7. Quyết định nghiệp vụ đã chốt và cách tiếp tục
 
-Không bắt đầu đồng thời Owner + Pet + Species + Breed. **G1 / DEC-01 đã chốt** như sau:
+**G1 / DEC-01 đã chốt** như sau; đây là quy tắc đang áp dụng, không phải module chưa triển khai:
 
 - Chỉ nhận số di động Việt Nam. Sau khi trim khoảng trắng ngoài, chấp nhận `0` + 9 chữ số hoặc `84`/`+84` + 9 chữ số; chữ số đầu của phần 9 chữ số phải thuộc `3/5/7/8/9`.
 - Chỉ nhận chữ số ASCII. Separator chỉ được là space, dấu gạch ngang (`-`) hoặc dấu chấm (`.`) và chỉ nằm giữa các nhóm chữ số; không hỗ trợ dấu ngoặc, extension, separator ở đầu/cuối hoặc separator liên tiếp.
@@ -153,9 +114,7 @@ Các quy tắc schema đã chốt thêm:
 - `Species.Code` do quản trị viên nhập ở workflow danh mục sau; trim, uppercase invariant, tối đa 30 ký tự và unique, không áp regex. `Species.Name` không unique.
 - Owner inactive không được dùng để tạo Pet mới; khóa Owner không cascade `Pet.IsActive`. Species/Breed giữ nguyên field trong DatabaseDesign, không thêm `CreatedAt` hoặc `RowVersion`.
 
-Lát hiện tại chỉ nên là:
-
-> **M2.1B — Owner/Pet schema:** tạo entity và EF configuration cho Owner, Species, Breed, Pet; thêm các `DbSet`; tạo duy nhất migration `AddOwnersAndPets` gồm bảng, constraint/index/FK và hai sequence; viết model/schema/migration tests tương ứng. Đây là lát schema-only: chưa làm service CRUD/search, controller/view/UI hoặc audit nghiệp vụ.
+Sau nghiệm thu M11, chỉ nhận một lỗi tái hiện được hoặc một yêu cầu cải tiến đã được người dùng chốt. Giữ nguyên các quy tắc trên. Nếu người dùng chỉ yêu cầu tiếp tục mà không có phần dở dang, kiểm tra tài liệu nghiệm thu và báo trạng thái trước; không tự tạo lại Owner/Pet hoặc sinh migration mới.
 
 ### 8. Báo cáo bắt buộc cuối mỗi task
 

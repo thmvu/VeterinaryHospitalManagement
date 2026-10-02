@@ -11,7 +11,8 @@ namespace VeterinaryHospitalManagement.Web.Areas.BackOffice.Controllers;
 [Area("BackOffice")]
 [Authorize]
 [PermissionAuthorize(PermissionCodes.PetView)]
-public sealed class PetsController(IPetService petService, IOwnerService ownerService) : Controller
+public sealed class PetsController(IPetService petService, IOwnerService ownerService,
+    IAuthorizationService authorizationService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
@@ -21,6 +22,10 @@ public sealed class PetsController(IPetService petService, IOwnerService ownerSe
         {
             return NotFound();
         }
+
+        if ((await authorizationService.AuthorizeAsync(User,
+                PermissionPolicyName.For(PermissionCodes.VisitView))).Succeeded)
+            pet = pet with { VisitHistory = await petService.GetVisitHistoryAsync(id, cancellationToken) };
 
         return View(pet);
     }
