@@ -81,7 +81,7 @@ Schema hiện tại có 26 bảng entity; xem [ERD theo EF model hiện tại](d
 6. Đăng nhập lễ tân mẫu, vào **Thanh toán & hóa đơn**, xem tạm tính, chọn tiền mặt/chuyển khoản và xác nhận. Với một lần khám tổng quát có số lượng 1 và giá seed ban đầu chưa đổi, tổng là **150.000 ₫**. Mở chi tiết để in hóa đơn.
 7. Đăng nhập quản lý mẫu, vào báo cáo doanh thu/dịch vụ theo **ngày thanh toán**, báo cáo lượt khám theo **ngày tiếp nhận**; đối chiếu dữ liệu web và file Excel.
 
-Quyền trong demo phụ thuộc ma trận đang cấu hình. Seed không khôi phục các quyền đã bị Admin gỡ. Seed tạo lịch hẹn, không tự check-in, ghi bệnh án hay thanh toán; dữ liệu báo cáo xuất hiện sau khi bạn thực hiện các bước tương ứng. Kịch bản trên là hướng dẫn nghiệm thu, chưa phải bằng chứng đã chạy toàn luồng trên SQL Server.
+Quyền trong demo phụ thuộc ma trận đang cấu hình. Seed không khôi phục các quyền đã bị Admin gỡ. Seed tạo lịch hẹn, không tự check-in, ghi bệnh án hay thanh toán; dữ liệu báo cáo xuất hiện sau khi bạn thực hiện các bước tương ứng. Kịch bản trên là hướng dẫn nghiệm thu qua giao diện; kết quả test service được ghi ở mục E2E SQL Server bên dưới.
 
 ## Khởi tạo Identity và Admin lần đầu
 
@@ -134,6 +134,23 @@ dotnet ef database update --project src/VeterinaryHospitalManagement.Web --start
 ## Báo cáo và Excel (M10)
 
 Tài khoản có quyền `Report.View` mở **Báo cáo → Doanh thu** trong sidebar. Chọn khoảng ngày theo giờ Việt Nam; doanh thu lấy hóa đơn đã thanh toán theo `PaidAt`, còn báo cáo dịch vụ lấy snapshot tên, số lượng và thành tiền từ `InvoiceItems`. Báo cáo lượt khám lọc theo `CheckedInAt` và chia theo trạng thái. Người có quyền `Report.Export` có thể tải Excel cho cùng khoảng ngày và số liệu đang xem.
+
+## E2E SQL Server (M11)
+
+Ngày 02/10/2026: kiểm tra kết nối bằng EF tới database test pass **1/1**; hai kịch bản `EndToEndSqlServerTests` pass **2/2**, không skip. Bộ test mặc định pass **218**, skip **119** test SQL opt-in, fail **0**. Hai kịch bản E2E kiểm tra:
+
+- Tạo tài khoản/hồ sơ → lịch hẹn → check-in → khám → lưu bệnh án/đơn thuốc bằng service → thực hiện/hủy dịch vụ → hoàn tất → thu tiền → báo cáo. Check-in và checkout lặp không tạo thêm bản ghi/audit; checkout lặp giữ phương thức thanh toán đầu tiên. Giá/tên dịch vụ giữ snapshot dù danh mục đổi, dịch vụ hủy không tính tiền; doanh thu dùng ngày thanh toán và lượt khám dùng ngày tiếp nhận theo giờ Việt Nam.
+- Walk-in, hủy lượt khám, hủy lịch hẹn và đánh dấu vắng sau giờ kết thúc; báo cáo lượt khám phản ánh trạng thái hủy.
+
+Test dùng clock cố định và database SQL Server riêng. Để chạy lại **chỉ hai kịch bản này**, cho phép fixture xóa/tạo lại `localhost/VeterinaryHospitalManagement_Test` trước mỗi test; dữ liệu đang có trong database test sẽ bị xóa:
+
+```powershell
+$env:VETERINARY_SQL_INTEGRATION_TESTS = "1"
+$env:VETERINARY_SQL_ALLOW_DESTRUCTIVE_TESTS = "YES_I_UNDERSTAND"
+dotnet test VeterinaryHospitalManagement.slnx --no-restore --filter FullyQualifiedName~EndToEndSqlServerTests
+```
+
+Kết quả trên xác nhận luồng service và lưu trữ SQL; chưa bao gồm thao tác qua trình duyệt, in thực tế, mở file Excel hoặc toàn bộ suite SQL/concurrency. M11 còn các bước nghiệm thu này.
 
 ## Bằng chứng kiểm thử Foundation
 

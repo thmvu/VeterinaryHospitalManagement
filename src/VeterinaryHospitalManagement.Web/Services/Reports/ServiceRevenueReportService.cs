@@ -20,13 +20,16 @@ public sealed class ServiceRevenueReportService(
         var rows = await db.InvoiceItems.AsNoTracking()
             .Where(item => item.Invoice.PaidAt >= startUtc && item.Invoice.PaidAt < endUtc)
             .GroupBy(item => item.DescriptionSnapshot)
-            .Select(group => new ServiceRevenueRow(
-                group.Key,
-                group.Sum(item => item.Quantity),
-                group.Count(),
-                group.Sum(item => item.LineTotal)))
+            .Select(group => new
+            {
+                ServiceName = group.Key,
+                Quantity = group.Sum(item => item.Quantity),
+                LineCount = group.Count(),
+                Revenue = group.Sum(item => item.LineTotal)
+            })
             .OrderByDescending(row => row.Revenue)
             .ThenBy(row => row.ServiceName)
+            .Select(row => new ServiceRevenueRow(row.ServiceName, row.Quantity, row.LineCount, row.Revenue))
             .ToListAsync(cancellationToken);
 
         return new ServiceRevenueReport(from, to, rows,
