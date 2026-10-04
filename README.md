@@ -1,93 +1,120 @@
 # Veterinary Hospital Management
 
-Ứng dụng ASP.NET Core MVC quản lý bệnh viện thú y ngoại trú: tài khoản nội bộ, chủ nuôi/thú cưng, lịch bác sĩ/lịch hẹn, tiếp nhận, khám và đơn thuốc, dịch vụ, hóa đơn, dashboard, nhật ký kiểm toán và báo cáo Excel.
+Ứng dụng web quản lý bệnh viện thú y ngoại trú, xây dựng bằng ASP.NET Core MVC và SQL Server. Tài liệu này hướng dẫn cài trên máy Windows, kết nối database, chạy ứng dụng, tạo tài khoản Admin đầu tiên và đi thử một lượt khám.
 
-## Yêu cầu
+## Mục lục
 
-- .NET SDK 10
-- Visual Studio có hỗ trợ .NET 10 và workload ASP.NET and web development
-- SQL Server chạy tại `localhost`, dùng Windows Authentication
+- [Tính năng](#tính-năng)
+- [Công nghệ và yêu cầu](#công-nghệ-và-yêu-cầu)
+- [Cài đặt và chạy lần đầu](#cài-đặt-và-chạy-lần-đầu)
+- [Kết nối SQL Server và xem dữ liệu](#kết-nối-sql-server-và-xem-dữ-liệu)
+- [Tạo tài khoản Admin đầu tiên](#tạo-tài-khoản-admin-đầu-tiên)
+- [Tài khoản và dữ liệu demo](#tài-khoản-và-dữ-liệu-demo)
+- [Hướng dẫn dùng hệ thống](#hướng-dẫn-dùng-hệ-thống)
+- [Migration và thay đổi database](#migration-và-thay-đổi-database)
+- [Build và kiểm thử](#build-và-kiểm-thử)
+- [Cấu trúc project](#cấu-trúc-project)
+- [Xử lý lỗi thường gặp](#xử-lý-lỗi-thường-gặp)
+- [Tài liệu và giới hạn hiện tại](#tài-liệu-và-giới-hạn-hiện-tại)
 
-## Mở và chạy
+## Tính năng
 
-1. Mở `VeterinaryHospitalManagement.slnx` bằng Visual Studio.
-2. Chọn `VeterinaryHospitalManagement.Web` làm Startup Project.
-3. Kiểm tra `ConnectionStrings:DefaultConnection` trong `src/VeterinaryHospitalManagement.Web/appsettings.Development.json`.
-4. Chạy bằng HTTPS trong Visual Studio, hoặc tại thư mục gốc dùng:
+- Đăng nhập nội bộ bằng ASP.NET Core Identity; không có đăng ký công khai.
+- Quản lý tài khoản nhân viên, bốn vai trò, ma trận quyền và nhật ký kiểm toán.
+- Quản lý chủ nuôi, thú cưng, loài/giống; mã chủ nuôi, thú cưng và bác sĩ được tự sinh.
+- Quản lý hồ sơ bác sĩ, ca làm, dịch vụ và danh mục thuốc.
+- Đặt lịch, xem lịch ngày/tuần, kiểm tra thời gian bác sĩ, hủy lịch và ghi nhận khách không đến.
+- Tiếp nhận lịch hẹn hoặc khách đến trực tiếp, phân công bác sĩ và theo dõi hàng đợi.
+- Ghi bệnh án, dấu hiệu khám, đơn thuốc và dịch vụ thực hiện trong lượt khám.
+- Hoàn tất lượt khám theo quy tắc nghiệp vụ; lưu snapshot để hồ sơ lịch sử không đổi theo danh mục hiện tại.
+- Thanh toán tiền mặt/chuyển khoản, lập một hóa đơn cho mỗi lượt khám và in hóa đơn.
+- In đơn thuốc A4 đã chốt, có liều dùng, đường dùng, tần suất, thời gian và lưu ý.
+- Dashboard, báo cáo doanh thu/lượt khám/dịch vụ và xuất Excel.
 
-   ```powershell
-   dotnet run --project src/VeterinaryHospitalManagement.Web --launch-profile https
-   ```
+## Một vài màn hình demo
 
-Chuỗi kết nối local mặc định dùng database dự kiến `VeterinaryHospitalManagementDb`, Integrated Security và `TrustServerCertificate=True`. Không lưu mật khẩu trong file cấu hình. Nếu môi trường sau này cần bí mật, dùng .NET user-secrets hoặc biến môi trường.
+Các ảnh dưới đây là ảnh chụp giao diện chạy local với dữ liệu kiểm thử mẫu. Thông tin chủ nuôi, thú cưng và hóa đơn trong ảnh là dữ liệu giả.
 
-## Mã tự động và dữ liệu mẫu
+<p align="center">
+  <img src="docs/images/report-services-demo.png" alt="Báo cáo doanh thu theo dịch vụ" width="49%" />
+  <img src="docs/images/invoice-print-demo.png" alt="Bản in hóa đơn thanh toán" width="49%" />
+</p>
 
-Mã chủ nuôi (`OWN-`), thú cưng (`PET-`) và bác sĩ (`VET-`) được cấp khi lưu hồ sơ; người dùng không phải nhập mã. Thay đổi mã bác sĩ cần áp migration mới một lần:
+<p align="center">
+  <img src="docs/images/prescription-print-demo.png" alt="Bản in đơn thuốc ngoại trú khổ A4" width="80%" />
+</p>
+
+## Công nghệ và yêu cầu
+
+- Windows 10/11.
+- .NET SDK 10.
+- SQL Server cài trên máy hoặc máy chủ mà máy phát triển có thể kết nối. Cấu hình mặc định dùng Windows Authentication và địa chỉ `localhost`.
+- Visual Studio có workload **ASP.NET and web development**, hoặc PowerShell/Windows Terminal.
+- SQL Server Management Studio (SSMS) để xem database và dữ liệu (không bắt buộc để chạy ứng dụng).
+
+Kiểm tra .NET SDK đã cài:
+
+```powershell
+dotnet --list-sdks
+```
+
+Trong danh sách cần có SDK 10.x. Repository chứa local tool manifest cho `dotnet-ef`; khôi phục tool trước khi chạy lệnh migration.
+
+## Cài đặt và chạy lần đầu
+
+Mở PowerShell tại thư mục repository:
+
+```powershell
+cd 'D:\vu\hoctap\webC#\VeterinaryHospitalManagement'
+```
+
+Khôi phục package và EF tool:
+
+```powershell
+dotnet restore VeterinaryHospitalManagement.slnx
+dotnet tool restore
+```
+
+Kiểm tra SQL Server đang chạy và tài khoản Windows hiện tại có quyền tạo database. Connection string Development mặc định nằm ở `src/VeterinaryHospitalManagement.Web/appsettings.Development.json`:
+
+```text
+Server=localhost;Database=VeterinaryHospitalManagementDb;Integrated Security=True;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=False
+```
+
+Nếu SQL Server của bạn ở một instance khác, sửa `Server` trong connection string, ví dụ `localhost\SQLEXPRESS`. Không đưa mật khẩu thật vào file được commit; với SQL Authentication hãy dùng user-secrets hoặc biến môi trường phù hợp.
+
+Áp dụng toàn bộ migration vào đúng database đã cấu hình:
 
 ```powershell
 dotnet ef database update --project src/VeterinaryHospitalManagement.Web --startup-project src/VeterinaryHospitalManagement.Web
 ```
 
-Sau khi đã có tài khoản Admin, có thể chèn dữ liệu thử vào database Development đang cấu hình bằng lệnh sau tại thư mục gốc:
+Chạy ứng dụng bằng HTTPS:
 
 ```powershell
-$env:ASPNETCORE_ENVIRONMENT = "Development"
-dotnet run --project src/VeterinaryHospitalManagement.Web --no-launch-profile -- --seed-demo-only
+dotnet run --project src/VeterinaryHospitalManagement.Web --launch-profile https
 ```
 
-Seed chỉ chạy trong Development và tự thoát sau khi hoàn tất. Với database đã có Admin, role và permissions, seed bổ sung 3 tài khoản nhân viên, 2 chủ nuôi, 2 thú cưng, danh mục Chó/Mèo, 2 giống, 2 dịch vụ và 1 thuốc mẫu. Nếu có hồ sơ bác sĩ mẫu, seed thử tạo ca 08:00–17:00; nếu có thêm thú cưng Milu của đúng chủ nuôi mẫu, seed thử tạo lịch hẹn 09:00–09:30. Các mốc giờ thuộc **ngày chạy seed theo giờ Việt Nam** và phải thỏa điều kiện hoạt động/không trùng lịch ở service.
+Mở `https://localhost:7164/Account/Login`. Profile HTTP dùng `http://localhost:5133`; cookie đăng nhập được cấu hình chỉ gửi qua HTTPS, vì vậy hãy dùng địa chỉ HTTPS khi đăng nhập. Lần đầu, trình duyệt có thể hỏi tin cậy chứng chỉ phát triển ASP.NET Core.
 
-| Vai trò mẫu | Email đăng nhập | Mật khẩu ban đầu |
-| --- | --- | --- |
-| Receptionist | `receptionist@hospital.local` | `Receptionist123!` |
-| Veterinarian | `doctor.tam@hospital.local` | `Doctor123!` |
-| Manager | `manager@hospital.local` | `Manager123!` |
+Có thể mở `VeterinaryHospitalManagement.slnx` bằng Visual Studio, đặt `VeterinaryHospitalManagement.Web` làm Startup Project, rồi nhấn **F5**. Các link nghiệp vụ xuất hiện sau khi đăng nhập và phụ thuộc vào quyền của tài khoản; trang `/` là landing page giới thiệu hệ thống.
 
-Đây là thông tin tài khoản demo có sẵn trong `DemoDataSeed`, chỉ dùng khi thử trên máy Development. Nếu email đã tồn tại, seed giữ nguyên tài khoản, role và mật khẩu hiện có; bảng trên chỉ áp dụng cho tài khoản mới do seed tạo. Nếu số điện thoại mẫu đã thuộc chủ nuôi khác, seed bỏ qua chủ nuôi đó. Dữ liệu có sẵn không được sửa; nếu có xung đột ca/lịch, service có thể từ chối và lệnh seed dừng. Chạy lại cùng ngày bổ sung phần còn thiếu; chạy vào ngày khác có thể tạo ca và lịch của ngày mới.
+## Kết nối SQL Server và xem dữ liệu
 
-Admin cũng có thể tạo tài khoản tại **Quản lý tài khoản** với vai trò `Veterinarian`; hệ thống tự tạo hồ sơ và cấp mã bác sĩ để hiện trong **Bác sĩ thú y**. Đổi tài khoản hiện có sang vai trò `Veterinarian` cũng tự tạo hồ sơ nếu chưa có.
+Sau khi lệnh `dotnet ef database update` chạy thành công:
 
-Với tài khoản Veterinarian đã tạo trước phiên bản đồng bộ này nhưng chưa có hồ sơ, chạy một lần trong Development:
+1. Mở SSMS và chọn **Connect → Database Engine**.
+2. Nhập **Server name** là `localhost` (hoặc đúng instance đang dùng), **Authentication** là `Windows Authentication`, rồi chọn **Connect**.
+3. Trong Object Explorer, nhấn phải **Databases → Refresh**. Mở `VeterinaryHospitalManagementDb` → **Tables** để xem các bảng.
+4. Muốn xem dữ liệu, nhấn phải một bảng → **Select Top 1000 Rows**. Bảng tài khoản Identity bắt đầu bằng `AspNet...`; bảng nghiệp vụ có tên như `Owners`, `Pets`, `Appointments`, `Visits`, `MedicalRecords`, `Prescriptions` và `Invoices`.
 
-```powershell
-$env:ASPNETCORE_ENVIRONMENT = "Development"
-dotnet run --project src/VeterinaryHospitalManagement.Web --no-launch-profile -- --sync-veterinarians-only
-```
+Sơ đồ quan hệ hiện tại nằm trong [docs/DatabaseSchema_Current.md](docs/DatabaseSchema_Current.md). Đây là sơ đồ Mermaid theo EF model; mở Markdown Preview trong Visual Studio Code hoặc xem trên GitHub để đọc quan hệ. SQL Server/SSMS không tự hiển thị sơ đồ chỉ vì migration đã chạy. Nếu muốn tạo sơ đồ trong SSMS, dùng **Database Diagrams → New Database Diagram** sau khi database có bảng; lần đầu SQL Server có thể yêu cầu cài các đối tượng hỗ trợ diagram. Sơ đồ trong tài liệu là nguồn đọc nhanh, còn migration và EF model trong code là nguồn schema của ứng dụng.
 
-Lệnh có thể chạy lại; chỉ tạo hồ sơ còn thiếu. Không cần migration mới cho thay đổi đồng bộ này.
+> Trước khi chạy migration, kiểm tra server và database trong connection string. `database update` áp schema lên đúng database đó. Đừng nhầm database ứng dụng `VeterinaryHospitalManagementDb` với database test `VeterinaryHospitalManagement_Test`.
 
-## Build và test
+## Tạo tài khoản Admin đầu tiên
 
-```powershell
-dotnet restore VeterinaryHospitalManagement.slnx
-dotnet build VeterinaryHospitalManagement.slnx --no-restore
-dotnet test VeterinaryHospitalManagement.slnx --no-build
-```
-
-## Phạm vi hiện tại
-
-Code đã triển khai M1–M11 của plan ngoại trú: Identity/RBAC, hồ sơ, danh mục/bác sĩ, lịch hẹn, tiếp nhận, lâm sàng, thanh toán/in hóa đơn, dashboard/kiểm toán/ma trận quyền, báo cáo web/Excel, seed demo, ERD và nghiệm thu trên SQL Server. Bằng chứng và giới hạn kiểm chứng nằm trong [M11_Acceptance.md](docs/M11_Acceptance.md). Đăng nhập dành cho tài khoản nội bộ; không có đăng ký công khai.
-
-Schema hiện tại có 26 bảng entity; xem [ERD theo EF model hiện tại](docs/DatabaseSchema_Current.md). Ứng dụng không tự áp migrations khi khởi động. Trước khi chạy `database update`, kiểm tra đúng server và database `VeterinaryHospitalManagementDb`.
-
-## Demo toàn luồng
-
-1. Áp dụng migrations, khởi tạo Admin/role/quyền theo mục bên dưới, rồi chạy `--seed-demo-only`.
-2. Khởi động bằng `dotnet run --project src/VeterinaryHospitalManagement.Web --launch-profile https`, mở `https://localhost:7164/Account/Login`. Ứng dụng cấu hình cookie đăng nhập chỉ gửi qua HTTPS.
-3. Đăng nhập lễ tân mẫu, chọn lịch hẹn Milu ngày chạy seed và check-in để tạo lượt khám `Waiting`.
-4. Đăng nhập bác sĩ mẫu, mở lượt khám được phân công và **Bắt đầu khám**. Ghi bệnh án có chẩn đoán, thêm dịch vụ **Khám tổng quát (mẫu)** rồi xác nhận **Đã thực hiện**. Có thể lập đơn thuốc mẫu để thử giao diện; chỉ dùng dữ liệu giả.
-5. **Hoàn tất khám** khi không còn dịch vụ Pending và các hồ sơ hợp lệ; trạng thái lượt khám chuyển `Completed`.
-6. Đăng nhập lễ tân mẫu, vào **Thanh toán & hóa đơn**, xem tạm tính, chọn tiền mặt/chuyển khoản và xác nhận. Với một lần khám tổng quát có số lượng 1 và giá seed ban đầu chưa đổi, tổng là **150.000 ₫**. Mở chi tiết để in hóa đơn.
-7. Đăng nhập quản lý mẫu, vào báo cáo doanh thu/dịch vụ theo **ngày thanh toán**, báo cáo lượt khám theo **ngày tiếp nhận**; đối chiếu dữ liệu web và file Excel.
-
-Quyền trong demo phụ thuộc ma trận đang cấu hình. Seed không khôi phục các quyền đã bị Admin gỡ. Seed tạo lịch hẹn, không tự check-in, ghi bệnh án hay thanh toán; dữ liệu báo cáo xuất hiện sau khi bạn thực hiện các bước tương ứng. Kịch bản trên là hướng dẫn nghiệm thu qua giao diện; kết quả test service được ghi ở mục E2E SQL Server bên dưới.
-
-## Khởi tạo Identity và Admin lần đầu
-
-Seed không chạy mặc định. Chỉ bật sau khi migration Identity đã được áp vào đúng database. Bốn role hệ thống (`Receptionist`, `Veterinarian`, `Manager`, `Admin`) và danh mục permission được seed idempotent. Lần baseline đầu tiên có thể hoàn tất một catalog dở; sau đó, chỉ permission code mới nhận quyền mặc định. Chạy lại không phục hồi các quyền cũ mà quản trị viên đã gỡ.
-
-Trong môi trường Development, đặt ba giá trị Admin bằng user-secrets và bật seed cho đúng một lần:
+Ứng dụng không tự tạo Admin và không áp migration khi khởi động. Sau khi đã chạy `database update`, cấu hình thông tin bootstrap an toàn bằng .NET user-secrets:
 
 ```powershell
 dotnet user-secrets set "BootstrapAdmin:Email" "admin@example.com" --project src/VeterinaryHospitalManagement.Web
@@ -95,12 +122,12 @@ dotnet user-secrets set "BootstrapAdmin:Password" "THAY_BANG_MAT_KHAU_MANH" --pr
 dotnet user-secrets set "BootstrapAdmin:FullName" "Quản trị hệ thống" --project src/VeterinaryHospitalManagement.Web
 dotnet user-secrets set "BootstrapAdmin:Enabled" "true" --project src/VeterinaryHospitalManagement.Web
 dotnet user-secrets set "IdentitySeed:RunOnStartup" "true" --project src/VeterinaryHospitalManagement.Web
-dotnet run --project src/VeterinaryHospitalManagement.Web
+dotnet run --project src/VeterinaryHospitalManagement.Web --launch-profile https
 ```
 
-Ứng dụng dừng ngay khi bootstrap được bật mà thiếu/sai `BootstrapAdmin:Email`, `BootstrapAdmin:Password` hoặc `BootstrapAdmin:FullName`; lỗi chỉ nêu tên key, không in giá trị. Seed dùng `UserManager`/`RoleManager`, không tự tạo `PasswordHash`. Nếu email đã thuộc một user không phải Admin, hoặc Admin đang bị khóa, seed dừng thay vì tự nâng quyền hay tự mở khóa.
+Seed tạo bốn role hệ thống (`Admin`, `Manager`, `Receptionist`, `Veterinarian`), catalog permission và Admin đầu tiên bằng Identity. Nếu cấu hình thiếu hoặc email đang thuộc một tài khoản không phải Admin, ứng dụng dừng và báo lỗi mà không tự nâng quyền tài khoản đó.
 
-Sau lần chạy thành công, dừng ứng dụng rồi tắt seed và xóa bí mật bootstrap:
+Sau khi đăng nhập thành công, dừng ứng dụng. Tắt seed và xóa bí mật bootstrap:
 
 ```powershell
 dotnet user-secrets set "BootstrapAdmin:Enabled" "false" --project src/VeterinaryHospitalManagement.Web
@@ -110,77 +137,168 @@ dotnet user-secrets remove "BootstrapAdmin:Password" --project src/VeterinaryHos
 dotnet user-secrets remove "BootstrapAdmin:FullName" --project src/VeterinaryHospitalManagement.Web
 ```
 
-Trang đăng nhập ở `/Account/Login`. User bị khóa (`IsActive = false`) không đăng nhập được; `/Account/Register` không tồn tại. Production phải lấy cấu hình bootstrap từ provider bí mật phù hợp và tắt bootstrap sau khi tạo Admin đầu tiên.
+Sau đó chạy lại app bình thường và đăng nhập tại `/Account/Login`. Admin quản lý nhân viên tại **Quản lý tài khoản**, chỉnh quyền tại **Ma trận quyền**. Một tài khoản có role Veterinarian sẽ có hồ sơ bác sĩ và mã bác sĩ được tạo đồng bộ.
 
-## Quản trị tài khoản
+## Tài khoản và dữ liệu demo
 
-Sau khi đăng nhập bằng Admin, mở `/BackOffice/Users`. Admin có thể tạo tài khoản nội bộ, sửa họ tên/email, đổi đúng một role, khóa/mở khóa và đặt lại mật khẩu. Không có xóa cứng tài khoản vì audit cần giữ lịch sử. Mọi thay đổi role, khóa hoặc reset mật khẩu thu hồi cookie cũ; hệ thống không cho khóa hoặc hạ quyền Admin đang hoạt động cuối cùng. Các thao tác này ghi AuditLog cùng transaction.
+Chỉ dùng dữ liệu dưới đây trên database Development để học hoặc thử giao diện. Không dùng tài khoản demo làm tài khoản thật.
 
-## Khám, đơn thuốc và dịch vụ
+| Vai trò | Email | Mật khẩu seed ban đầu |
+| --- | --- | --- |
+| Lễ tân | `receptionist@hospital.local` | `Receptionist123!` |
+| Bác sĩ | `doctor.tam@hospital.local` | `Doctor123!` |
+| Quản lý | `manager@hospital.local` | `Manager123!` |
 
-Bác sĩ phụ trách mở lượt khám đang `InProgress` để ghi bệnh án, lập đơn thuốc nếu cần và thêm dịch vụ. Dịch vụ được ghi `Pending`, rồi xác nhận `Performed` hoặc `Cancelled`; tên và giá được giữ theo thời điểm thêm. Chỉ dịch vụ `Performed` được tính tiền. Bệnh án phải có chẩn đoán, không còn dịch vụ `Pending`, và đơn thuốc nếu đã lập phải có dòng hợp lệ thì bác sĩ mới được **Hoàn tất khám**. Bệnh án và đơn thuốc được chốt cùng lượt khám trong một giao dịch; đơn thuốc là chỉ định điều trị, không tự cộng vào hóa đơn. Schema lâm sàng nằm trong migration `AddClinicalRecords`.
+Sau khi tạo Admin, mở PowerShell tại repository và chạy seed mẫu:
 
-## In đơn thuốc
+```powershell
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+dotnet run --project src/VeterinaryHospitalManagement.Web --no-launch-profile -- --seed-demo-only
+```
 
-Sau khi bác sĩ hoàn tất khám và đơn được chốt, mở **Đơn thuốc → In đơn thuốc** để xem bản in A4. Chỉ Admin hoặc bác sĩ đang hoạt động phụ trách lượt khám, có đủ `Prescription.View` và `Prescription.Print`, được truy cập. Đơn nháp, đơn chưa có thuốc hoặc lượt khám chưa hoàn tất không có nút in. Bản in giữ tên/đơn vị thuốc và chỉ dẫn đã lưu; không lấy lại thông tin thuốc hiện tại hoặc cộng tiền thuốc vào hóa đơn. Dùng nút **In đơn thuốc** trên trang in để mở hộp thoại in của trình duyệt.
+Lệnh này chỉ chạy trong Development, bổ sung dữ liệu còn thiếu rồi thoát. Nó tạo tài khoản nhân viên mẫu, Chó/Mèo và giống Poodle/Mèo ta, hai dịch vụ, một thuốc, hai chủ nuôi và thú cưng. Nếu có thể tạo ca bác sĩ và lịch của Milu vào khung giờ 09:00–09:30 trong **ngày chạy seed theo giờ Việt Nam**, seed cũng tạo chúng. Seed không tự check-in, khám hoặc thanh toán.
 
-## Thu tiền và hóa đơn
+Seed giữ nguyên tài khoản và hồ sơ đã có. Nếu số điện thoại mẫu đã thuộc một chủ nuôi khác, seed bỏ qua hồ sơ mẫu đó. Nếu cùng ngày ca/lịch trùng với dữ liệu hiện có, nghiệp vụ có thể từ chối tạo lịch. Chạy lại seed không sửa dữ liệu kinh doanh hiện có; chạy vào ngày khác có thể tạo ca/lịch mới cho ngày đó.
 
-Sau khi lượt khám `Completed`, lễ tân vào **Thanh toán & hóa đơn** trong sidebar. Trang tạm tính chỉ hiển thị dịch vụ đã thực hiện; khi xác nhận tiền mặt hoặc chuyển khoản, server đọc lại và tính lại tổng, lưu hóa đơn và audit trong một giao dịch. Mỗi lượt khám có tối đa một hóa đơn; bấm xác nhận lặp trả hóa đơn cũ và không đổi phương thức thanh toán. Lượt không có dịch vụ vẫn có thể có hóa đơn 0 ₫. Từ chi tiết hóa đơn, tài khoản có quyền `Invoice.Print` có thể mở trang in A4 của trình duyệt. Bản in này không phải hóa đơn điện tử tích hợp thuế.
+Nếu có tài khoản Veterinarian cũ nhưng thiếu hồ sơ bác sĩ, có thể đồng bộ phần còn thiếu trong Development:
 
-Trước khi dùng chức năng thu tiền trên database ứng dụng, áp dụng migration `AddInvoices` một lần trong thư mục gốc repository (kiểm tra connection string đang trỏ đúng database ứng dụng, không phải database test):
+```powershell
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+dotnet run --project src/VeterinaryHospitalManagement.Web --no-launch-profile -- --sync-veterinarians-only
+```
+
+Lệnh này có thể chạy lại, không cần migration, và tự thoát sau khi hoàn tất.
+
+## Hướng dẫn dùng hệ thống
+
+Navigation hiển thị theo role và permission. Quyền mặc định được cấp khi seed lần đầu; Admin có thể thay đổi ma trận. Các quyền nhạy cảm quản lý tài khoản, phân quyền và audit chỉ dành cho Admin. Bác sĩ chỉ xem/chỉnh hồ sơ lâm sàng thuộc lượt khám được giao; lễ tân xử lý tiếp nhận và thanh toán; quản lý xem danh mục/lịch và báo cáo theo quyền.
+
+### Chạy thử một lượt khám
+
+1. Đăng nhập bằng Admin, vào **Quản lý tài khoản** và xác nhận các nhân viên cần dùng đã được tạo. Nếu dùng demo, đăng nhập lễ tân mẫu.
+2. Vào **Chủ nuôi & Thú cưng**, tìm chủ nuôi theo điện thoại hoặc mã. Tạo chủ nuôi/thú cưng mới nếu cần; hệ thống tự sinh mã hồ sơ.
+3. Vào **Lịch hẹn**, chọn thú cưng, bác sĩ và khung giờ còn trống. Có thể dùng lịch mẫu của Milu nếu seed đã tạo lịch hôm nay.
+4. Lễ tân mở hàng đợi, tiếp nhận lịch hẹn (hoặc chọn tiếp nhận khách trực tiếp), rồi phân công bác sĩ nếu cần.
+5. Bác sĩ mở lượt được giao và bắt đầu khám. Ghi bệnh án có chẩn đoán; thêm dịch vụ, rồi đánh dấu từng dòng đã thực hiện hoặc đã hủy. Có thể tạo đơn thuốc nếu cần.
+6. Bác sĩ hoàn tất lượt khám sau khi không còn dịch vụ chờ xử lý và dữ liệu bệnh án/đơn thuốc hợp lệ.
+7. Lễ tân mở **Thanh toán & hóa đơn**, kiểm tra các dịch vụ đã thực hiện, chọn tiền mặt hoặc chuyển khoản và xác nhận thanh toán. Dịch vụ bị hủy và thuốc không tự cộng vào tổng hóa đơn.
+8. Mở hóa đơn để xem hoặc in. Người có quyền `Invoice.Print` mới mở được bản in.
+9. Vào **Báo cáo** để xem doanh thu, lượt khám, dịch vụ hoặc tải Excel theo khoảng ngày. Doanh thu tính theo ngày thanh toán; lượt khám dùng ngày tiếp nhận, theo giờ Việt Nam.
+
+### Đơn thuốc và hóa đơn
+
+Đơn thuốc chỉ in sau khi bác sĩ hoàn tất lượt khám và chốt đơn. Từ chi tiết đơn thuốc, chọn **In đơn thuốc**. Admin hoặc bác sĩ đang hoạt động phụ trách lượt khám cần có cả `Prescription.View` và `Prescription.Print`. Trang in sử dụng snapshot tên/đơn vị thuốc và thông tin đã lưu; in từ trình duyệt theo khổ A4. Chưa nghiệm thu máy in vật lý.
+
+Hóa đơn được tính lại phía server khi xác nhận thanh toán, tối đa một hóa đơn cho mỗi lượt khám. Bản in hóa đơn hỗ trợ trình duyệt/A4 nhưng không phải hóa đơn điện tử có kết nối cơ quan thuế.
+
+## Migration và thay đổi database
+
+Các migration EF Core là nguồn duy nhất để thay đổi schema. Repository hiện có 11 migration; migration mới nhất là `20260926181724_AddInvoices`. Lệnh `database update` có thể chạy lại: EF chỉ áp dụng migration chưa có trong `__EFMigrationsHistory`.
+
+Áp tất cả migration vào database trong connection string:
 
 ```powershell
 dotnet tool restore
 dotnet ef database update --project src/VeterinaryHospitalManagement.Web --startup-project src/VeterinaryHospitalManagement.Web
 ```
 
-## Báo cáo và Excel (M10)
-
-Tài khoản có quyền `Report.View` mở **Báo cáo → Doanh thu** trong sidebar. Chọn khoảng ngày theo giờ Việt Nam; doanh thu lấy hóa đơn đã thanh toán theo `PaidAt`, còn báo cáo dịch vụ lấy snapshot tên, số lượng và thành tiền từ `InvoiceItems`. Báo cáo lượt khám lọc theo `CheckedInAt` và chia theo trạng thái. Người có quyền `Report.Export` có thể tải Excel cho cùng khoảng ngày và số liệu đang xem.
-
-## E2E SQL Server (M11)
-
-Ngày 02/10/2026: kiểm tra kết nối bằng EF tới database test pass **1/1**; hai kịch bản `EndToEndSqlServerTests` pass **2/2**, không skip. Bộ test mặc định pass **218**, skip **119** test SQL opt-in, fail **0**. Hai kịch bản E2E kiểm tra:
-
-- Tạo tài khoản/hồ sơ → lịch hẹn → check-in → khám → lưu bệnh án/đơn thuốc bằng service → thực hiện/hủy dịch vụ → hoàn tất → thu tiền → báo cáo. Check-in và checkout lặp không tạo thêm bản ghi/audit; checkout lặp giữ phương thức thanh toán đầu tiên. Giá/tên dịch vụ giữ snapshot dù danh mục đổi, dịch vụ hủy không tính tiền; doanh thu dùng ngày thanh toán và lượt khám dùng ngày tiếp nhận theo giờ Việt Nam.
-- Walk-in, hủy lượt khám, hủy lịch hẹn và đánh dấu vắng sau giờ kết thúc; báo cáo lượt khám phản ánh trạng thái hủy.
-
-Test dùng clock cố định và database SQL Server riêng. Để chạy lại **chỉ hai kịch bản này**, cho phép fixture xóa/tạo lại `localhost/VeterinaryHospitalManagement_Test` trước mỗi test; dữ liệu đang có trong database test sẽ bị xóa:
+Kiểm tra trạng thái migration:
 
 ```powershell
-$env:VETERINARY_SQL_INTEGRATION_TESTS = "1"
-$env:VETERINARY_SQL_ALLOW_DESTRUCTIVE_TESTS = "YES_I_UNDERSTAND"
-dotnet test VeterinaryHospitalManagement.slnx --no-restore --filter FullyQualifiedName~EndToEndSqlServerTests
+dotnet ef migrations list --project src/VeterinaryHospitalManagement.Web --startup-project src/VeterinaryHospitalManagement.Web
 ```
 
-Nghiệm thu bổ sung ngày 02–03/10/2026: toàn bộ suite SQL trước các sửa UI/lịch sử cuối đạt **337/337**, không fail/skip, gồm 9 kiểm thử có tên concurrency. E2E đã kiểm tra thêm endpoint báo cáo/bản in, nội dung ba file Excel, ngày thanh toán khác ngày tiếp nhận, HTTP 400 cho bộ lọc sai và HTTP 403 khi thiếu quyền. Hồ sơ thú cưng hiển thị tối đa 50 lượt khám gần nhất nếu có `Visit.View`; chỉ có `Pet.View` không được thấy lịch sử.
-
-Smoke test bằng trình duyệt đã kiểm tra đăng nhập/đăng xuất, navigation Admin, hóa đơn/bản in A4, báo cáo và tải ba file `.xlsx`. File tải xuống được mở bằng bộ đọc OpenXML độc lập để đối chiếu tổng và kiểu số. Chưa nghiệm thu máy in vật lý, Microsoft Excel desktop, hoặc triển khai production. Chi tiết các lượt kiểm tra và thay đổi cuối ở [M11_Acceptance.md](docs/M11_Acceptance.md).
-
-## Bằng chứng kiểm thử Foundation
-
-- `WebApplicationFactory<Program>` khởi động ứng dụng bằng TestHost với Data Protection tạm thời, kiểm tra trang chủ trả HTTP 200, HTML dùng `lang="vi"` và có đúng tên hệ thống.
-- Test Access Denied kiểm tra `/Home/AccessDenied` trả HTTP 403.
-- Test clock dùng một `TimeProvider` cố định để kiểm tra UTC được đổi sang múi giờ Việt Nam UTC+7.
-- Guard của test SQL chỉ chấp nhận đúng server `localhost`, database `VeterinaryHospitalManagement_Test`, Windows Authentication và các tùy chọn kết nối giống ứng dụng (`Encrypt=True`, `TrustServerCertificate=True`, `MultipleActiveResultSets=False`). Guard thứ hai yêu cầu opt-in riêng trước mọi thao tác reset/xóa dữ liệu trong fixture tương lai.
-- Test kết nối SQL là test opt-in và được xUnit đánh dấu **Skipped** thật trong bộ test mặc định. Test này không tạo hoặc xóa database; nó chỉ gọi `ApplicationDbContext.Database.CanConnectAsync()` tới database test đã tồn tại với đúng connection contract.
-
-Để chạy kiểm tra kết nối SQL không phá hủy sau khi đã chuẩn bị `VeterinaryHospitalManagement_Test`:
+Chỉ khi sửa entity/configuration làm đổi schema, tạo migration mới rồi review file migration trước khi cập nhật database:
 
 ```powershell
-$env:VETERINARY_SQL_INTEGRATION_TESTS = "1"
-dotnet test VeterinaryHospitalManagement.slnx --filter FullyQualifiedName~SqlServerOptInConnectivityTests
+dotnet ef migrations add TenThayDoiNgan --project src/VeterinaryHospitalManagement.Web --startup-project src/VeterinaryHospitalManagement.Web
+dotnet ef database update --project src/VeterinaryHospitalManagement.Web --startup-project src/VeterinaryHospitalManagement.Web
 ```
 
-Để chạy toàn bộ Identity SQL suite, gồm migration/schema/seed/workflow, cần xác nhận riêng việc cho phép fixture xóa và tạo lại **đúng database test** `localhost/VeterinaryHospitalManagement_Test`:
+Nếu chỉ sửa controller, service, view hoặc CSS thì thường không cần migration. Không sửa bảng trực tiếp trong SSMS để thay schema ứng dụng. Trước khi áp vào database đang có dữ liệu, xác nhận đúng server/database và sao lưu theo quy trình của bạn.
+
+## Build và kiểm thử
+
+Build solution:
 
 ```powershell
-$env:VETERINARY_SQL_INTEGRATION_TESTS = "1"
-$env:VETERINARY_SQL_ALLOW_DESTRUCTIVE_TESTS = "YES_I_UNDERSTAND"
-dotnet test VeterinaryHospitalManagement.slnx --no-restore
+dotnet restore VeterinaryHospitalManagement.slnx
+dotnet build VeterinaryHospitalManagement.slnx --no-restore
 ```
 
-Không đặt `VETERINARY_SQL_ALLOW_DESTRUCTIVE_TESTS=YES_I_UNDERSTAND` khi chuỗi kết nối không trỏ đúng `VeterinaryHospitalManagement_Test`. Test suite giữ khóa SQL cross-process cho database test, nhưng không được dùng nó với database ứng dụng hoặc database demo.
+Chạy test mặc định:
 
-Kết quả test mặc định không chứng minh SQL Server hoặc database ứng dụng kết nối được. Trước migration phải chạy test opt-in với đúng connection contract; không dùng probe `Encrypt=False` thay cho bằng chứng này.
+```powershell
+dotnet test VeterinaryHospitalManagement.slnx --no-build
+```
+
+Các bài test SQL Server được bỏ qua trong lượt mặc định nếu chưa bật opt-in. Một số fixture SQL có thể xóa và tạo lại database test riêng; chỉ chạy chúng khi đã hiểu phạm vi database và đúng biến môi trường xác nhận trong test. Connection contract được khóa vào `localhost/VeterinaryHospitalManagement_Test`; tuyệt đối không đổi test connection sang database ứng dụng.
+
+Kết quả kiểm tra gần nhất và phạm vi chưa kiểm chứng được ghi trong [docs/M11_Acceptance.md](docs/M11_Acceptance.md). Tại lần cập nhật tài liệu này, test mặc định đạt **218 passed, 0 failed, 122 skipped**; 122 test SQL bị bỏ qua theo thiết kế. Các lượt SQL tập trung gần đây được chạy riêng trên database test và được ghi trong báo cáo nghiệm thu. Không suy ra test SQL đã chạy chỉ từ kết quả mặc định.
+
+## Cấu trúc project
+
+```text
+VeterinaryHospitalManagement/
+├── src/
+│   └── VeterinaryHospitalManagement.Web/
+│       ├── Areas/BackOffice/       # Controller, ViewModel, Razor View nội bộ
+│       ├── Authorization/          # Catalog và policy permission
+│       ├── Data/                   # DbContext, entity configuration, seed
+│       ├── Migrations/             # EF Core migrations
+│       ├── Models/                 # Entity và enum
+│       └── Services/               # Nghiệp vụ theo module
+├── tests/
+│   └── VeterinaryHospitalManagement.Tests/
+├── docs/
+│   ├── VeterinaryHospitalManagement_ProjectPlan_v1.0.md
+│   ├── DatabaseDesign_v1.0.md
+│   ├── DatabaseSchema_Current.md
+│   ├── M11_Acceptance.md
+│   └── Codex_Continuation_Prompt.md
+└── VeterinaryHospitalManagement.slnx
+```
+
+Ứng dụng theo kiến trúc MVC → service → một `ApplicationDbContext`, dùng SQL Server và EF Core. Identity cung cấp đăng nhập; các policy permission kiểm soát từng thao tác. Thời gian nghiệp vụ hiển thị theo múi giờ Việt Nam. Không có API/SPA riêng.
+
+## Xử lý lỗi thường gặp
+
+### `dotnet-ef does not exist` hoặc không tìm thấy `dotnet ef`
+
+Đứng tại thư mục gốc repository và chạy:
+
+```powershell
+dotnet tool restore
+```
+
+Sau đó chạy lại nguyên lệnh EF có cả `--project` và `--startup-project` như mục Migration.
+
+### `A network-related or instance-specific error` khi kết nối database
+
+Kiểm tra service SQL Server đang chạy, đúng Server name/instance và tài khoản Windows hiện tại có quyền. Nếu dùng SQL Express, thử `localhost\SQLEXPRESS`; cập nhật `DefaultConnection` trong `appsettings.Development.json` trước khi chạy migration/app.
+
+### `Invalid object name 'TênBảng'`
+
+Ứng dụng đang đọc bảng chưa có trong database mà connection string hiện tại trỏ tới. Dừng app, xác nhận đúng database, chạy `dotnet ef database update ...` từ thư mục repository, rồi khởi động lại. Nếu migration báo không tìm thấy command, chạy `dotnet tool restore` trước.
+
+### Ứng dụng chỉ hiện landing page
+
+Trang `/` là trang giới thiệu. Đăng nhập tại `https://localhost:7164/Account/Login`; các màn nghiệp vụ nằm trong BackOffice và chỉ hiện khi tài khoản có quyền tương ứng. Database mới cần migration và tài khoản Admin bootstrap trước. Tài khoản demo chỉ có sau khi chạy `--seed-demo-only`.
+
+### SSMS không thấy database sau khi migration thành công
+
+Trong SSMS kiểm tra bạn đang kết nối đúng server/instance mà connection string dùng. Nhấn phải **Databases → Refresh**. Ứng dụng có thể đang kết nối một SQL Server instance khác nếu `Server` không phải `localhost`.
+
+### Đăng nhập được nhưng không thấy chức năng
+
+Navigation được lọc theo role và ma trận quyền. Đăng nhập Admin để kiểm tra **Quản lý tài khoản** và **Ma trận quyền**; xác nhận user hoạt động, role đúng và các permission cần thiết đã cấp. User Veterinarian cần hồ sơ bác sĩ hoạt động và chỉ truy cập lượt khám được phân công.
+
+## Tài liệu và giới hạn hiện tại
+
+- [Kế hoạch nghiệp vụ M1–M11](docs/VeterinaryHospitalManagement_ProjectPlan_v1.0.md)
+- [Thiết kế database ban đầu](docs/DatabaseDesign_v1.0.md)
+- [ERD/schema theo EF model hiện tại](docs/DatabaseSchema_Current.md)
+- [Kết quả nghiệm thu và giới hạn kiểm chứng](docs/M11_Acceptance.md)
+- [Prompt bàn giao cho task Codex tiếp theo](docs/Codex_Continuation_Prompt.md)
+
+Plan ngoại trú M1–M11 đã được triển khai và nghiệm thu local trên SQL Server; in đơn thuốc được bổ sung sau nghiệm thu ban đầu. Đây chưa phải nghiệm thu production. Chưa xác minh cài đặt trên máy sạch, triển khai server, sao lưu/khôi phục thực tế, tải lớn, Excel desktop hoặc máy in vật lý. Bản in hóa đơn không thay thế hóa đơn điện tử thuế.
