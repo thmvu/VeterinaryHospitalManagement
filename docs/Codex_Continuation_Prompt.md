@@ -36,7 +36,7 @@ Không tin hoàn toàn vào bản tóm tắt này nếu code hiện tại cho th
 
 ### 3. Trạng thái đã hoàn thành và đã xác minh
 
-Mốc cập nhật: M11 — nghiệm thu hệ thống ngoại trú, ngày 02–03/10/2026. Đọc [M11_Acceptance.md](M11_Acceptance.md) và README để lấy bằng chứng mới nhất; kiểm tra Git trước khi kết luận trạng thái hiện tại.
+Mốc cập nhật: M11 — nghiệm thu hệ thống ngoại trú ngày 02–03/10/2026, bổ sung in đơn thuốc ngày 04/10/2026. Đọc [M11_Acceptance.md](M11_Acceptance.md) và README để lấy bằng chứng mới nhất; kiểm tra Git trước khi kết luận trạng thái hiện tại.
 
 Hệ thống đã triển khai:
 
@@ -47,6 +47,7 @@ Hệ thống đã triển khai:
 - Lịch hẹn, availability, lịch ngày/tuần, hủy và vắng; chống trùng bác sĩ/thú cưng trên SQL Server.
 - Tiếp nhận từ lịch hẹn, walk-in, hàng đợi, phân công, bắt đầu/hủy lượt khám.
 - Bệnh án, đơn thuốc, dịch vụ Pending/Performed/Cancelled, hoàn tất khám với kiểm tra nghiệp vụ và snapshot.
+- In đơn thuốc A4 đã chốt: Admin hoặc bác sĩ đang hoạt động phụ trách, có cả Prescription.View và Prescription.Print. Giữ snapshot tên/đơn vị thuốc, thông tin lượt khám và chỉ dẫn; không tính tiền thuốc vào hóa đơn.
 - Thanh toán tiền mặt/chuyển khoản, một hóa đơn mỗi lượt khám, trang in A4.
 - Dashboard, giao diện Botanical, navigation theo quyền.
 - Báo cáo doanh thu/lượt khám/dịch vụ, xuất .xlsx theo cùng khoảng ngày Việt Nam.

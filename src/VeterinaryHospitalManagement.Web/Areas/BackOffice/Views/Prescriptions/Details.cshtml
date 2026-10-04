@@ -1,7 +1,13 @@
 @model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Prescriptions.PrescriptionPageViewModel
+@using Microsoft.AspNetCore.Authorization
+@inject IAuthorizationService AuthorizationService
 @{
     ViewData["Title"] = $"Đơn thuốc {Model.VisitNumber}";
     var prescription = Model.Prescription;
+    var canPrint = prescription?.Status == "Finalized" && prescription.Items.Count > 0 &&
+        Model.VisitStatus == "Completed" &&
+        (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.PrescriptionPrint))).Succeeded &&
+        (await AuthorizationService.AuthorizeAsync(User, PermissionPolicyName.For(PermissionCodes.PrescriptionView))).Succeeded;
 }
 
 <header class="record-header">
@@ -12,6 +18,10 @@
     </div>
     <div class="d-flex gap-2">
         <a asp-controller="Visits" asp-action="Details" asp-route-id="@Model.VisitId" class="btn btn-ghost">← Lượt khám</a>
+        @if (canPrint)
+        {
+            <a asp-action="Print" asp-route-id="@Model.VisitId" class="btn btn-brand">In đơn thuốc</a>
+        }
         @if (Model.CanEdit)
         {
             <a asp-action="Edit" asp-route-id="@Model.VisitId" class="btn btn-brand">@(prescription is null ? "Tạo đơn thuốc" : "Sửa bản nháp")</a>

@@ -1,0 +1,107 @@
+@model VeterinaryHospitalManagement.Web.Areas.BackOffice.ViewModels.Prescriptions.PrescriptionPrintViewModel
+@using System.Globalization
+@inject VeterinaryHospitalManagement.Web.Services.Time.IVietnamTimeProvider VietnamTimeProvider
+@{
+    Layout = null;
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+    var visit = Model.Visit;
+    var prescription = Model.Prescription;
+    var completedAt = visit.CompletedAt?.ToOffset(VietnamTimeProvider.LocalNow.Offset);
+}
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Đơn thuốc @visit.VisitNumber</title>
+    <style>
+        :root { color-scheme: light; --forest: #2d3a31; --sage: #8c9a84; --paper: #f9f8f4; --stone: #e6e2da; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--paper); color: var(--forest); font: 15px/1.55 Arial, sans-serif; }
+        .print-actions { max-width: 820px; margin: 24px auto 12px; display: flex; justify-content: space-between; gap: 12px; padding: 0 12px; }
+        .print-actions a, .print-actions button { border: 1px solid var(--forest); border-radius: 8px; padding: 10px 16px; background: white; color: var(--forest); font: inherit; text-decoration: none; cursor: pointer; }
+        .print-actions button { background: var(--forest); color: white; }
+        .print-actions a:focus-visible, .print-actions button:focus-visible { outline: 3px solid var(--sage); outline-offset: 3px; }
+        .prescription { max-width: 820px; margin: 0 auto 32px; padding: 42px 48px; background: white; box-shadow: 0 12px 36px #25342b18; }
+        .document-head { border-bottom: 2px solid var(--forest); padding-bottom: 22px; }
+        .brand { font-weight: 700; font-size: 17px; }
+        h1 { font: 700 30px/1.2 Georgia, serif; margin: 16px 0 8px; }
+        .visit-number { color: #536055; }
+        .patient { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 32px; margin: 26px 0; }
+        .label { display: block; color: #536055; font-size: 13px; margin-bottom: 3px; }
+        .value { font-weight: 600; overflow-wrap: anywhere; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #eff3ed; text-align: left; font-size: 13px; }
+        th, td { padding: 14px 12px; border-bottom: 1px solid var(--stone); vertical-align: top; }
+        .quantity { width: 22%; text-align: right; }
+        .amount { display: block; white-space: nowrap; font-weight: 600; }
+        .unit { display: block; overflow-wrap: anywhere; font-size: 13px; }
+        .medicine { font-size: 17px; overflow-wrap: anywhere; }
+        .directions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; margin: 12px 0 0; }
+        .directions dt { color: #536055; font-size: 12px; }
+        .directions dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+        .item-note { margin: 12px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .general { margin-top: 24px; border-left: 3px solid var(--sage); padding-left: 16px; }
+        h2 { margin: 0 0 8px; font-size: 16px; }
+        .general p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .document-footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--stone); font-size: 13px; color: #536055; }
+        @@media (max-width: 600px) { .prescription { padding: 28px 20px; } .patient, .directions { grid-template-columns: 1fr; } th, td { padding: 12px 8px; } h1 { font-size: 26px; } }
+        @@media print {
+            body { background: white; }
+            .print-actions { display: none; }
+            .prescription { max-width: none; margin: 0; padding: 0; box-shadow: none; }
+            .document-head, .patient, tr, .general, .document-footer { break-inside: avoid; }
+            thead { display: table-header-group; }
+            @@page { size: A4; margin: 16mm; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="print-actions" aria-label="Thao tác đơn thuốc">
+        <a asp-action="Details" asp-route-id="@visit.Id">Quay lại đơn thuốc</a>
+        <button type="button" onclick="window.print()">In đơn thuốc</button>
+    </nav>
+    <main class="prescription">
+        <header class="document-head">
+            <div class="brand">Veterinary Hospital Management</div>
+            <h1>Đơn thuốc ngoại trú</h1>
+            <div class="visit-number">Lượt khám @visit.VisitNumber</div>
+        </header>
+        <section class="patient" aria-label="Thông tin đơn thuốc">
+            <div><span class="label">Thú cưng</span><span class="value">@visit.PetName</span></div>
+            <div><span class="label">Chủ nuôi</span><span class="value">@visit.OwnerName</span><div>@visit.OwnerPhone</div></div>
+            <div><span class="label">Bác sĩ phụ trách</span><span class="value">@visit.VeterinarianName</span></div>
+            <div><span class="label">Hoàn tất khám</span><span class="value">@completedAt?.ToString("dd/MM/yyyy HH:mm")</span></div>
+        </section>
+        <table aria-label="Thuốc và hướng dẫn dùng">
+            <thead><tr><th scope="col">Thuốc và hướng dẫn dùng</th><th scope="col" class="quantity">Số lượng</th></tr></thead>
+            <tbody>
+            @foreach (var item in prescription.Items)
+            {
+                <tr>
+                    <td>
+                        <strong class="medicine">@item.MedicineName</strong>
+                        <dl class="directions">
+                            <div><dt>Liều dùng</dt><dd>@item.Dosage</dd></div>
+                            <div><dt>Đường dùng</dt><dd>@item.Route</dd></div>
+                            <div><dt>Tần suất</dt><dd>@item.Frequency</dd></div>
+                            <div><dt>Thời gian dùng</dt><dd>@item.Duration</dd></div>
+                        </dl>
+                        @if (!string.IsNullOrWhiteSpace(item.Instructions))
+                        {
+                            <p class="item-note"><strong>Lưu ý:</strong> @item.Instructions</p>
+                        }
+                    </td>
+                    <td class="quantity"><span class="amount">@item.Quantity.ToString("0.##", vi)</span><span class="unit">@item.Unit</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        @if (!string.IsNullOrWhiteSpace(prescription.Instructions))
+        {
+            <section class="general" aria-label="Hướng dẫn chung"><h2>Hướng dẫn chung</h2><p>@prescription.Instructions</p></section>
+        }
+        <footer class="document-footer">Đơn thuốc đã chốt theo lượt khám @visit.VisitNumber.</footer>
+    </main>
+</body>
+</html>

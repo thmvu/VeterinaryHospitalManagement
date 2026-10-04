@@ -57,3 +57,22 @@ Log/TRX/screenshot được giữ local trong `docs/agent-work/m11-verification`
 Chưa kiểm tra Microsoft Excel desktop, máy in vật lý, triển khai production hoặc tải lớn thực tế. Đã kiểm tra file OpenXML và trang in/CSS A4; không đồng nhất những kiểm tra này với in trên thiết bị thật. Bản in hóa đơn không phải hóa đơn điện tử thuế. Việc cài đặt trên một máy mới được hướng dẫn trong README nhưng chưa được tái hiện trên máy sạch riêng.
 
 M11 hoàn tất trong phạm vi nghiệm thu local nêu trên. Task tiếp theo chỉ nên là một yêu cầu cải tiến hoặc lỗi tái hiện được do người dùng chốt; không tự mở thêm milestone ngoài plan v1.0.
+
+## Bổ sung 04/10/2026 — In đơn thuốc
+
+Recovery audit phát hiện permission `Prescription.Print` đã tồn tại nhưng chưa có endpoint, trang in hoặc nút mở bản in. Nghiệm thu ban đầu chưa bao phủ chức năng này. Tác nhân chính bổ sung `Prescriptions/Print/{visitId}`, ViewModel và trang A4 theo phong cách Botanical; trang chi tiết chỉ hiện nút khi đơn có thuốc, đã chốt và lượt khám đã hoàn tất.
+
+Endpoint yêu cầu cả `Prescription.View` và `Prescription.Print`; chỉ Admin hoặc bác sĩ đang hoạt động phụ trách lượt khám được truy cập. Đơn nháp/trạng thái không hợp lệ trả 409, hồ sơ không tồn tại trả 404. Bản in dùng thông tin snapshot chủ/thú/bác sĩ và tên/đơn vị thuốc đã lưu, hiển thị liều dùng, đường dùng, tần suất, thời gian và lưu ý. Razor mã hóa nội dung; GET không thay đổi RowVersion/audit hoặc tạo hóa đơn.
+
+| Lượt kiểm tra bổ sung | Kết quả |
+| --- | --- |
+| Nhóm Clinical và CompleteVisit, gồm test in mới | 18 passed, 0 failed, 0 skipped trên SQL Server |
+| Ba test in đơn thuốc sau chỉnh bố cục số lượng | 3 passed, 0 failed, 0 skipped trên SQL Server |
+| Happy path tạo fixture để kiểm tra UI | 1 passed, 0 failed, 0 skipped trên SQL Server |
+| Toàn solution mặc định hiện tại | 218 passed, 0 failed, 122 skipped; test SQL cần opt-in |
+| Build solution hiện tại | 0 warning, 0 error |
+| Trình duyệt | Bác sĩ phụ trách mở từ chủ nuôi → thú cưng → lịch sử khám → đơn thuốc → in; kiểm tra nội dung và liên kết quay lại. Desktop 1280px và mobile 390px không tràn ngang |
+
+Reviewer `prescription_print_tester` viết và chạy test độc lập cho quyền truy cập, trạng thái hồ sơ, snapshot sau thay đổi danh mục, số lượng thập phân, mã hóa HTML và GET không ghi dữ liệu; không phát hiện lỗi chặn ở phần triển khai mới. Phần chức năng thiếu được tác nhân chính phát hiện qua đối chiếu plan/code; không có bằng chứng quy lỗi cũ cho một tác nhân cụ thể.
+
+Không thêm migration, không đổi schema hoặc dữ liệu database ứng dụng. Chỉ dùng database test đã được cho phép tạo lại. Log/TRX và hai ảnh giao diện được giữ local tại `docs/agent-work/prescription-print`, bị Git ignore. Chưa kiểm tra hộp thoại in/PDF hoặc máy in vật lý; bằng chứng UI là trang HTML và CSS A4. Kết quả full SQL 337 test ở trên vẫn là lượt nghiệm thu trước bổ sung; chưa chạy lại toàn bộ SQL suite 340 test.

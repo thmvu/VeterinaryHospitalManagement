@@ -120,6 +120,10 @@ Sau khi đăng nhập bằng Admin, mở `/BackOffice/Users`. Admin có thể t�
 
 Bác sĩ phụ trách mở lượt khám đang `InProgress` để ghi bệnh án, lập đơn thuốc nếu cần và thêm dịch vụ. Dịch vụ được ghi `Pending`, rồi xác nhận `Performed` hoặc `Cancelled`; tên và giá được giữ theo thời điểm thêm. Chỉ dịch vụ `Performed` được tính tiền. Bệnh án phải có chẩn đoán, không còn dịch vụ `Pending`, và đơn thuốc nếu đã lập phải có dòng hợp lệ thì bác sĩ mới được **Hoàn tất khám**. Bệnh án và đơn thuốc được chốt cùng lượt khám trong một giao dịch; đơn thuốc là chỉ định điều trị, không tự cộng vào hóa đơn. Schema lâm sàng nằm trong migration `AddClinicalRecords`.
 
+## In đơn thuốc
+
+Sau khi bác sĩ hoàn tất khám và đơn được chốt, mở **Đơn thuốc → In đơn thuốc** để xem bản in A4. Chỉ Admin hoặc bác sĩ đang hoạt động phụ trách lượt khám, có đủ `Prescription.View` và `Prescription.Print`, được truy cập. Đơn nháp, đơn chưa có thuốc hoặc lượt khám chưa hoàn tất không có nút in. Bản in giữ tên/đơn vị thuốc và chỉ dẫn đã lưu; không lấy lại thông tin thuốc hiện tại hoặc cộng tiền thuốc vào hóa đơn. Dùng nút **In đơn thuốc** trên trang in để mở hộp thoại in của trình duyệt.
+
 ## Thu tiền và hóa đơn
 
 Sau khi lượt khám `Completed`, lễ tân vào **Thanh toán & hóa đơn** trong sidebar. Trang tạm tính chỉ hiển thị dịch vụ đã thực hiện; khi xác nhận tiền mặt hoặc chuyển khoản, server đọc lại và tính lại tổng, lưu hóa đơn và audit trong một giao dịch. Mỗi lượt khám có tối đa một hóa đơn; bấm xác nhận lặp trả hóa đơn cũ và không đổi phương thức thanh toán. Lượt không có dịch vụ vẫn có thể có hóa đơn 0 ₫. Từ chi tiết hóa đơn, tài khoản có quyền `Invoice.Print` có thể mở trang in A4 của trình duyệt. Bản in này không phải hóa đơn điện tử tích hợp thuế.

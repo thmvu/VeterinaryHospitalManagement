@@ -36,6 +36,23 @@ public sealed class PrescriptionsController(
         });
     }
 
+    [HttpGet, PermissionAuthorize(PermissionCodes.PrescriptionPrint), PermissionAuthorize(PermissionCodes.PrescriptionView)]
+    public async Task<IActionResult> Print(int id, CancellationToken ct)
+    {
+        var visit = await visits.GetDetailsAsync(id, ct);
+        if (visit is null) return NotFound();
+        if (!User.IsInRole(SystemRoleNames.Admin) &&
+            !await IsAssignedVeterinarianAsync(visit.VeterinarianId, ct)) return Forbid();
+
+        var prescription = await prescriptions.FindByVisitAsync(id, ct);
+        if (prescription is null) return NotFound();
+        if (visit.Status != VisitStatus.Completed.ToString() ||
+            prescription.Status != ClinicalDocumentStatus.Finalized.ToString() || prescription.Items.Count == 0)
+            return Conflict("Chỉ có thể in đơn thuốc đã chốt sau khi hoàn tất lượt khám.");
+
+        return View(new PrescriptionPrintViewModel { Visit = visit, Prescription = prescription });
+    }
+
     [HttpGet, PermissionAuthorize(PermissionCodes.PrescriptionManage)]
     public async Task<IActionResult> Edit(int id, CancellationToken ct)
     {
